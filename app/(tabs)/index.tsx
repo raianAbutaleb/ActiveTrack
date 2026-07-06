@@ -40,6 +40,8 @@ const gymWorkoutDays = [
   'Rest',
 ];
 
+const lapActivities = ['Run', 'Walking', 'Cycling', 'Swimming'];
+
 type GymSet = {
   id: number;
   reps: string;
@@ -56,8 +58,14 @@ type SessionDetails = {
   teamTwoName?: string;
   teamOneScore?: string;
   teamTwoScore?: string;
+
   gymWorkoutDay?: string;
   gymExercises?: GymExercise[];
+
+  laps?: number;
+  lapDistance?: string;
+  lapDistanceUnit?: string;
+  totalDistance?: string;
 };
 
 type Session = {
@@ -93,6 +101,10 @@ export default function HomeScreen() {
   const [gymSetReps, setGymSetReps] = useState('');
   const [currentGymSets, setCurrentGymSets] = useState<GymSet[]>([]);
   const [gymExercises, setGymExercises] = useState<GymExercise[]>([]);
+
+  const [lapCount, setLapCount] = useState(0);
+  const [lapDistance, setLapDistance] = useState('');
+  const [lapDistanceUnit, setLapDistanceUnit] = useState('m');
 
   useEffect(() => {
     loadSavedData();
@@ -131,6 +143,35 @@ export default function HomeScreen() {
     }
   };
 
+  const isLapActivity = (activity: string | null) => {
+    if (!activity) {
+      return false;
+    }
+
+    return lapActivities.includes(activity);
+  };
+
+  const getDefaultLapDistance = (activity: string) => {
+    if (activity === 'Cycling') {
+      return {
+        distance: '1',
+        unit: 'km',
+      };
+    }
+
+    if (activity === 'Swimming') {
+      return {
+        distance: '25',
+        unit: 'm',
+      };
+    }
+
+    return {
+      distance: '400',
+      unit: 'm',
+    };
+  };
+
   const resetActivityFields = () => {
     setFootballTeamOneName('');
     setFootballTeamTwoName('');
@@ -142,6 +183,10 @@ export default function HomeScreen() {
     setGymSetReps('');
     setCurrentGymSets([]);
     setGymExercises([]);
+
+    setLapCount(0);
+    setLapDistance('');
+    setLapDistanceUnit('m');
   };
 
   const openActivity = (activity: string) => {
@@ -149,6 +194,12 @@ export default function HomeScreen() {
     setStartTime(null);
     setEndTime(null);
     resetActivityFields();
+
+    if (lapActivities.includes(activity)) {
+      const defaultLap = getDefaultLapDistance(activity);
+      setLapDistance(defaultLap.distance);
+      setLapDistanceUnit(defaultLap.unit);
+    }
   };
 
   const openOtherModal = () => {
@@ -237,6 +288,41 @@ export default function HomeScreen() {
     }
 
     setEndTime(new Date());
+  };
+
+  const addLap = () => {
+    if (!startTime) {
+      alert('Please start the activity first');
+      return;
+    }
+
+    if (endTime) {
+      alert('Activity already ended');
+      return;
+    }
+
+    setLapCount(lapCount + 1);
+  };
+
+  const resetLaps = () => {
+    setLapCount(0);
+  };
+
+  const getTotalLapDistance = () => {
+    const distanceNumber = Number(lapDistance);
+
+    if (!distanceNumber || lapCount === 0) {
+      return `0 ${lapDistanceUnit}`;
+    }
+
+    const total = distanceNumber * lapCount;
+
+    if (lapDistanceUnit === 'm' && total >= 1000) {
+      const kmTotal = total / 1000;
+      return `${kmTotal.toFixed(2)} km`;
+    }
+
+    return `${total} ${lapDistanceUnit}`;
   };
 
   const getDurationSeconds = () => {
@@ -335,6 +421,11 @@ export default function HomeScreen() {
       return;
     }
 
+    if (isLapActivity(selectedActivity) && lapDistance.trim() === '') {
+      alert('Please enter lap distance');
+      return;
+    }
+
     let finalGymExercises = gymExercises;
 
     if (selectedActivity === 'Gym') {
@@ -374,6 +465,15 @@ export default function HomeScreen() {
       newSession.details = {
         gymWorkoutDay: gymWorkoutDay.trim(),
         gymExercises: finalGymExercises,
+      };
+    }
+
+    if (isLapActivity(selectedActivity)) {
+      newSession.details = {
+        laps: lapCount,
+        lapDistance: lapDistance.trim(),
+        lapDistanceUnit: lapDistanceUnit,
+        totalDistance: getTotalLapDistance(),
       };
     }
 
@@ -659,6 +759,67 @@ export default function HomeScreen() {
     );
   };
 
+  const renderLapFields = () => {
+    if (!isLapActivity(selectedActivity)) {
+      return null;
+    }
+
+    return (
+      <View style={styles.detailsBox}>
+        <Text style={styles.detailsTitle}>{selectedActivity} Laps</Text>
+
+        <Text style={styles.detailsSubtitle}>Lap distance</Text>
+
+        <View style={styles.scoreRow}>
+          <TextInput
+            style={styles.scoreInput}
+            placeholder="Lap distance"
+            placeholderTextColor="#888"
+            value={lapDistance}
+            onChangeText={setLapDistance}
+            keyboardType="decimal-pad"
+          />
+
+          <TouchableOpacity
+            style={[
+              styles.unitButton,
+              lapDistanceUnit === 'm' && styles.selectedUnitButton,
+            ]}
+            onPress={() => setLapDistanceUnit('m')}
+          >
+            <Text style={styles.unitButtonText}>m</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.unitButton,
+              lapDistanceUnit === 'km' && styles.selectedUnitButton,
+            ]}
+            onPress={() => setLapDistanceUnit('km')}
+          >
+            <Text style={styles.unitButtonText}>km</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.lapBox}>
+          <Text style={styles.lapNumber}>{lapCount}</Text>
+          <Text style={styles.lapLabel}>laps completed</Text>
+          <Text style={styles.totalDistanceText}>
+            Total distance: {getTotalLapDistance()}
+          </Text>
+        </View>
+
+        <TouchableOpacity style={styles.addExerciseButton} onPress={addLap}>
+          <Text style={styles.buttonText}>+ Add Lap</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.resetLapButton} onPress={resetLaps}>
+          <Text style={styles.buttonText}>Reset Laps</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
   const renderSessionDetails = (session: Session) => {
     if (session.activity === 'Football' && session.details) {
       return (
@@ -706,6 +867,22 @@ export default function HomeScreen() {
       );
     }
 
+    if (isLapActivity(session.activity) && session.details) {
+      return (
+        <View style={styles.savedDetailsBox}>
+          <Text style={styles.savedDetailsText}>
+            Laps: {session.details.laps || 0}
+          </Text>
+          <Text style={styles.savedDetailsText}>
+            Lap Distance: {session.details.lapDistance || '0'} {session.details.lapDistanceUnit || 'm'}
+          </Text>
+          <Text style={styles.savedDetailsText}>
+            Total Distance: {session.details.totalDistance || '0 m'}
+          </Text>
+        </View>
+      );
+    }
+
     return null;
   };
 
@@ -722,6 +899,7 @@ export default function HomeScreen() {
 
           {renderFootballFields()}
           {renderGymFields()}
+          {renderLapFields()}
 
           <TouchableOpacity style={styles.startButton} onPress={startActivity}>
             <Text style={styles.buttonText}>Start Activity</Text>
@@ -1052,6 +1230,22 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     color: '#000000',
   },
+  unitButton: {
+    backgroundColor: '#34495e',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    height: 54,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  selectedUnitButton: {
+    backgroundColor: '#1f8a70',
+  },
+  unitButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '800',
+  },
   addSetButton: {
     backgroundColor: '#2563eb',
     borderRadius: 12,
@@ -1071,6 +1265,35 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 16,
     marginTop: 14,
+  },
+  resetLapButton: {
+    backgroundColor: '#34495e',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 4,
+  },
+  lapBox: {
+    backgroundColor: '#101820',
+    padding: 22,
+    borderRadius: 14,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  lapNumber: {
+    color: '#ffffff',
+    fontSize: 54,
+    fontWeight: 'bold',
+  },
+  lapLabel: {
+    color: '#b0b0b0',
+    fontSize: 17,
+    marginTop: 4,
+  },
+  totalDistanceText: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: '700',
+    marginTop: 10,
   },
   exerciseListBox: {
     backgroundColor: '#101820',
