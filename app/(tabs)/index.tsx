@@ -48,6 +48,9 @@ const matchActivities = ['Padel', 'Tennis'];
 
 
 export default function HomeScreen() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loginUsername, setLoginUsername] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
   const [activities, setActivities] = useState<string[]>(defaultActivities);
   const [selectedActivity, setSelectedActivity] = useState<string | null>(null);
 
@@ -123,6 +126,19 @@ export default function HomeScreen() {
   useEffect(() => {
     loadSavedData();
   }, []);
+  const login = () => {
+  if (loginUsername.trim() === '') {
+    alert('Please enter username or phone number');
+    return;
+  }
+
+  if (loginPassword.trim() === '') {
+    alert('Please enter password');
+    return;
+  }
+
+  setIsLoggedIn(true);
+};
 
   const loadSavedData = async () => {
     try {
@@ -977,7 +993,41 @@ export default function HomeScreen() {
 
     return null;
   };
+  if (!isLoggedIn) {
+    return (
+    <GestureHandlerRootView style={styles.root}>
+      <View style={styles.loginContainer}>
+        <Text style={styles.loginTitle}>ActiveTrack</Text>
+        <Text style={styles.loginSubtitle}>Sign in to track your activities</Text>
 
+        <TextInput
+          style={styles.input}
+          placeholder="Username or phone number"
+          placeholderTextColor="#888"
+          value={loginUsername}
+          onChangeText={setLoginUsername}
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Password"
+          placeholderTextColor="#888"
+          value={loginPassword}
+          onChangeText={setLoginPassword}
+          secureTextEntry
+        />
+
+        <TouchableOpacity style={styles.startButton} onPress={login}>
+          <Text style={styles.buttonText}>Sign In</Text>
+        </TouchableOpacity>
+
+        <Text style={styles.loginHint}>
+          Demo login: enter anything for now
+        </Text>
+      </View>
+    </GestureHandlerRootView>
+  );
+}
   if (selectedActivity) {
     return (
       <GestureHandlerRootView style={styles.root}>
@@ -1663,4 +1713,29 @@ const styles = StyleSheet.create({
   savedExerciseBlock: {
     marginBottom: 10,
   },
+  loginContainer: {
+  flex: 1,
+  backgroundColor: '#101820',
+  padding: 24,
+  justifyContent: 'center',
+},
+loginTitle: {
+  fontSize: 42,
+  fontWeight: 'bold',
+  color: '#ffffff',
+  marginBottom: 8,
+  textAlign: 'center',
+},
+loginSubtitle: {
+  fontSize: 18,
+  color: '#b0b0b0',
+  marginBottom: 30,
+  textAlign: 'center',
+},
+loginHint: {
+  color: '#9ca3af',
+  fontSize: 14,
+  textAlign: 'center',
+  marginTop: 12,
+},
 });
