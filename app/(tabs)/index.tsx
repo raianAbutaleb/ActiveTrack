@@ -1,4 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import GymTracker from '../../components/GymTracker';
+import BalootTracker from '../../components/BalootTracker';
+import HorseRidingTracker from '../../components/HorseRidingTracker';
 import { useEffect, useState } from 'react';
 import {
   Alert,
@@ -14,8 +17,7 @@ import {
   GestureHandlerRootView,
   Swipeable,
 } from 'react-native-gesture-handler';
-import BalootTracker from '../../components/BalootTracker';
-import HorseRidingTracker from '../../components/HorseRidingTracker';
+
 
 import {
   BalootScore,
@@ -38,16 +40,6 @@ const defaultActivities = [
   'Swimming',
   'Studying',
   'Baloot',
-];
-
-const gymWorkoutDays = [
-  'Chest',
-  'Back',
-  'Legs',
-  'Shoulder',
-  'Arms',
-  'Abs',
-  'Rest',
 ];
 
 const lapActivities = ['Run', 'Walking', 'Cycling', 'Swimming'];
@@ -439,60 +431,7 @@ export default function HomeScreen() {
 
     return formatDuration(getDurationSeconds());
   };
-
-  const addGymSet = () => {
-    const cleanReps = gymSetReps.trim();
-
-    if (cleanReps === '') {
-      alert('Please enter reps for this set');
-      return;
-    }
-
-    const newSet: GymSet = {
-      id: Date.now(),
-      reps: cleanReps,
-    };
-
-    setCurrentGymSets([...currentGymSets, newSet]);
-    setGymSetReps('');
-  };
-
-  const deleteCurrentGymSet = (setId: number) => {
-    const newSets = currentGymSets.filter((set) => set.id !== setId);
-    setCurrentGymSets(newSets);
-  };
-
-  const saveGymExercise = () => {
-    const cleanExerciseName = gymExerciseName.trim();
-
-    if (cleanExerciseName === '') {
-      alert('Please enter exercise name');
-      return;
-    }
-
-    if (currentGymSets.length === 0) {
-      alert('Please add at least one set');
-      return;
-    }
-
-    const newExercise: GymExercise = {
-      id: Date.now(),
-      name: cleanExerciseName,
-      sets: currentGymSets,
-    };
-
-    setGymExercises([...gymExercises, newExercise]);
-
-    setGymExerciseName('');
-    setGymSetReps('');
-    setCurrentGymSets([]);
-  };
-
-  const deleteGymExercise = (exerciseId: number) => {
-    const newExercises = gymExercises.filter((exercise) => exercise.id !== exerciseId);
-    setGymExercises(newExercises);
-  };
-
+  
   const addMatchRound = () => {
     const cleanTeamOneGames = matchTeamOneGames.trim();
     const cleanTeamTwoGames = matchTeamTwoGames.trim();
@@ -923,126 +862,6 @@ export default function HomeScreen() {
     );
   };
 
-  const renderGymFields = () => {
-    if (selectedActivity !== 'Gym') {
-      return null;
-    }
-
-    return (
-      <View style={styles.detailsBox}>
-        <Text style={styles.detailsTitle}>Gym Workout</Text>
-        <Text style={styles.detailsSubtitle}>Choose workout day</Text>
-
-        <View style={styles.workoutGrid}>
-          {gymWorkoutDays.map((day) => (
-            <TouchableOpacity
-              key={day}
-              style={[
-                styles.workoutButton,
-                gymWorkoutDay === day && styles.selectedWorkoutButton,
-              ]}
-              onPress={() => setGymWorkoutDay(day)}
-            >
-              <Text
-                style={[
-                  styles.workoutButtonText,
-                  gymWorkoutDay === day && styles.selectedWorkoutButtonText,
-                ]}
-              >
-                {day}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <Text style={styles.detailsSubtitle}>Current Exercise</Text>
-
-        <TextInput
-          style={styles.input}
-          placeholder="Exercise name, example: Bench Press"
-          placeholderTextColor="#888"
-          value={gymExerciseName}
-          onChangeText={setGymExerciseName}
-        />
-
-        <View style={styles.scoreRow}>
-          <TextInput
-            style={styles.scoreInput}
-            placeholder="Set reps"
-            placeholderTextColor="#888"
-            value={gymSetReps}
-            onChangeText={setGymSetReps}
-            keyboardType="number-pad"
-          />
-
-          <TouchableOpacity style={styles.addSetButton} onPress={addGymSet}>
-            <Text style={styles.addSetText}>+ Set</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.exerciseListBox}>
-          <Text style={styles.exerciseListTitle}>Sets for This Exercise</Text>
-
-          {currentGymSets.length === 0 ? (
-            <Text style={styles.emptyHistory}>No sets added yet</Text>
-          ) : (
-            currentGymSets.map((set, index) => (
-              <View key={set.id} style={styles.exerciseRow}>
-                <View style={styles.exerciseInfo}>
-                  <Text style={styles.exerciseName}>
-                    Set {index + 1}: {set.reps} reps
-                  </Text>
-                </View>
-
-                <TouchableOpacity
-                  style={styles.exerciseDeleteButton}
-                  onPress={() => deleteCurrentGymSet(set.id)}
-                >
-                  <Text style={styles.exerciseDeleteText}>X</Text>
-                </TouchableOpacity>
-              </View>
-            ))
-          )}
-        </View>
-
-        <TouchableOpacity style={styles.addExerciseButton} onPress={saveGymExercise}>
-          <Text style={styles.buttonText}>Save Exercise</Text>
-        </TouchableOpacity>
-
-        <View style={styles.exerciseListBox}>
-          <Text style={styles.exerciseListTitle}>Exercises Added</Text>
-
-          {gymExercises.length === 0 ? (
-            <Text style={styles.emptyHistory}>No exercises saved yet</Text>
-          ) : (
-            gymExercises.map((exercise, index) => (
-              <View key={exercise.id} style={styles.exerciseRow}>
-                <View style={styles.exerciseInfo}>
-                  <Text style={styles.exerciseName}>
-                    {index + 1}. {exercise.name}
-                  </Text>
-
-                  {exercise.sets.map((set, setIndex) => (
-                    <Text key={set.id} style={styles.exerciseDetails}>
-                      Set {setIndex + 1}: {set.reps} reps
-                    </Text>
-                  ))}
-                </View>
-
-                <TouchableOpacity
-                  style={styles.exerciseDeleteButton}
-                  onPress={() => deleteGymExercise(exercise.id)}
-                >
-                  <Text style={styles.exerciseDeleteText}>X</Text>
-                </TouchableOpacity>
-              </View>
-            ))
-          )}
-        </View>
-      </View>
-    );
-  };
-
   const renderLapFields = () => {
     if (!isLapActivity(selectedActivity)) {
       return null;
@@ -1441,7 +1260,19 @@ export default function HomeScreen() {
           <Text style={styles.subtitle}>Track your activity session</Text>
 
           {renderFootballFields()}
-          {renderGymFields()}
+          <GymTracker
+  selectedActivity={selectedActivity}
+  gymWorkoutDay={gymWorkoutDay}
+  setGymWorkoutDay={setGymWorkoutDay}
+  gymExerciseName={gymExerciseName}
+  setGymExerciseName={setGymExerciseName}
+  gymSetReps={gymSetReps}
+  setGymSetReps={setGymSetReps}
+  currentGymSets={currentGymSets}
+  setCurrentGymSets={setCurrentGymSets}
+  gymExercises={gymExercises}
+  setGymExercises={setGymExercises}
+/>
           {renderLapFields()}
           {renderMatchFields()}
           
@@ -1808,30 +1639,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     marginTop: 6,
   },
-  workoutGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginBottom: 18,
-  },
-  workoutButton: {
-    backgroundColor: '#34495e',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 10,
-  },
-  selectedWorkoutButton: {
-    backgroundColor: '#1f8a70',
-  },
-  workoutButtonText: {
-    color: '#ffffff',
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  selectedWorkoutButtonText: {
-    color: '#ffffff',
-    fontWeight: '800',
-  },
+  
   scoreRow: {
     flexDirection: 'row',
     gap: 10,
@@ -1861,19 +1669,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
   },
-  addSetButton: {
-    backgroundColor: '#2563eb',
-    borderRadius: 12,
-    paddingHorizontal: 18,
-    height: 54,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  addSetText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '800',
-  },
+  
   addExerciseButton: {
     backgroundColor: '#2563eb',
     padding: 16,
@@ -1945,11 +1741,6 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '700',
     marginBottom: 4,
-  },
-  exerciseDetails: {
-    color: '#b0b0b0',
-    fontSize: 15,
-    marginBottom: 2,
   },
   exerciseDeleteButton: {
     backgroundColor: '#b84040',
