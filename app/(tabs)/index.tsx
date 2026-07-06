@@ -40,15 +40,20 @@ const gymWorkoutDays = [
   'Rest',
 ];
 
+type GymExercise = {
+  id: number;
+  name: string;
+  sets: string;
+  reps: string;
+};
+
 type SessionDetails = {
   teamOneName?: string;
   teamTwoName?: string;
   teamOneScore?: string;
   teamTwoScore?: string;
   gymWorkoutDay?: string;
-  gymExerciseName?: string;
-  gymSets?: string;
-  gymReps?: string;
+  gymExercises?: GymExercise[];
 };
 
 type Session = {
@@ -83,6 +88,7 @@ export default function HomeScreen() {
   const [gymExerciseName, setGymExerciseName] = useState('');
   const [gymSets, setGymSets] = useState('');
   const [gymReps, setGymReps] = useState('');
+  const [gymExercises, setGymExercises] = useState<GymExercise[]>([]);
 
   useEffect(() => {
     loadSavedData();
@@ -131,6 +137,7 @@ export default function HomeScreen() {
     setGymExerciseName('');
     setGymSets('');
     setGymReps('');
+    setGymExercises([]);
   };
 
   const openActivity = (activity: string) => {
@@ -266,9 +273,53 @@ export default function HomeScreen() {
     return formatDuration(getDurationSeconds());
   };
 
+  const addGymExercise = () => {
+    const cleanExerciseName = gymExerciseName.trim();
+    const cleanSets = gymSets.trim();
+    const cleanReps = gymReps.trim();
+
+    if (cleanExerciseName === '') {
+      alert('Please enter exercise name');
+      return;
+    }
+
+    if (cleanSets === '') {
+      alert('Please enter sets');
+      return;
+    }
+
+    if (cleanReps === '') {
+      alert('Please enter reps');
+      return;
+    }
+
+    const newExercise: GymExercise = {
+      id: Date.now(),
+      name: cleanExerciseName,
+      sets: cleanSets,
+      reps: cleanReps,
+    };
+
+    setGymExercises([...gymExercises, newExercise]);
+
+    setGymExerciseName('');
+    setGymSets('');
+    setGymReps('');
+  };
+
+  const deleteGymExercise = (exerciseId: number) => {
+    const newExercises = gymExercises.filter((exercise) => exercise.id !== exerciseId);
+    setGymExercises(newExercises);
+  };
+
   const saveSession = () => {
     if (!selectedActivity || !startTime || !endTime) {
       alert('Please start and end the activity first');
+      return;
+    }
+
+    if (selectedActivity === 'Gym' && gymWorkoutDay === '') {
+      alert('Please choose workout day');
       return;
     }
 
@@ -294,9 +345,7 @@ export default function HomeScreen() {
     if (selectedActivity === 'Gym') {
       newSession.details = {
         gymWorkoutDay: gymWorkoutDay.trim(),
-        gymExerciseName: gymExerciseName.trim(),
-        gymSets: gymSets.trim(),
-        gymReps: gymReps.trim(),
+        gymExercises: gymExercises,
       };
     }
 
@@ -475,7 +524,7 @@ export default function HomeScreen() {
 
     return (
       <View style={styles.detailsBox}>
-        <Text style={styles.detailsTitle}>Gym Details</Text>
+        <Text style={styles.detailsTitle}>Gym Workout</Text>
         <Text style={styles.detailsSubtitle}>Choose workout day</Text>
 
         <View style={styles.workoutGrid}>
@@ -500,6 +549,8 @@ export default function HomeScreen() {
           ))}
         </View>
 
+        <Text style={styles.detailsSubtitle}>Add exercises</Text>
+
         <TextInput
           style={styles.input}
           placeholder="Exercise name, example: Bench Press"
@@ -508,23 +559,57 @@ export default function HomeScreen() {
           onChangeText={setGymExerciseName}
         />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Sets, example: 4"
-          placeholderTextColor="#888"
-          value={gymSets}
-          onChangeText={setGymSets}
-          keyboardType="number-pad"
-        />
+        <View style={styles.scoreRow}>
+          <TextInput
+            style={styles.scoreInput}
+            placeholder="Sets"
+            placeholderTextColor="#888"
+            value={gymSets}
+            onChangeText={setGymSets}
+            keyboardType="number-pad"
+          />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Reps, example: 10"
-          placeholderTextColor="#888"
-          value={gymReps}
-          onChangeText={setGymReps}
-          keyboardType="number-pad"
-        />
+          <TextInput
+            style={styles.scoreInput}
+            placeholder="Reps"
+            placeholderTextColor="#888"
+            value={gymReps}
+            onChangeText={setGymReps}
+            keyboardType="number-pad"
+          />
+        </View>
+
+        <TouchableOpacity style={styles.addExerciseButton} onPress={addGymExercise}>
+          <Text style={styles.buttonText}>+ Add Exercise</Text>
+        </TouchableOpacity>
+
+        <View style={styles.exerciseListBox}>
+          <Text style={styles.exerciseListTitle}>Exercises Added</Text>
+
+          {gymExercises.length === 0 ? (
+            <Text style={styles.emptyHistory}>No exercises added yet</Text>
+          ) : (
+            gymExercises.map((exercise, index) => (
+              <View key={exercise.id} style={styles.exerciseRow}>
+                <View style={styles.exerciseInfo}>
+                  <Text style={styles.exerciseName}>
+                    {index + 1}. {exercise.name}
+                  </Text>
+                  <Text style={styles.exerciseDetails}>
+                    {exercise.sets} sets x {exercise.reps} reps
+                  </Text>
+                </View>
+
+                <TouchableOpacity
+                  style={styles.exerciseDeleteButton}
+                  onPress={() => deleteGymExercise(exercise.id)}
+                >
+                  <Text style={styles.exerciseDeleteText}>X</Text>
+                </TouchableOpacity>
+              </View>
+            ))
+          )}
+        </View>
       </View>
     );
   };
@@ -552,15 +637,18 @@ export default function HomeScreen() {
           <Text style={styles.savedDetailsText}>
             Workout Day: {session.details.gymWorkoutDay || 'Not filled'}
           </Text>
-          <Text style={styles.savedDetailsText}>
-            Exercise: {session.details.gymExerciseName || 'Not filled'}
-          </Text>
-          <Text style={styles.savedDetailsText}>
-            Sets: {session.details.gymSets || 'Not filled'}
-          </Text>
-          <Text style={styles.savedDetailsText}>
-            Reps: {session.details.gymReps || 'Not filled'}
-          </Text>
+
+          <Text style={styles.savedDetailsHeader}>Exercises:</Text>
+
+          {!session.details.gymExercises || session.details.gymExercises.length === 0 ? (
+            <Text style={styles.savedDetailsText}>No exercises saved</Text>
+          ) : (
+            session.details.gymExercises.map((exercise, index) => (
+              <Text key={exercise.id} style={styles.savedDetailsText}>
+                {index + 1}. {exercise.name} — {exercise.sets} sets x {exercise.reps} reps
+              </Text>
+            ))
+          )}
         </View>
       );
     }
@@ -911,6 +999,59 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     color: '#000000',
   },
+  addExerciseButton: {
+    backgroundColor: '#2563eb',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  exerciseListBox: {
+    backgroundColor: '#101820',
+    padding: 14,
+    borderRadius: 12,
+    marginTop: 4,
+  },
+  exerciseListTitle: {
+    color: '#ffffff',
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  exerciseRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderBottomColor: '#34495e',
+    borderBottomWidth: 1,
+    paddingVertical: 10,
+  },
+  exerciseInfo: {
+    flex: 1,
+  },
+  exerciseName: {
+    color: '#ffffff',
+    fontSize: 17,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  exerciseDetails: {
+    color: '#b0b0b0',
+    fontSize: 15,
+  },
+  exerciseDeleteButton: {
+    backgroundColor: '#b84040',
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 10,
+  },
+  exerciseDeleteText: {
+    color: '#ffffff',
+    fontWeight: 'bold',
+    fontSize: 15,
+  },
   startButton: {
     backgroundColor: '#1f8a70',
     padding: 18,
@@ -1045,6 +1186,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#101820',
     padding: 12,
     borderRadius: 10,
+  },
+  savedDetailsHeader: {
+    color: '#ffffff',
+    fontSize: 17,
+    fontWeight: 'bold',
+    marginTop: 8,
+    marginBottom: 4,
   },
   savedDetailsText: {
     color: '#ffffff',
