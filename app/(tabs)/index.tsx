@@ -30,6 +30,27 @@ const defaultActivities = [
   'Baloot',
 ];
 
+const gymWorkoutDays = [
+  'Chest',
+  'Back',
+  'Legs',
+  'Shoulder',
+  'Arms',
+  'Abs',
+  'Rest',
+];
+
+type SessionDetails = {
+  teamOneName?: string;
+  teamTwoName?: string;
+  teamOneScore?: string;
+  teamTwoScore?: string;
+  gymWorkoutDay?: string;
+  gymExerciseName?: string;
+  gymSets?: string;
+  gymReps?: string;
+};
+
 type Session = {
   id: number;
   activity: string;
@@ -38,12 +59,7 @@ type Session = {
   duration: string;
   durationSeconds?: number;
   date: string;
-  details?: {
-    teamOneName?: string;
-    teamTwoName?: string;
-    teamOneScore?: string;
-    teamTwoScore?: string;
-  };
+  details?: SessionDetails;
 };
 
 export default function HomeScreen() {
@@ -62,6 +78,11 @@ export default function HomeScreen() {
   const [footballTeamTwoName, setFootballTeamTwoName] = useState('');
   const [footballTeamOneScore, setFootballTeamOneScore] = useState('');
   const [footballTeamTwoScore, setFootballTeamTwoScore] = useState('');
+
+  const [gymWorkoutDay, setGymWorkoutDay] = useState('');
+  const [gymExerciseName, setGymExerciseName] = useState('');
+  const [gymSets, setGymSets] = useState('');
+  const [gymReps, setGymReps] = useState('');
 
   useEffect(() => {
     loadSavedData();
@@ -105,6 +126,11 @@ export default function HomeScreen() {
     setFootballTeamTwoName('');
     setFootballTeamOneScore('');
     setFootballTeamTwoScore('');
+
+    setGymWorkoutDay('');
+    setGymExerciseName('');
+    setGymSets('');
+    setGymReps('');
   };
 
   const openActivity = (activity: string) => {
@@ -262,6 +288,15 @@ export default function HomeScreen() {
         teamTwoName: footballTeamTwoName.trim(),
         teamOneScore: footballTeamOneScore.trim(),
         teamTwoScore: footballTeamTwoScore.trim(),
+      };
+    }
+
+    if (selectedActivity === 'Gym') {
+      newSession.details = {
+        gymWorkoutDay: gymWorkoutDay.trim(),
+        gymExerciseName: gymExerciseName.trim(),
+        gymSets: gymSets.trim(),
+        gymReps: gymReps.trim(),
       };
     }
 
@@ -433,6 +468,67 @@ export default function HomeScreen() {
     );
   };
 
+  const renderGymFields = () => {
+    if (selectedActivity !== 'Gym') {
+      return null;
+    }
+
+    return (
+      <View style={styles.detailsBox}>
+        <Text style={styles.detailsTitle}>Gym Details</Text>
+        <Text style={styles.detailsSubtitle}>Choose workout day</Text>
+
+        <View style={styles.workoutGrid}>
+          {gymWorkoutDays.map((day) => (
+            <TouchableOpacity
+              key={day}
+              style={[
+                styles.workoutButton,
+                gymWorkoutDay === day && styles.selectedWorkoutButton,
+              ]}
+              onPress={() => setGymWorkoutDay(day)}
+            >
+              <Text
+                style={[
+                  styles.workoutButtonText,
+                  gymWorkoutDay === day && styles.selectedWorkoutButtonText,
+                ]}
+              >
+                {day}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <TextInput
+          style={styles.input}
+          placeholder="Exercise name, example: Bench Press"
+          placeholderTextColor="#888"
+          value={gymExerciseName}
+          onChangeText={setGymExerciseName}
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Sets, example: 4"
+          placeholderTextColor="#888"
+          value={gymSets}
+          onChangeText={setGymSets}
+          keyboardType="number-pad"
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Reps, example: 10"
+          placeholderTextColor="#888"
+          value={gymReps}
+          onChangeText={setGymReps}
+          keyboardType="number-pad"
+        />
+      </View>
+    );
+  };
+
   const renderSessionDetails = (session: Session) => {
     if (session.activity === 'Football' && session.details) {
       return (
@@ -445,6 +541,25 @@ export default function HomeScreen() {
           </Text>
           <Text style={styles.savedDetailsText}>
             Score: {session.details.teamOneScore || '0'} - {session.details.teamTwoScore || '0'}
+          </Text>
+        </View>
+      );
+    }
+
+    if (session.activity === 'Gym' && session.details) {
+      return (
+        <View style={styles.savedDetailsBox}>
+          <Text style={styles.savedDetailsText}>
+            Workout Day: {session.details.gymWorkoutDay || 'Not filled'}
+          </Text>
+          <Text style={styles.savedDetailsText}>
+            Exercise: {session.details.gymExerciseName || 'Not filled'}
+          </Text>
+          <Text style={styles.savedDetailsText}>
+            Sets: {session.details.gymSets || 'Not filled'}
+          </Text>
+          <Text style={styles.savedDetailsText}>
+            Reps: {session.details.gymReps || 'Not filled'}
           </Text>
         </View>
       );
@@ -465,6 +580,7 @@ export default function HomeScreen() {
           <Text style={styles.subtitle}>Track your activity session</Text>
 
           {renderFootballFields()}
+          {renderGymFields()}
 
           <TouchableOpacity style={styles.startButton} onPress={startActivity}>
             <Text style={styles.buttonText}>Start Activity</Text>
@@ -752,6 +868,35 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 14,
+  },
+  detailsSubtitle: {
+    color: '#b0b0b0',
+    fontSize: 16,
+    marginBottom: 12,
+  },
+  workoutGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginBottom: 18,
+  },
+  workoutButton: {
+    backgroundColor: '#34495e',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+  },
+  selectedWorkoutButton: {
+    backgroundColor: '#1f8a70',
+  },
+  workoutButtonText: {
+    color: '#ffffff',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  selectedWorkoutButtonText: {
+    color: '#ffffff',
+    fontWeight: '800',
   },
   scoreRow: {
     flexDirection: 'row',
