@@ -15,6 +15,14 @@ import {
   Swipeable,
 } from 'react-native-gesture-handler';
 
+import {
+  BalootScore,
+  GymExercise,
+  GymSet,
+  MatchRound,
+  Session,
+} from '../../types';
+
 const defaultActivities = [
   'Football',
   'Gym',
@@ -44,105 +52,6 @@ const lapActivities = ['Run', 'Walking', 'Cycling', 'Swimming'];
 const matchActivities = ['Padel', 'Tennis'];
 const dealerDirections = ['↑', '→', '↓', '←'];
 
-type GymSet = {
-  id: number;
-  reps: string;
-};
-
-type GymExercise = {
-  id: number;
-  name: string;
-  sets: GymSet[];
-};
-
-type MatchRound = {
-  id: number;
-  teamOneGames: string;
-  teamTwoGames: string;
-};
-
-type BalootScore = {
-  id: number;
-  us: string;
-  them: string;
-};
-
-type HorseRidingDetails = {
-  horseName?: string;
-  trainingType?: string;
-  restDay?: boolean;
-  walkingMinutes?: string;
-
-  hayGiven?: boolean;
-  waterChecked?: boolean;
-  foodOilGiven?: boolean;
-  shampooUsed?: boolean;
-  padsCleaningSuppliesUsed?: boolean;
-  hoofOilUsed?: boolean;
-
-  releveAmount?: string;
-  releveBuyingDate?: string;
-
-  equiJewelAmount?: string;
-  equiJewelBuyingDate?: string;
-
-  foodOilBuyingDate?: string;
-  shampooBuyingDate?: string;
-  padsCleaningSuppliesBuyingDate?: string;
-  hoofOilBuyingDate?: string;
-
-  dressageTestDay?: boolean;
-  dressageTestName?: string;
-  dressageScore?: string;
-  dressageNotes?: string;
-
-  jumpingDay?: boolean;
-  fenceHeight?: string;
-  fenceCount?: string;
-  jumpingNotes?: string;
-
-  horseNotes?: string;
-};
-
-type SessionDetails = {
-  teamOneName?: string;
-  teamTwoName?: string;
-  teamOneScore?: string;
-  teamTwoScore?: string;
-
-  gymWorkoutDay?: string;
-  gymExercises?: GymExercise[];
-
-  laps?: number;
-  lapDistance?: string;
-  lapDistanceUnit?: string;
-  totalDistance?: string;
-
-  matchTeamOneName?: string;
-  matchTeamTwoName?: string;
-  matchRounds?: MatchRound[];
-  matchTeamOneTotal?: number;
-  matchTeamTwoTotal?: number;
-
-  balootScores?: BalootScore[];
-  balootUsTotal?: number;
-  balootThemTotal?: number;
-  balootWinner?: string;
-  balootDealerDirection?: string;
-
-  horseRiding?: HorseRidingDetails;
-};
-
-type Session = {
-  id: number;
-  activity: string;
-  start: string;
-  end: string;
-  duration: string;
-  durationSeconds?: number;
-  date: string;
-  details?: SessionDetails;
-};
 
 export default function HomeScreen() {
   const [activities, setActivities] = useState<string[]>(defaultActivities);
