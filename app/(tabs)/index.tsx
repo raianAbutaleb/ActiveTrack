@@ -67,6 +67,35 @@ type BalootScore = {
   them: string;
 };
 
+type HorseRidingDetails = {
+  horseName?: string;
+  trainingType?: string;
+  restDay?: boolean;
+  walkingMinutes?: string;
+
+  hayGiven?: boolean;
+  waterChecked?: boolean;
+  foodOilGiven?: boolean;
+  shampooUsed?: boolean;
+  padsCleaningSuppliesUsed?: boolean;
+  hoofOilUsed?: boolean;
+
+  releveAmount?: string;
+  equiJewelAmount?: string;
+
+  dressageTestDay?: boolean;
+  dressageTestName?: string;
+  dressageScore?: string;
+  dressageNotes?: string;
+
+  jumpingDay?: boolean;
+  fenceHeight?: string;
+  fenceCount?: string;
+  jumpingNotes?: string;
+
+  horseNotes?: string;
+};
+
 type SessionDetails = {
   teamOneName?: string;
   teamTwoName?: string;
@@ -92,6 +121,8 @@ type SessionDetails = {
   balootThemTotal?: number;
   balootWinner?: string;
   balootDealerDirection?: string;
+
+  horseRiding?: HorseRidingDetails;
 };
 
 type Session = {
@@ -142,6 +173,33 @@ export default function HomeScreen() {
   const [balootThemScore, setBalootThemScore] = useState('');
   const [balootScores, setBalootScores] = useState<BalootScore[]>([]);
   const [balootDealerDirection, setBalootDealerDirection] = useState('↑');
+
+  const [horseName, setHorseName] = useState('');
+  const [horseTrainingType, setHorseTrainingType] = useState('');
+  const [horseRestDay, setHorseRestDay] = useState(false);
+  const [horseWalkingMinutes, setHorseWalkingMinutes] = useState('');
+
+  const [horseHayGiven, setHorseHayGiven] = useState(false);
+  const [horseWaterChecked, setHorseWaterChecked] = useState(false);
+  const [horseFoodOilGiven, setHorseFoodOilGiven] = useState(false);
+  const [horseShampooUsed, setHorseShampooUsed] = useState(false);
+  const [horsePadsCleaningSuppliesUsed, setHorsePadsCleaningSuppliesUsed] = useState(false);
+  const [horseHoofOilUsed, setHorseHoofOilUsed] = useState(false);
+
+  const [horseReleveAmount, setHorseReleveAmount] = useState('');
+  const [horseEquiJewelAmount, setHorseEquiJewelAmount] = useState('');
+
+  const [horseDressageTestDay, setHorseDressageTestDay] = useState(false);
+  const [horseDressageTestName, setHorseDressageTestName] = useState('');
+  const [horseDressageScore, setHorseDressageScore] = useState('');
+  const [horseDressageNotes, setHorseDressageNotes] = useState('');
+
+  const [horseJumpingDay, setHorseJumpingDay] = useState(false);
+  const [horseFenceHeight, setHorseFenceHeight] = useState('');
+  const [horseFenceCount, setHorseFenceCount] = useState('');
+  const [horseJumpingNotes, setHorseJumpingNotes] = useState('');
+
+  const [horseNotes, setHorseNotes] = useState('');
 
   useEffect(() => {
     loadSavedData();
@@ -200,6 +258,10 @@ export default function HomeScreen() {
     return activity === 'Baloot';
   };
 
+  const isHorseRidingActivity = (activity: string | null) => {
+    return activity === 'Horse Riding';
+  };
+
   const getDefaultLapDistance = (activity: string) => {
     if (activity === 'Cycling') {
       return {
@@ -247,6 +309,33 @@ export default function HomeScreen() {
     setBalootThemScore('');
     setBalootScores([]);
     setBalootDealerDirection('↑');
+
+    setHorseName('');
+    setHorseTrainingType('');
+    setHorseRestDay(false);
+    setHorseWalkingMinutes('');
+
+    setHorseHayGiven(false);
+    setHorseWaterChecked(false);
+    setHorseFoodOilGiven(false);
+    setHorseShampooUsed(false);
+    setHorsePadsCleaningSuppliesUsed(false);
+    setHorseHoofOilUsed(false);
+
+    setHorseReleveAmount('');
+    setHorseEquiJewelAmount('');
+
+    setHorseDressageTestDay(false);
+    setHorseDressageTestName('');
+    setHorseDressageScore('');
+    setHorseDressageNotes('');
+
+    setHorseJumpingDay(false);
+    setHorseFenceHeight('');
+    setHorseFenceCount('');
+    setHorseJumpingNotes('');
+
+    setHorseNotes('');
   };
 
   const openActivity = (activity: string) => {
@@ -784,6 +873,39 @@ export default function HomeScreen() {
       };
     }
 
+    if (isHorseRidingActivity(selectedActivity)) {
+      newSession.details = {
+        horseRiding: {
+          horseName: horseName.trim(),
+          trainingType: horseTrainingType.trim(),
+          restDay: horseRestDay,
+          walkingMinutes: horseWalkingMinutes.trim(),
+
+          hayGiven: horseHayGiven,
+          waterChecked: horseWaterChecked,
+          foodOilGiven: horseFoodOilGiven,
+          shampooUsed: horseShampooUsed,
+          padsCleaningSuppliesUsed: horsePadsCleaningSuppliesUsed,
+          hoofOilUsed: horseHoofOilUsed,
+
+          releveAmount: horseReleveAmount.trim(),
+          equiJewelAmount: horseEquiJewelAmount.trim(),
+
+          dressageTestDay: horseDressageTestDay,
+          dressageTestName: horseDressageTestName.trim(),
+          dressageScore: horseDressageScore.trim(),
+          dressageNotes: horseDressageNotes.trim(),
+
+          jumpingDay: horseJumpingDay,
+          fenceHeight: horseFenceHeight.trim(),
+          fenceCount: horseFenceCount.trim(),
+          jumpingNotes: horseJumpingNotes.trim(),
+
+          horseNotes: horseNotes.trim(),
+        },
+      };
+    }
+
     const newSessions = [newSession, ...sessions];
 
     setSessions(newSessions);
@@ -894,6 +1016,23 @@ export default function HomeScreen() {
         onPress={() => confirmDeleteSession(sessionId)}
       >
         <Text style={styles.swipeDeleteText}>Delete</Text>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderYesNoButton = (
+    label: string,
+    value: boolean,
+    onPress: () => void
+  ) => {
+    return (
+      <TouchableOpacity
+        style={[styles.toggleButton, value && styles.selectedToggleButton]}
+        onPress={onPress}
+      >
+        <Text style={[styles.toggleText, value && styles.selectedToggleText]}>
+          {label}: {value ? 'Yes' : 'No'}
+        </Text>
       </TouchableOpacity>
     );
   };
@@ -1311,6 +1450,157 @@ export default function HomeScreen() {
     );
   };
 
+  const renderHorseRidingFields = () => {
+    if (!isHorseRidingActivity(selectedActivity)) {
+      return null;
+    }
+
+    return (
+      <View style={styles.detailsBox}>
+        <Text style={styles.detailsTitle}>Horse Riding</Text>
+
+        <TextInput
+          style={styles.input}
+          placeholder="Horse name, example: Durkji"
+          placeholderTextColor="#888"
+          value={horseName}
+          onChangeText={setHorseName}
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Training type, example: Dressage / Flatwork / Jumping"
+          placeholderTextColor="#888"
+          value={horseTrainingType}
+          onChangeText={setHorseTrainingType}
+        />
+
+        {renderYesNoButton('Rest Day', horseRestDay, () => setHorseRestDay(!horseRestDay))}
+
+        <TextInput
+          style={styles.input}
+          placeholder="Daily walking minutes"
+          placeholderTextColor="#888"
+          value={horseWalkingMinutes}
+          onChangeText={setHorseWalkingMinutes}
+          keyboardType="number-pad"
+        />
+
+        <Text style={styles.detailsSubtitle}>Daily Care</Text>
+
+        {renderYesNoButton('Hay Given', horseHayGiven, () => setHorseHayGiven(!horseHayGiven))}
+        {renderYesNoButton('Water Checked', horseWaterChecked, () => setHorseWaterChecked(!horseWaterChecked))}
+        {renderYesNoButton('Food Oil Given', horseFoodOilGiven, () => setHorseFoodOilGiven(!horseFoodOilGiven))}
+        {renderYesNoButton('Hoof Oil Used', horseHoofOilUsed, () => setHorseHoofOilUsed(!horseHoofOilUsed))}
+
+        <Text style={styles.detailsSubtitle}>Cleaning Supplies</Text>
+
+        {renderYesNoButton('Shampoo Used', horseShampooUsed, () => setHorseShampooUsed(!horseShampooUsed))}
+        {renderYesNoButton('Pads Cleaning Supplies Used', horsePadsCleaningSuppliesUsed, () =>
+          setHorsePadsCleaningSuppliesUsed(!horsePadsCleaningSuppliesUsed)
+        )}
+
+        <Text style={styles.detailsSubtitle}>Monthly Feed</Text>
+
+        <TextInput
+          style={styles.input}
+          placeholder="Re-Leve amount, example: 2 kg"
+          placeholderTextColor="#888"
+          value={horseReleveAmount}
+          onChangeText={setHorseReleveAmount}
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Equi Jewel amount, example: 0.5 kg"
+          placeholderTextColor="#888"
+          value={horseEquiJewelAmount}
+          onChangeText={setHorseEquiJewelAmount}
+        />
+
+        <Text style={styles.detailsSubtitle}>Dressage Test</Text>
+
+        {renderYesNoButton('Dressage Test Day', horseDressageTestDay, () =>
+          setHorseDressageTestDay(!horseDressageTestDay)
+        )}
+
+        {horseDressageTestDay && (
+          <>
+            <TextInput
+              style={styles.input}
+              placeholder="Dressage test name"
+              placeholderTextColor="#888"
+              value={horseDressageTestName}
+              onChangeText={setHorseDressageTestName}
+            />
+
+            <TextInput
+              style={styles.input}
+              placeholder="Dressage score %, example: 68.5"
+              placeholderTextColor="#888"
+              value={horseDressageScore}
+              onChangeText={setHorseDressageScore}
+              keyboardType="decimal-pad"
+            />
+
+            <TextInput
+              style={styles.input}
+              placeholder="Dressage judge notes"
+              placeholderTextColor="#888"
+              value={horseDressageNotes}
+              onChangeText={setHorseDressageNotes}
+            />
+          </>
+        )}
+
+        <Text style={styles.detailsSubtitle}>Jumping</Text>
+
+        {renderYesNoButton('Jumping Day', horseJumpingDay, () =>
+          setHorseJumpingDay(!horseJumpingDay)
+        )}
+
+        {horseJumpingDay && (
+          <>
+            <TextInput
+              style={styles.input}
+              placeholder="Fence height, example: 80 cm"
+              placeholderTextColor="#888"
+              value={horseFenceHeight}
+              onChangeText={setHorseFenceHeight}
+            />
+
+            <TextInput
+              style={styles.input}
+              placeholder="Fence count"
+              placeholderTextColor="#888"
+              value={horseFenceCount}
+              onChangeText={setHorseFenceCount}
+              keyboardType="number-pad"
+            />
+
+            <TextInput
+              style={styles.input}
+              placeholder="Jumping notes"
+              placeholderTextColor="#888"
+              value={horseJumpingNotes}
+              onChangeText={setHorseJumpingNotes}
+            />
+          </>
+        )}
+
+        <Text style={styles.detailsSubtitle}>Notes</Text>
+
+        <TextInput
+          style={styles.input}
+          placeholder="Horse riding notes"
+          placeholderTextColor="#888"
+          value={horseNotes}
+          onChangeText={setHorseNotes}
+        />
+      </View>
+    );
+  };
+
   const renderSessionDetails = (session: Session) => {
     if (session.activity === 'Football' && session.details) {
       return (
@@ -1439,6 +1729,92 @@ export default function HomeScreen() {
       );
     }
 
+    if (isHorseRidingActivity(session.activity) && session.details?.horseRiding) {
+      const horse = session.details.horseRiding;
+
+      return (
+        <View style={styles.savedDetailsBox}>
+          <Text style={styles.savedDetailsHeader}>Horse Riding:</Text>
+
+          <Text style={styles.savedDetailsText}>
+            Horse: {horse.horseName || 'Not filled'}
+          </Text>
+          <Text style={styles.savedDetailsText}>
+            Training: {horse.trainingType || 'Not filled'}
+          </Text>
+          <Text style={styles.savedDetailsText}>
+            Rest Day: {horse.restDay ? 'Yes' : 'No'}
+          </Text>
+          <Text style={styles.savedDetailsText}>
+            Walking Minutes: {horse.walkingMinutes || '0'}
+          </Text>
+
+          <Text style={styles.savedDetailsHeader}>Daily Care:</Text>
+          <Text style={styles.savedDetailsText}>Hay: {horse.hayGiven ? 'Yes' : 'No'}</Text>
+          <Text style={styles.savedDetailsText}>Water: {horse.waterChecked ? 'Yes' : 'No'}</Text>
+          <Text style={styles.savedDetailsText}>Food Oil: {horse.foodOilGiven ? 'Yes' : 'No'}</Text>
+          <Text style={styles.savedDetailsText}>Hoof Oil: {horse.hoofOilUsed ? 'Yes' : 'No'}</Text>
+
+          <Text style={styles.savedDetailsHeader}>Cleaning:</Text>
+          <Text style={styles.savedDetailsText}>Shampoo: {horse.shampooUsed ? 'Yes' : 'No'}</Text>
+          <Text style={styles.savedDetailsText}>
+            Pads Cleaning Supplies: {horse.padsCleaningSuppliesUsed ? 'Yes' : 'No'}
+          </Text>
+
+          <Text style={styles.savedDetailsHeader}>Monthly Feed:</Text>
+          <Text style={styles.savedDetailsText}>
+            Re-Leve: {horse.releveAmount || 'Not filled'}
+          </Text>
+          <Text style={styles.savedDetailsText}>
+            Equi Jewel: {horse.equiJewelAmount || 'Not filled'}
+          </Text>
+
+          <Text style={styles.savedDetailsHeader}>Dressage:</Text>
+          <Text style={styles.savedDetailsText}>
+            Test Day: {horse.dressageTestDay ? 'Yes' : 'No'}
+          </Text>
+
+          {horse.dressageTestDay && (
+            <>
+              <Text style={styles.savedDetailsText}>
+                Test Name: {horse.dressageTestName || 'Not filled'}
+              </Text>
+              <Text style={styles.savedDetailsText}>
+                Score: {horse.dressageScore || '0'}%
+              </Text>
+              <Text style={styles.savedDetailsText}>
+                Notes: {horse.dressageNotes || 'None'}
+              </Text>
+            </>
+          )}
+
+          <Text style={styles.savedDetailsHeader}>Jumping:</Text>
+          <Text style={styles.savedDetailsText}>
+            Jumping Day: {horse.jumpingDay ? 'Yes' : 'No'}
+          </Text>
+
+          {horse.jumpingDay && (
+            <>
+              <Text style={styles.savedDetailsText}>
+                Fence Height: {horse.fenceHeight || 'Not filled'}
+              </Text>
+              <Text style={styles.savedDetailsText}>
+                Fence Count: {horse.fenceCount || '0'}
+              </Text>
+              <Text style={styles.savedDetailsText}>
+                Notes: {horse.jumpingNotes || 'None'}
+              </Text>
+            </>
+          )}
+
+          <Text style={styles.savedDetailsHeader}>Notes:</Text>
+          <Text style={styles.savedDetailsText}>
+            {horse.horseNotes || 'None'}
+          </Text>
+        </View>
+      );
+    }
+
     return null;
   };
 
@@ -1458,6 +1834,7 @@ export default function HomeScreen() {
           {renderLapFields()}
           {renderMatchFields()}
           {renderBalootFields()}
+          {renderHorseRidingFields()}
 
           <TouchableOpacity style={styles.startButton} onPress={startActivity}>
             <Text style={styles.buttonText}>Start Activity</Text>
@@ -1750,6 +2127,7 @@ const styles = StyleSheet.create({
     color: '#b0b0b0',
     fontSize: 16,
     marginBottom: 12,
+    marginTop: 6,
   },
   workoutGrid: {
     flexDirection: 'row',
@@ -1984,6 +2362,25 @@ const styles = StyleSheet.create({
   dealerHint: {
     color: '#9ca3af',
     fontSize: 14,
+  },
+  toggleButton: {
+    backgroundColor: '#34495e',
+    padding: 14,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  selectedToggleButton: {
+    backgroundColor: '#1f8a70',
+  },
+  toggleText: {
+    color: '#ffffff',
+    fontSize: 17,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  selectedToggleText: {
+    color: '#ffffff',
+    fontWeight: '800',
   },
   startButton: {
     backgroundColor: '#1f8a70',
