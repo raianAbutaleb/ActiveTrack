@@ -85,6 +85,8 @@ export type SessionDetails = {
   balootDealerDirection?: string;
 
   horseRiding?: HorseRidingDetails;
+
+  vehicleMaintenance?: VehicleMaintenanceDetails;
 };
 
 export type Session = {
@@ -96,4 +98,11 @@ export type Session = {
   durationSeconds?: number;
   date: string;
   details?: SessionDetails;
+};
+export type VehicleMaintenanceDetails = {
+  vehicleName: string;
+  serviceType: string;
+  mileage: string;
+  cost: string;
+  notes: string;
 };

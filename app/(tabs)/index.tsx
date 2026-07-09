@@ -41,6 +41,7 @@ const defaultActivities = [
   'Swimming',
   'Studying',
   'Baloot',
+  'Vehicle Maintenance',
 ];
 
 const lapActivities = ['Run', 'Walking', 'Cycling', 'Swimming'];
@@ -61,6 +62,7 @@ export default function HomeScreen() {
   const [endTime, setEndTime] = useState<Date | null>(null);
 
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [historyFilter, setHistoryFilter] = useState('All');
 
   const [footballTeamOneName, setFootballTeamOneName] = useState('');
   const [footballTeamTwoName, setFootballTeamTwoName] = useState('');
@@ -122,6 +124,12 @@ export default function HomeScreen() {
   const [horseJumpingNotes, setHorseJumpingNotes] = useState('');
 
   const [horseNotes, setHorseNotes] = useState('');
+
+  const [vehicleName, setVehicleName] = useState('');
+const [vehicleServiceType, setVehicleServiceType] = useState('');
+const [vehicleMileage, setVehicleMileage] = useState('');
+const [vehicleCost, setVehicleCost] = useState('');
+const [vehicleNotes, setVehicleNotes] = useState('');
 
   useEffect(() => {
     loadSavedData();
@@ -200,6 +208,10 @@ const logout = () => {
     return activity === 'Horse Riding';
   };
 
+  const isVehicleMaintenanceActivity = (activity: string | null) => {
+  return activity === 'Vehicle Maintenance';
+};
+
   const getDefaultLapDistance = (activity: string) => {
     if (activity === 'Cycling') {
       return {
@@ -247,6 +259,12 @@ const logout = () => {
     setBalootThemScore('');
     setBalootScores([]);
     setBalootDealerDirection('↑');
+
+    setVehicleName('');
+    setVehicleServiceType('');
+    setVehicleMileage('');
+    setVehicleCost('');
+    setVehicleNotes('');
 
     setHorseName('');
     setHorseTrainingType('');
@@ -464,10 +482,15 @@ const logout = () => {
   };
 
   const saveSession = () => {
-    if (!selectedActivity || !startTime || !endTime) {
-      alert('Please start and end the activity first');
-      return;
-    }
+    if (!selectedActivity) {
+  alert('Please choose an activity first');
+  return;
+}
+
+if (!isVehicleMaintenanceActivity(selectedActivity) && (!startTime || !endTime)) {
+  alert('Please start and end the activity first');
+  return;
+}
 
     if (selectedActivity === 'Gym' && gymWorkoutDay === '') {
       alert('Please choose workout day');
@@ -542,14 +565,22 @@ const logout = () => {
     }
 
     const newSession: Session = {
-      id: Date.now(),
-      activity: selectedActivity,
-      start: startTime.toLocaleTimeString(),
-      end: endTime.toLocaleTimeString(),
-      duration: getDuration(),
-      durationSeconds: getDurationSeconds(),
-      date: new Date().toLocaleDateString(),
-    };
+  id: Date.now(),
+  activity: selectedActivity,
+  start: isVehicleMaintenanceActivity(selectedActivity)
+    ? 'Not timed'
+    : startTime!.toLocaleTimeString(),
+  end: isVehicleMaintenanceActivity(selectedActivity)
+    ? 'Not timed'
+    : endTime!.toLocaleTimeString(),
+  duration: isVehicleMaintenanceActivity(selectedActivity)
+    ? 'Not timed'
+    : getDuration(),
+  durationSeconds: isVehicleMaintenanceActivity(selectedActivity)
+    ? 0
+    : getDurationSeconds(),
+  date: new Date().toLocaleDateString(),
+};
 
     if (selectedActivity === 'Football') {
       newSession.details = {
@@ -647,7 +678,19 @@ const logout = () => {
         },
       };
     }
+    if (isVehicleMaintenanceActivity(selectedActivity)) {
+  newSession.details = {
+    vehicleMaintenance: {
+      vehicleName: vehicleName.trim(),
+      serviceType: vehicleServiceType.trim(),
+      mileage: vehicleMileage.trim(),
+      cost: vehicleCost.trim(),
+      notes: vehicleNotes.trim(),
+    },
+  };
+}
 
+    
     const newSessions = [newSession, ...sessions];
 
     setSessions(newSessions);
@@ -707,6 +750,13 @@ const logout = () => {
     setEndTime(null);
     resetActivityFields();
   };
+const getFilteredSessions = () => {
+  if (historyFilter === 'All') {
+    return sessions;
+  }
+
+  return sessions.filter((session) => session.activity === historyFilter);
+};
 
   const getTotalTime = () => {
     const totalSeconds = sessions.reduce((total, session) => {
@@ -750,6 +800,46 @@ const logout = () => {
       </TouchableOpacity>
     );
   };
+  const getActivityGroup = (activity: string) => {
+  if (['Football', 'Padel', 'Tennis', 'Golf'].includes(activity)) {
+    return 'Sports';
+  }
+
+  if (['Gym', 'Run', 'Cycling', 'Walking', 'Swimming'].includes(activity)) {
+    return 'Training';
+  }
+
+  if (activity === 'Horse Riding') {
+    return 'Horse';
+  }
+
+  if (activity === 'Baloot') {
+    return 'Games';
+  }
+
+  if (activity === 'Studying') {
+    return 'Study';
+  }
+
+  return 'Other';
+};
+
+const getGroupedActivities = () => {
+  const groupOrder = ['Sports', 'Training', 'Horse', 'Games', 'Study', 'Other'];
+
+  return groupOrder
+    .map((groupName) => {
+      const groupActivities = activities.filter(
+        (activity) => getActivityGroup(activity) === groupName
+      );
+
+      return {
+        groupName,
+        groupActivities,
+      };
+    })
+    .filter((group) => group.groupActivities.length > 0);
+};
 
   const renderSessionDeleteAction = (sessionId: number) => {
     return (
@@ -993,6 +1083,35 @@ const logout = () => {
         </View>
       );
     }
+    if (isVehicleMaintenanceActivity(session.activity) && session.details?.vehicleMaintenance) {
+  const vehicle = session.details.vehicleMaintenance;
+
+  return (
+    <View style={styles.savedDetailsBox}>
+      <Text style={styles.savedDetailsHeader}>Vehicle Maintenance:</Text>
+
+      <Text style={styles.savedDetailsText}>
+        Vehicle: {vehicle.vehicleName || 'Not filled'}
+      </Text>
+
+      <Text style={styles.savedDetailsText}>
+        Service: {vehicle.serviceType || 'Not filled'}
+      </Text>
+
+      <Text style={styles.savedDetailsText}>
+        Mileage: {vehicle.mileage || 'Not filled'}
+      </Text>
+
+      <Text style={styles.savedDetailsText}>
+        Cost: {vehicle.cost || '0'}
+      </Text>
+
+      <Text style={styles.savedDetailsText}>
+        Notes: {vehicle.notes || 'None'}
+      </Text>
+    </View>
+  );
+}
 
     return null;
   };
@@ -1041,6 +1160,11 @@ const logout = () => {
 
           <Text style={styles.title}>{selectedActivity}</Text>
           <Text style={styles.subtitle}>Track your activity session</Text>
+          {!isVehicleMaintenanceActivity(selectedActivity) && (
+          <TouchableOpacity style={styles.startButton} onPress={startActivity}>
+          <Text style={styles.buttonText}>Start Activity</Text>
+        </TouchableOpacity>
+)}
 
           <FootballTracker
   selectedActivity={selectedActivity}
@@ -1160,30 +1284,88 @@ const logout = () => {
   horseNotes={horseNotes}
   setHorseNotes={setHorseNotes}
 />
+{isVehicleMaintenanceActivity(selectedActivity) && (
+  <View style={styles.infoBox}>
+    <Text style={styles.savedDetailsHeader}>Vehicle Maintenance</Text>
 
-          <TouchableOpacity style={styles.startButton} onPress={startActivity}>
-            <Text style={styles.buttonText}>Start Activity</Text>
-          </TouchableOpacity>
+    <TextInput
+      style={styles.input}
+      placeholder="Vehicle name, example: Indian Motorcycle"
+      placeholderTextColor="#888"
+      value={vehicleName}
+      onChangeText={setVehicleName}
+    />
 
-          <TouchableOpacity style={styles.endButton} onPress={endActivity}>
-            <Text style={styles.buttonText}>End Activity</Text>
-          </TouchableOpacity>
+    <Text style={styles.savedDetailsText}>Service Type</Text>
 
-          <View style={styles.infoBox}>
-            <Text style={styles.infoText}>
-              Start: {startTime ? startTime.toLocaleTimeString() : 'Not started'}
-            </Text>
+    {['Tire Change', 'Battery', 'Oil Change', 'Other Service', 'Gas Filling'].map((service) => (
+      <TouchableOpacity
+        key={service}
+        style={[
+          styles.activityButton,
+          vehicleServiceType === service && styles.selectedOptionButton,
+        ]}
+        onPress={() => setVehicleServiceType(service)}
+      >
+        <Text style={styles.activityText}>{service}</Text>
+      </TouchableOpacity>
+    ))}
 
-            <Text style={styles.infoText}>
-              End: {endTime ? endTime.toLocaleTimeString() : 'Not ended'}
-            </Text>
+    <TextInput
+      style={styles.input}
+      placeholder="Mileage / KM"
+      placeholderTextColor="#888"
+      value={vehicleMileage}
+      onChangeText={setVehicleMileage}
+      keyboardType="numeric"
+    />
 
-            <Text style={styles.durationText}>Duration: {getDuration()}</Text>
-          </View>
+    <TextInput
+      style={styles.input}
+      placeholder="Cost"
+      placeholderTextColor="#888"
+      value={vehicleCost}
+      onChangeText={setVehicleCost}
+      keyboardType="numeric"
+    />
 
-          <TouchableOpacity style={styles.saveButton} onPress={saveSession}>
-            <Text style={styles.buttonText}>Save Session</Text>
-          </TouchableOpacity>
+    <TextInput
+      style={styles.input}
+      placeholder="Notes"
+      placeholderTextColor="#888"
+      value={vehicleNotes}
+      onChangeText={setVehicleNotes}
+      multiline
+    />
+  </View>
+)}
+
+          {!isVehicleMaintenanceActivity(selectedActivity) && (
+  <TouchableOpacity style={styles.endButton} onPress={endActivity}>
+    <Text style={styles.buttonText}>End Activity</Text>
+  </TouchableOpacity>
+)}
+
+          {!isVehicleMaintenanceActivity(selectedActivity) && (
+  <View style={styles.infoBox}>
+    <Text style={styles.infoText}>
+      Start: {startTime ? startTime.toLocaleTimeString() : 'Not started'}
+    </Text>
+
+    <Text style={styles.infoText}>
+      End: {endTime ? endTime.toLocaleTimeString() : 'Not ended'}
+    </Text>
+
+    <Text style={styles.durationText}>Duration: {getDuration()}</Text>
+  </View>
+)}
+
+  <TouchableOpacity style={styles.saveButton} onPress={saveSession}>
+  <Text style={styles.buttonText}>
+    {isVehicleMaintenanceActivity(selectedActivity) ? 'Save Maintenance' : 'Save Session'}
+  </Text>
+</TouchableOpacity>
+
         </ScrollView>
       </GestureHandlerRootView>
     );
@@ -1235,26 +1417,32 @@ const logout = () => {
           <Text style={styles.hintText}>Swipe left on an activity to delete it</Text>
 
           <View style={styles.activityList}>
-            {activities.length === 0 ? (
-              <Text style={styles.emptyHistory}>
-                No activities available. Press Add Activity or Reset List.
-              </Text>
-            ) : (
-              activities.map((activity) => (
-                <Swipeable
-                  key={activity}
-                  renderRightActions={() => renderActivityDeleteAction(activity)}
-                >
-                  <TouchableOpacity
-                    style={styles.activityButton}
-                    onPress={() => openActivity(activity)}
-                  >
-                    <Text style={styles.activityText}>{activity}</Text>
-                  </TouchableOpacity>
-                </Swipeable>
-              ))
-            )}
-          </View>
+  {activities.length === 0 ? (
+    <Text style={styles.emptyHistory}>
+      No activities available. Press Add Activity or Reset List.
+    </Text>
+  ) : (
+    getGroupedActivities().map((group) => (
+      <View key={group.groupName} style={styles.activityGroup}>
+        <Text style={styles.activityGroupTitle}>{group.groupName}</Text>
+
+        {group.groupActivities.map((activity) => (
+          <Swipeable
+            key={activity}
+            renderRightActions={() => renderActivityDeleteAction(activity)}
+          >
+            <TouchableOpacity
+              style={styles.activityButton}
+              onPress={() => openActivity(activity)}
+            >
+              <Text style={styles.activityText}>{activity}</Text>
+            </TouchableOpacity>
+          </Swipeable>
+        ))}
+      </View>
+    ))
+  )}
+</View>
 
           <View style={styles.historySection}>
             <View style={styles.historyHeader}>
@@ -1270,26 +1458,66 @@ const logout = () => {
             {sessions.length > 0 && (
               <Text style={styles.hintText}>Swipe left on a session to delete it</Text>
             )}
+            {sessions.length > 0 && (
+  <ScrollView
+    horizontal
+    showsHorizontalScrollIndicator={false}
+    style={styles.historyFilterScroll}
+  >
+    {['All', ...activities].map((activity) => (
+      <TouchableOpacity
+        key={activity}
+        style={[
+          styles.historyFilterButton,
+          historyFilter === activity && styles.historyFilterButtonActive,
+        ]}
+        onPress={() => setHistoryFilter(activity)}
+      >
+        <Text
+          style={[
+            styles.historyFilterText,
+            historyFilter === activity && styles.historyFilterTextActive,
+          ]}
+        >
+          {activity}
+        </Text>
+      </TouchableOpacity>
+    ))}
+  </ScrollView>
+)}
 
             {sessions.length === 0 ? (
-              <Text style={styles.emptyHistory}>No sessions saved yet</Text>
-            ) : (
-              sessions.map((session) => (
+  <Text style={styles.emptyHistory}>No sessions saved yet</Text>
+) : getFilteredSessions().length === 0 ? (
+  <Text style={styles.emptyHistory}>No sessions for {historyFilter} yet</Text>
+) : (
+  getFilteredSessions().map((session) => (
                 <Swipeable
                   key={session.id}
                   renderRightActions={() => renderSessionDeleteAction(session.id)}
                 >
                   <View style={styles.sessionCard}>
-                    <Text style={styles.sessionActivity}>{session.activity}</Text>
-                    <Text style={styles.sessionText}>Date: {session.date}</Text>
-                    <Text style={styles.sessionText}>Start: {session.start}</Text>
-                    <Text style={styles.sessionText}>End: {session.end}</Text>
-                    <Text style={styles.sessionDuration}>
-                      Duration: {session.duration}
-                    </Text>
+  <View style={styles.sessionTopRow}>
+    <View style={styles.activityBadge}>
+      <Text style={styles.activityBadgeText}>{session.activity}</Text>
+    </View>
 
-                    {renderSessionDetails(session)}
-                  </View>
+    <Text style={styles.sessionDate}>{session.date}</Text>
+  </View>
+
+  {!isVehicleMaintenanceActivity(session.activity) && (
+  <>
+    <Text style={styles.sessionDurationLarge}>{session.duration}</Text>
+
+    <View style={styles.sessionTimeRow}>
+      <Text style={styles.sessionTimeText}>Start: {session.start}</Text>
+      <Text style={styles.sessionTimeText}>End: {session.end}</Text>
+    </View>
+  </>
+)}
+
+  {renderSessionDetails(session)}
+</View>
                 </Swipeable>
               ))
             )}
@@ -1415,6 +1643,16 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'center',
   },
+  activityGroup: {
+  marginBottom: 18,
+},
+
+activityGroupTitle: {
+  color: '#ffffff',
+  fontSize: 22,
+  fontWeight: 'bold',
+  marginBottom: 12,
+},
   activityList: {
     gap: 12,
     paddingBottom: 30,
@@ -1643,6 +1881,34 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     color: '#000000',
   },
+  historyFilterScroll: {
+  marginBottom: 14,
+},
+
+historyFilterButton: {
+  backgroundColor: '#1b2733',
+  paddingVertical: 10,
+  paddingHorizontal: 14,
+  borderRadius: 20,
+  marginRight: 10,
+  borderWidth: 1,
+  borderColor: '#34495e',
+},
+
+historyFilterButtonActive: {
+  backgroundColor: '#1f8a70',
+  borderColor: '#1f8a70',
+},
+
+historyFilterText: {
+  color: '#b0b0b0',
+  fontSize: 14,
+  fontWeight: '600',
+},
+
+historyFilterTextActive: {
+  color: '#ffffff',
+},
   historySection: {
     marginTop: 10,
     paddingBottom: 60,
@@ -1765,5 +2031,55 @@ homeDescription: {
   fontSize: 15,
   lineHeight: 22,
   marginBottom: 20,
+},
+sessionTopRow: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  marginBottom: 12,
+},
+
+activityBadge: {
+  backgroundColor: '#1f8a70',
+  paddingVertical: 6,
+  paddingHorizontal: 12,
+  borderRadius: 999,
+},
+
+activityBadgeText: {
+  color: '#ffffff',
+  fontSize: 14,
+  fontWeight: '700',
+},
+
+sessionDate: {
+  color: '#b0b0b0',
+  fontSize: 14,
+  fontWeight: '600',
+},
+
+sessionDurationLarge: {
+  color: '#ffffff',
+  fontSize: 24,
+  fontWeight: 'bold',
+  marginBottom: 10,
+},
+
+sessionTimeRow: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  backgroundColor: '#101820',
+  padding: 12,
+  borderRadius: 10,
+  marginBottom: 8,
+},
+
+sessionTimeText: {
+  color: '#d0d0d0',
+  fontSize: 14,
+  fontWeight: '600',
+},
+selectedOptionButton: {
+  backgroundColor: '#2563eb',
 },
 });
