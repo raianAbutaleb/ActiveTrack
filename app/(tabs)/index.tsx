@@ -53,8 +53,6 @@ export default function HomeScreen() {
   const navigation = useNavigation();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
-  const [signupFirstName, setSignupFirstName] = useState('');
-  const [signupLastName, setSignupLastName] = useState('');
   const [loginUsername, setLoginUsername] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [signupRepeatPassword, setSignupRepeatPassword] = useState('');
@@ -174,11 +172,6 @@ const [vehicleMileage, setVehicleMileage] = useState('');
   setIsLoggedIn(true);
 };
 const signup = () => {
-  if (signupFirstName.trim() === '' || signupLastName.trim() === '') {
-    alert('Please enter first and last name');
-    return;
-  }
-
   if (loginUsername.trim() === '') {
     alert('Please enter email or phone number');
     return;
@@ -1194,86 +1187,46 @@ const getGroupedActivities = () => {
 
     return (
     <GestureHandlerRootView style={styles.root}>
-      <ScrollView
-        contentContainerStyle={[
-          styles.loginContainer,
-          isSignupMode && styles.signupContainer,
-        ]}
-      >
-        {isSignupMode && (
+      <ScrollView contentContainerStyle={styles.loginContainer}>
+        <Text style={styles.loginTitle}>ActiveTrack</Text>
+        <Text style={styles.loginSubtitle}>
+          {isSignupMode ? 'Create your account' : 'Sign in to track your activities'}
+        </Text>
+
+        <View style={styles.authModeRow}>
           <TouchableOpacity
-            style={styles.signupCancelButton}
+            style={[
+              styles.authModeButton,
+              authMode === 'signin' && styles.authModeButtonActive,
+            ]}
             onPress={() => setAuthMode('signin')}
           >
-            <Text style={styles.signupCancelText}>Cancel</Text>
+            <Text style={styles.authModeText}>Sign In</Text>
           </TouchableOpacity>
-        )}
 
-        <Text style={[styles.loginTitle, isSignupMode && styles.signupTitle]}>
-          {isSignupMode ? 'Create an account' : 'ActiveTrack'}
-        </Text>
-        {!isSignupMode && (
-          <Text style={styles.loginSubtitle}>Sign in to track your activities</Text>
-        )}
+          <TouchableOpacity
+            style={[
+              styles.authModeButton,
+              authMode === 'signup' && styles.authModeButtonActive,
+            ]}
+            onPress={() => setAuthMode('signup')}
+          >
+            <Text style={styles.authModeText}>Sign Up</Text>
+          </TouchableOpacity>
+        </View>
 
-        {!isSignupMode && (
-          <View style={styles.authModeRow}>
-            <TouchableOpacity
-              style={[
-                styles.authModeButton,
-                authMode === 'signin' && styles.authModeButtonActive,
-              ]}
-              onPress={() => setAuthMode('signin')}
-            >
-              <Text style={styles.authModeText}>Sign In</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.authModeButton}
-              onPress={() => setAuthMode('signup')}
-            >
-              <Text style={styles.authModeText}>Sign Up</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {isSignupMode && (
-          <>
-            <Text style={styles.signupLabel}>Name</Text>
-            <View style={styles.signupNameRow}>
-              <TextInput
-                style={[styles.input, styles.signupInput, styles.signupNameInput]}
-                placeholder="Raian"
-                placeholderTextColor="#555252"
-                value={signupFirstName}
-                onChangeText={setSignupFirstName}
-              />
-
-              <TextInput
-                style={[styles.input, styles.signupInput, styles.signupNameInput]}
-                placeholder="Abutaleb"
-                placeholderTextColor="#555252"
-                value={signupLastName}
-                onChangeText={setSignupLastName}
-              />
-            </View>
-          </>
-        )}
-
-        {isSignupMode && <Text style={styles.signupLabel}>Email</Text>}
         <TextInput
-          style={[styles.input, isSignupMode && styles.signupInput]}
-          placeholder={isSignupMode ? 'raianabutaleb@outlook.sa' : 'Username or phone number'}
-          placeholderTextColor={isSignupMode ? '#555252' : '#8f8f92'}
+          style={styles.input}
+          placeholder={isSignupMode ? 'Email or phone' : 'Username or email'}
+          placeholderTextColor="#8f8f92"
           value={loginUsername}
           onChangeText={setLoginUsername}
         />
 
-        {isSignupMode && <Text style={styles.signupLabel}>Password</Text>}
         <TextInput
-          style={[styles.input, isSignupMode && styles.signupInput]}
-          placeholder="Password"
-          placeholderTextColor={isSignupMode ? '#555252' : '#8f8f92'}
+          style={styles.input}
+          placeholder={isSignupMode ? 'New password' : 'Password'}
+          placeholderTextColor="#8f8f92"
           value={loginPassword}
           onChangeText={setLoginPassword}
           secureTextEntry
@@ -1281,11 +1234,10 @@ const getGroupedActivities = () => {
 
         {isSignupMode && (
           <>
-            <Text style={styles.signupLabel}>Repeat password</Text>
             <TextInput
-              style={[styles.input, styles.signupInput]}
-              placeholder="Repeat password"
-              placeholderTextColor="#555252"
+              style={styles.input}
+              placeholder="Confirm password"
+              placeholderTextColor="#8f8f92"
               value={signupRepeatPassword}
               onChangeText={setSignupRepeatPassword}
               secureTextEntry
@@ -1298,7 +1250,7 @@ const getGroupedActivities = () => {
         )}
 
         <TouchableOpacity
-          style={[styles.startButton, isSignupMode && styles.signupButton]}
+          style={styles.startButton}
           onPress={isSignupMode ? signup : login}
         >
           <Text style={styles.buttonText}>
@@ -1306,34 +1258,36 @@ const getGroupedActivities = () => {
           </Text>
         </TouchableOpacity>
 
-        {isSignupMode ? (
-          <>
-            <Text style={styles.signupLegal}>
-              By creating an ActiveTrack account, you agree to save your data on
-              this device. We never share your data.
-            </Text>
+        <TouchableOpacity
+          style={styles.secondaryAuthButton}
+          onPress={() => alert('Face ID / passkey can be connected later')}
+        >
+          <Text style={styles.secondaryAuthButtonText}>Face ID / Passkey</Text>
+        </TouchableOpacity>
 
-            <Text style={styles.signupDivider}>Or</Text>
+        <Text style={styles.signupDivider}>Or</Text>
 
-            <TouchableOpacity
-              style={styles.socialButton}
-              onPress={() => alert('Apple sign-up can be connected later')}
-            >
-              <Text style={styles.socialButtonText}>Sign up with Apple</Text>
-            </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.socialButton}
+          onPress={() =>
+            alert(isSignupMode ? 'Apple sign-up can be connected later' : 'Apple login can be connected later')
+          }
+        >
+          <Text style={styles.socialButtonText}>
+            {isSignupMode ? 'Sign up with Apple' : 'Log in with Apple'}
+          </Text>
+        </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.socialButton}
-              onPress={() => alert('Facebook sign-up can be connected later')}
-            >
-              <Text style={styles.socialButtonText}>Sign up with Facebook</Text>
-            </TouchableOpacity>
-          </>
-        ) : (
-          <TouchableOpacity onPress={() => setAuthMode('signup')}>
-            <Text style={styles.loginHint}>Create a new account</Text>
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity
+          style={styles.socialButton}
+          onPress={() =>
+            alert(isSignupMode ? 'Facebook sign-up can be connected later' : 'Facebook login can be connected later')
+          }
+        >
+          <Text style={styles.socialButtonText}>
+            {isSignupMode ? 'Sign up with Facebook' : 'Log in with Facebook'}
+          </Text>
+        </TouchableOpacity>
       </ScrollView>
     </GestureHandlerRootView>
   );
@@ -2127,24 +2081,12 @@ historyFilterTextActive: {
   padding: 24,
   justifyContent: 'center',
 },
-signupContainer: {
-  backgroundColor: '#ffffff',
-  justifyContent: 'flex-start',
-  paddingTop: 36,
-},
 loginTitle: {
   fontSize: 42,
   fontWeight: 'bold',
   color: '#ffffff',
   marginBottom: 8,
   textAlign: 'center',
-},
-signupTitle: {
-  color: '#171717',
-  fontSize: 38,
-  textAlign: 'left',
-  marginTop: 24,
-  marginBottom: 30,
 },
 loginSubtitle: {
   fontSize: 18,
@@ -2178,71 +2120,42 @@ authModeText: {
   fontWeight: '800',
   textAlign: 'center',
 },
-signupCancelButton: {
-  alignSelf: 'flex-start',
-  borderColor: '#d7d4cf',
-  borderWidth: 1,
-  borderRadius: 999,
-  paddingVertical: 10,
-  paddingHorizontal: 24,
-},
-signupCancelText: {
-  color: '#171717',
-  fontSize: 18,
-  fontWeight: '500',
-},
-signupLabel: {
-  color: '#6d6a6a',
-  fontSize: 18,
-  marginBottom: 8,
-},
-signupNameRow: {
-  flexDirection: 'row',
-  gap: 12,
-  marginBottom: 12,
-},
-signupNameInput: {
-  flex: 1,
-},
-signupInput: {
-  backgroundColor: '#efedf2',
-  color: '#171717',
-  borderRadius: 12,
-  marginBottom: 14,
-},
 signupHelp: {
-  color: '#686464',
+  color: '#a7a7aa',
   fontSize: 14,
   marginBottom: 22,
 },
-signupButton: {
-  backgroundColor: '#f26543',
-  borderRadius: 999,
-  marginBottom: 14,
-},
-signupLegal: {
-  color: '#686464',
-  fontSize: 14,
-  lineHeight: 20,
-  marginBottom: 16,
-},
 signupDivider: {
-  color: '#555252',
-  fontSize: 18,
+  color: '#a7a7aa',
+  fontSize: 16,
   textAlign: 'center',
-  marginBottom: 16,
+  marginBottom: 12,
+},
+secondaryAuthButton: {
+  borderColor: '#3a3a3d',
+  borderWidth: 1,
+  borderRadius: 12,
+  padding: 15,
+  marginTop: 2,
+  marginBottom: 12,
+},
+secondaryAuthButtonText: {
+  color: '#ffffff',
+  fontSize: 16,
+  fontWeight: '800',
+  textAlign: 'center',
 },
 socialButton: {
-  borderColor: '#9b9999',
+  borderColor: '#3a3a3d',
   borderWidth: 1,
-  borderRadius: 999,
+  borderRadius: 12,
   padding: 15,
   marginBottom: 12,
 },
 socialButtonText: {
-  color: '#555252',
-  fontSize: 18,
-  fontWeight: '700',
+  color: '#ffffff',
+  fontSize: 16,
+  fontWeight: '800',
   textAlign: 'center',
 },
 logoutButton: {

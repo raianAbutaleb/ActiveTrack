@@ -56,9 +56,10 @@ const translations = {
     signInDescription: 'Sign in to continue tracking on this device.',
     resetDescription: 'Use your recovery code to set a new password.',
     name: 'Name',
-    identifier: 'Email or phone',
+    signinIdentifier: 'Username or email',
+    signupIdentifier: 'Email or phone',
     password: 'Password',
-    repeatPassword: 'Repeat password',
+    confirmPassword: 'Confirm password',
     passwordMinimum: 'Password must be at least 8 characters.',
     recoveryCode: 'Recovery code',
     newPassword: 'New password',
@@ -68,6 +69,8 @@ const translations = {
     signupLegal:
       'By creating an ActiveTrack account, you agree to save your data on this device. We never share your data.',
     or: 'Or',
+    appleSignin: 'Log in with Apple',
+    facebookSignin: 'Log in with Facebook',
     appleSignup: 'Sign up with Apple',
     facebookSignup: 'Sign up with Facebook',
     backToSignin: 'Back to sign in',
@@ -148,9 +151,10 @@ const translations = {
     signInDescription: 'سجل الدخول لمتابعة التتبع على هذا الجهاز.',
     resetDescription: 'استخدم رمز الاسترجاع لتعيين كلمة مرور جديدة.',
     name: 'الاسم',
-    identifier: 'البريد أو رقم الجوال',
+    signinIdentifier: 'اسم المستخدم أو البريد',
+    signupIdentifier: 'البريد أو رقم الجوال',
     password: 'كلمة المرور',
-    repeatPassword: 'تأكيد كلمة المرور',
+    confirmPassword: 'تأكيد كلمة المرور',
     passwordMinimum: 'كلمة المرور يجب أن تكون 8 أحرف على الأقل.',
     recoveryCode: 'رمز الاسترجاع',
     newPassword: 'كلمة مرور جديدة',
@@ -160,6 +164,8 @@ const translations = {
     signupLegal:
       'بإنشاء حساب ActiveTrack، أنت توافق على حفظ بياناتك على هذا الجهاز. لا نشارك بياناتك.',
     or: 'أو',
+    appleSignin: 'تسجيل الدخول باستخدام Apple',
+    facebookSignin: 'تسجيل الدخول باستخدام Facebook',
     appleSignup: 'إنشاء حساب باستخدام Apple',
     facebookSignup: 'إنشاء حساب باستخدام Facebook',
     backToSignin: 'العودة لتسجيل الدخول',
@@ -268,15 +274,12 @@ const authDescription = document.querySelector('#auth-description');
 const authSubmit = document.querySelector('#auth-submit');
 const authMessage = document.querySelector('#auth-message');
 const identifierInput = document.querySelector('input[name="identifier"]');
-const firstNameInput = document.querySelector('input[name="firstName"]');
-const lastNameInput = document.querySelector('input[name="lastName"]');
 const passwordInput = document.querySelector('#auth-password');
 const repeatPasswordInput = document.querySelector('input[name="repeatPassword"]');
 const recoveryCodeInput = document.querySelector('input[name="recoveryCode"]');
 const newPasswordInput = document.querySelector('input[name="newPassword"]');
 const passkeyButton = document.querySelector('#passkey-button');
 const forgotButton = document.querySelector('#forgot-button');
-const signupCancelButton = document.querySelector('#signup-cancel-button');
 const appleSignupButton = document.querySelector('#apple-signup-button');
 const facebookSignupButton = document.querySelector('#facebook-signup-button');
 const recoveryCard = document.querySelector('#recovery-card');
@@ -337,18 +340,16 @@ function applyLanguage() {
   setText('#hero-copy', text('heroCopy'));
   setText('#signin-tab', text('signIn'));
   setText('#signup-tab', text('signUp'));
-  setText('#name-label', text('name'));
-  setText('#identifier-label', text('identifier'));
-  setText('#password-label', text('password'));
-  setText('#repeat-password-label', text('repeatPassword'));
+  setText('#identifier-label', state.authMode === 'signup' ? text('signupIdentifier') : text('signinIdentifier'));
+  setText('#password-label', state.authMode === 'signup' ? text('newPassword') : text('password'));
+  setText('#repeat-password-label', text('confirmPassword'));
   setText('#password-minimum', text('passwordMinimum'));
   setText('#recovery-label', text('recoveryCode'));
   setText('#new-password-label', text('newPassword'));
   setText('#passkey-button', text('passkey'));
-  setText('#signup-legal', text('signupLegal'));
   setText('#signup-divider', text('or'));
-  setText('#apple-signup-button', text('appleSignup'));
-  setText('#facebook-signup-button', text('facebookSignup'));
+  setText('#apple-signup-button', state.authMode === 'signup' ? text('appleSignup') : text('appleSignin'));
+  setText('#facebook-signup-button', state.authMode === 'signup' ? text('facebookSignup') : text('facebookSignin'));
   setText('#recovery-card-title', text('saveRecoveryCode'));
   setText('#recovery-card-text', text('recoveryHelp'));
   setText('#security-title', text('securityTitle'));
@@ -492,17 +493,21 @@ function setAuthMode(mode) {
     : isReset
       ? text('resetDescription')
       : text('signInDescription');
-  authSubmit.textContent = isSignup ? text('createAccount') : isReset ? text('resetPassword') : text('signIn');
+  authSubmit.textContent = isSignup ? text('signUp') : isReset ? text('resetPassword') : text('signIn');
+  document.querySelector('#identifier-label').textContent = isSignup ? text('signupIdentifier') : text('signinIdentifier');
+  document.querySelector('#password-label').textContent = isSignup ? text('newPassword') : text('password');
+  appleSignupButton.textContent = isSignup ? text('appleSignup') : text('appleSignin');
+  facebookSignupButton.textContent = isSignup ? text('facebookSignup') : text('facebookSignin');
   identifierInput.required = !isReset;
-  firstNameInput.required = isSignup;
-  lastNameInput.required = isSignup;
   passwordInput.required = !isReset;
   repeatPasswordInput.required = isSignup;
   recoveryCodeInput.required = isReset;
   newPasswordInput.required = isReset;
   passwordInput.closest('label').style.display = isReset ? 'none' : 'grid';
   passwordInput.autocomplete = isSignup ? 'new-password' : 'current-password';
-  passkeyButton.style.display = isSignup || isReset ? 'none' : 'inline-flex';
+  passkeyButton.style.display = isReset ? 'none' : 'inline-flex';
+  document.querySelector('.signup-divider').style.display = isReset ? 'none' : 'block';
+  document.querySelector('.signup-social').style.display = isReset ? 'none' : 'grid';
   forgotButton.textContent = isReset ? text('backToSignin') : text('forgot');
   recoveryCard.classList.add('hidden');
   authMessage.textContent = '';
@@ -1217,9 +1222,6 @@ authForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   const formData = new FormData(authForm);
   const identifier = String(formData.get('identifier') || '').trim();
-  const firstName = String(formData.get('firstName') || '').trim();
-  const lastName = String(formData.get('lastName') || '').trim();
-  const fullName = `${firstName} ${lastName}`.trim() || identifier;
   const password = String(formData.get('password') || '');
   const repeatPassword = String(formData.get('repeatPassword') || '');
   const newPassword = String(formData.get('newPassword') || '');
@@ -1243,9 +1245,7 @@ authForm.addEventListener('submit', async (event) => {
       const user = {
         schemaVersion: 2,
         createdAt: new Date().toISOString(),
-        firstName,
-        lastName,
-        fullName,
+        fullName: identifier,
         identifier,
         goal: null,
         passwordSalt,
@@ -1347,12 +1347,17 @@ forgotButton.addEventListener('click', () => {
 });
 
 passkeyButton.addEventListener('click', loginWithPasskey);
-signupCancelButton.addEventListener('click', () => setAuthMode('signin'));
 appleSignupButton.addEventListener('click', () => {
-  authMessage.textContent = 'Apple sign-up can be connected later.';
+  authMessage.textContent =
+    state.authMode === 'signup'
+      ? 'Apple sign-up can be connected later.'
+      : 'Apple login can be connected later.';
 });
 facebookSignupButton.addEventListener('click', () => {
-  authMessage.textContent = 'Facebook sign-up can be connected later.';
+  authMessage.textContent =
+    state.authMode === 'signup'
+      ? 'Facebook sign-up can be connected later.'
+      : 'Facebook login can be connected later.';
 });
 
 logoutButton.addEventListener('click', () => {
