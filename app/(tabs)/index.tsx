@@ -1189,6 +1189,9 @@ const getGroupedActivities = () => {
     <GestureHandlerRootView style={styles.root}>
       <ScrollView contentContainerStyle={styles.loginContainer}>
         <Text style={styles.loginTitle}>ActiveTrack</Text>
+        <Text style={styles.loginTagline}>
+          Track and save your activity sessions.{'\n'}تتبع واحفظ جلسات نشاطك.
+        </Text>
         <Text style={styles.loginSubtitle}>
           {isSignupMode ? 'Create your account' : 'Sign in to track your activities'}
         </Text>
@@ -2086,6 +2089,14 @@ loginTitle: {
   fontWeight: 'bold',
   color: '#ffffff',
   marginBottom: 8,
+  textAlign: 'center',
+},
+loginTagline: {
+  fontSize: 18,
+  color: '#ffffff',
+  fontWeight: '800',
+  lineHeight: 26,
+  marginBottom: 12,
   textAlign: 'center',
 },
 loginSubtitle: {

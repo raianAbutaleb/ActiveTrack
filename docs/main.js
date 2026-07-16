@@ -44,7 +44,7 @@ const translations = {
     back: 'Back',
     logout: 'Logout',
     authEyebrow: 'Personal activity tracking',
-    heroTitle: 'Track your sessions, matches, rides, study, and maintenance.',
+    heroTitle: 'Track and save your activity sessions.\nتتبع واحفظ جلسات نشاطك.',
     heroCopy:
       'ActiveTrack Web is a local-first tracker. Your account and saved sessions stay in this browser, with tools to review, filter, and export your history.',
     signIn: 'Sign in',
@@ -132,7 +132,7 @@ const translations = {
     back: 'رجوع',
     logout: 'تسجيل الخروج',
     authEyebrow: 'تتبع النشاطات الشخصية',
-    heroTitle: 'تتبع تمارينك ومبارياتك وركوب الخيل والدراسة وصيانة السيارة.',
+    heroTitle: 'تتبع واحفظ جلسات نشاطك.\nTrack and save your activity sessions.',
     heroCopy:
       'ActiveTrack Web تطبيق يعمل على هذا الجهاز. حسابك وسجلاتك تبقى محفوظة في هذا المتصفح، مع أدوات للمراجعة والتصفية والتصدير.',
     signIn: 'تسجيل الدخول',

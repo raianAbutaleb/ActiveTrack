@@ -154,6 +154,10 @@ h1 {
   line-height: 0.96;
 }
 
+#hero-title {
+  white-space: pre-line;
+}
+
 h2 {
   margin-bottom: 10px;
   font-size: 1.8rem;
