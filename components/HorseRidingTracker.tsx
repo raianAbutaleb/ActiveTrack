@@ -40,6 +40,30 @@ type Props = {
   horseCanterMinutes: string;
   setHorseCanterMinutes: Dispatch<SetStateAction<string>>;
 
+  horseRideDistance: string;
+  setHorseRideDistance: Dispatch<SetStateAction<string>>;
+
+  horseAverageSpeed: string;
+  setHorseAverageSpeed: Dispatch<SetStateAction<string>>;
+
+  horseLeftTurns: string;
+  setHorseLeftTurns: Dispatch<SetStateAction<string>>;
+
+  horseRightTurns: string;
+  setHorseRightTurns: Dispatch<SetStateAction<string>>;
+
+  horseRideDate: string;
+  setHorseRideDate: Dispatch<SetStateAction<string>>;
+
+  horseCalendarNote: string;
+  setHorseCalendarNote: Dispatch<SetStateAction<string>>;
+
+  horseSafetyLocation: string;
+  setHorseSafetyLocation: Dispatch<SetStateAction<string>>;
+
+  horseSafetyContact: string;
+  setHorseSafetyContact: Dispatch<SetStateAction<string>>;
+
   horseHayGiven: boolean;
   setHorseHayGiven: Dispatch<SetStateAction<boolean>>;
 
@@ -232,6 +256,78 @@ export default function HorseRidingTracker(props: Props) {
         value={props.horseCanterMinutes}
         onChangeText={props.setHorseCanterMinutes}
         keyboardType="number-pad"
+      />
+
+      <Text style={styles.detailsSubtitle}>Ride Metrics</Text>
+
+      <TextInput
+        style={styles.input}
+        placeholder="Ride distance, example: 4.2 km"
+        placeholderTextColor="#8f8f92"
+        value={props.horseRideDistance}
+        onChangeText={props.setHorseRideDistance}
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="Average speed, example: 8.5 km/h"
+        placeholderTextColor="#8f8f92"
+        value={props.horseAverageSpeed}
+        onChangeText={props.setHorseAverageSpeed}
+      />
+
+      <View style={styles.scoreRow}>
+        <TextInput
+          style={styles.scoreInput}
+          placeholder="Left turns"
+          placeholderTextColor="#8f8f92"
+          value={props.horseLeftTurns}
+          onChangeText={props.setHorseLeftTurns}
+          keyboardType="number-pad"
+        />
+
+        <TextInput
+          style={styles.scoreInput}
+          placeholder="Right turns"
+          placeholderTextColor="#8f8f92"
+          value={props.horseRightTurns}
+          onChangeText={props.setHorseRightTurns}
+          keyboardType="number-pad"
+        />
+      </View>
+
+      <Text style={styles.detailsSubtitle}>Calendar and Safety</Text>
+
+      <TextInput
+        style={styles.input}
+        placeholder="Ride date, example: 17/07/2026"
+        placeholderTextColor="#8f8f92"
+        value={props.horseRideDate}
+        onChangeText={props.setHorseRideDate}
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="Calendar note, example: Farrier visit next week"
+        placeholderTextColor="#8f8f92"
+        value={props.horseCalendarNote}
+        onChangeText={props.setHorseCalendarNote}
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="Safety location, example: Riyadh stable"
+        placeholderTextColor="#8f8f92"
+        value={props.horseSafetyLocation}
+        onChangeText={props.setHorseSafetyLocation}
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="Safety contact"
+        placeholderTextColor="#8f8f92"
+        value={props.horseSafetyContact}
+        onChangeText={props.setHorseSafetyContact}
       />
 
       <Text style={styles.detailsSubtitle}>Daily Care</Text>
@@ -435,6 +531,19 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     fontSize: 18,
+    marginBottom: 12,
+    color: '#000000',
+  },
+  scoreRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  scoreInput: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
     marginBottom: 12,
     color: '#000000',
   },

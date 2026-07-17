@@ -2,6 +2,7 @@ const storageKeys = {
   user: 'activetrack-web-user',
   sessions: 'activetrack-web-sessions',
   customActivities: 'activetrack-web-custom-activities',
+  customTemplates: 'activetrack-web-custom-templates',
   activeSession: 'activetrack-web-session-active',
   language: 'activetrack-web-language',
 };
@@ -22,20 +23,33 @@ const defaultActivities = [
   'Work',
   'Baloot',
   'Vehicle Maintenance',
+  'Personal Info',
 ];
 
 const activitySections = [
   {
-    key: 'sports',
-    activities: ['Football', 'Padel', 'Tennis', 'Golf', 'Horse Riding', 'Baloot'],
+    key: 'sportsGames',
+    activities: ['Football', 'Padel', 'Tennis', 'Golf', 'Baloot'],
   },
   {
-    key: 'fitness',
+    key: 'fitnessMovement',
     activities: ['Gym', 'Run', 'Cycling', 'Walking', 'Swimming'],
   },
   {
-    key: 'life',
-    activities: ['Studying', 'Work', 'Vehicle Maintenance'],
+    key: 'horse',
+    activities: ['Horse Riding'],
+  },
+  {
+    key: 'studyWork',
+    activities: ['Studying', 'Work'],
+  },
+  {
+    key: 'lifeTracking',
+    activities: ['Personal Info'],
+  },
+  {
+    key: 'vehicle',
+    activities: ['Vehicle Maintenance'],
   },
 ];
 
@@ -86,11 +100,13 @@ const translations = {
     none: 'None',
     customActivities: 'Custom activities',
     addCustomActivity: 'Add custom activity',
+    customFields: 'Reusable fields (separate with commas)',
     add: 'Add',
     activity: 'Activity',
     trackerHelper: 'Fill the details, then save the session.',
     trackerTimed: 'Start the timer, fill the details, then save the session.',
     trackerVehicle: 'Vehicle Maintenance saves without a timer.',
+    trackerRecord: 'Personal Info saves as a record without a timer.',
     timer: 'Timer',
     start: 'Start',
     end: 'End',
@@ -105,16 +121,21 @@ const translations = {
     delete: 'Delete',
     noSessions: 'No saved sessions yet.',
     maintenanceRecord: 'Maintenance record. No timer used.',
+    personalRecord: 'Personal information record. No timer used.',
     details: 'Details',
     noDetails: 'No details saved',
     sections: {
-      sports: 'Sports and games',
-      fitness: 'Fitness and movement',
-      life: 'Life tracking',
+      sportsGames: 'Sports and games',
+      fitnessMovement: 'Fitness and movement',
+      horse: 'Horse activities',
+      studyWork: 'Study and work',
+      lifeTracking: 'Life tracking',
+      vehicle: 'Vehicle and maintenance',
       custom: 'Custom activities',
     },
     helpers: {
       'Vehicle Maintenance': 'Service, mileage, cost, notes',
+      'Personal Info': 'Document numbers and expiration dates',
       Gym: 'Workout day, exercises, timer',
       Football: 'Teams, score, timer',
       Padel: 'Teams, rounds, winner',
@@ -220,11 +241,13 @@ const translations = {
     none: 'لا يوجد',
     customActivities: 'النشاطات المخصصة',
     addCustomActivity: 'إضافة نشاط مخصص',
+    customFields: 'حقول قابلة لإعادة الاستخدام (افصل بينها بفواصل)',
     add: 'إضافة',
     activity: 'النشاط',
     trackerHelper: 'املأ التفاصيل ثم احفظ الجلسة.',
     trackerTimed: 'ابدأ المؤقت، املأ التفاصيل، ثم احفظ الجلسة.',
     trackerVehicle: 'صيانة السيارة تحفظ بدون مؤقت.',
+    trackerRecord: 'تحفظ المعلومات الشخصية كسجل بدون مؤقت.',
     timer: 'المؤقت',
     start: 'بدء',
     end: 'إنهاء',
@@ -239,16 +262,21 @@ const translations = {
     delete: 'حذف',
     noSessions: 'لا توجد جلسات محفوظة حتى الآن.',
     maintenanceRecord: 'سجل صيانة. لا يوجد مؤقت.',
+    personalRecord: 'سجل معلومات شخصية. لا يوجد مؤقت.',
     details: 'التفاصيل',
     noDetails: 'لا توجد تفاصيل محفوظة',
     sections: {
-      sports: 'الرياضات والألعاب',
-      fitness: 'اللياقة والحركة',
-      life: 'تتبع الحياة اليومية',
+      sportsGames: 'الرياضات والألعاب',
+      fitnessMovement: 'اللياقة والحركة',
+      horse: 'أنشطة الخيل',
+      studyWork: 'الدراسة والعمل',
+      lifeTracking: 'تتبع الحياة',
+      vehicle: 'المركبات والصيانة',
       custom: 'نشاطات مخصصة',
     },
     helpers: {
       'Vehicle Maintenance': 'الخدمة، العداد، التكلفة، الملاحظات',
+      'Personal Info': 'أرقام الوثائق وتواريخ الانتهاء',
       Gym: 'يوم التمرين، التمارين، المؤقت',
       Football: 'الفرق، النتيجة، المؤقت',
       Padel: 'الفرق، الجولات، الفائز',
@@ -279,6 +307,7 @@ const translations = {
       Work: 'العمل',
       Baloot: 'بلوت',
       'Vehicle Maintenance': 'صيانة السيارة',
+      'Personal Info': 'المعلومات الشخصية',
     },
     featureUpgrades: [
       {
@@ -326,18 +355,10 @@ const translations = {
 };
 
 const lapActivities = ['Run', 'Walking', 'Cycling', 'Swimming'];
+const movementActivities = ['Run', 'Walking', 'Cycling'];
 const matchActivities = ['Padel', 'Tennis'];
 const balootDealerDirections = ['↑', '→', '↓', '←'];
 const gymWorkoutDays = ['Chest', 'Back', 'Legs', 'Shoulder', 'Arms', 'Abs', 'Rest'];
-const gymExerciseLibrary = {
-  Chest: ['Bench Press', 'Incline Dumbbell Press', 'Chest Fly', 'Push-ups'],
-  Back: ['Lat Pulldown', 'Seated Row', 'Deadlift', 'Single-arm Dumbbell Row'],
-  Legs: ['Squat', 'Leg Press', 'Romanian Deadlift', 'Calf Raises'],
-  Shoulder: ['Shoulder Press', 'Lateral Raises', 'Front Raises', 'Face Pulls'],
-  Arms: ['Biceps Curl', 'Triceps Pushdown', 'Hammer Curl', 'Dips'],
-  Abs: ['Plank', 'Crunches', 'Leg Raises', 'Cable Crunch'],
-  Rest: ['Mobility Stretch', 'Light Walk', 'Foam Rolling', 'Breathing'],
-};
 const views = {
   auth: document.querySelector('#auth-view'),
   home: document.querySelector('#home-view'),
@@ -350,14 +371,18 @@ const state = {
   currentView: 'auth',
   previousView: null,
   selectedActivity: null,
+  selectedCategory: null,
   startTime: null,
   endTime: null,
   timerId: null,
   language: localStorage.getItem(storageKeys.language) || 'en',
   sessions: readJson(storageKeys.sessions, []),
   customActivities: readJson(storageKeys.customActivities, []),
+  customTemplates: readJson(storageKeys.customTemplates, {}),
   currentGymSets: [],
   gymExercises: [],
+  gymRestSeconds: 0,
+  gymRestTimerId: null,
   studyCandleSeconds: 0,
   studyCandleRunning: false,
   studyCandleTimerId: null,
@@ -396,6 +421,7 @@ const sessionForm = document.querySelector('#session-form');
 const activityFields = document.querySelector('#activity-fields');
 const sessionMessage = document.querySelector('#session-message');
 const historyFilter = document.querySelector('#history-filter');
+const progressDashboard = document.querySelector('#progress-dashboard');
 const historyList = document.querySelector('#history-list');
 const clearHistoryButton = document.querySelector('#clear-history-button');
 const exportHistoryButton = document.querySelector('#export-history-button');
@@ -424,6 +450,9 @@ function balootText(key) {
       us: 'Us',
       them: 'Them',
       winner: 'Winner',
+      teamNames: 'Team names',
+      usName: 'Us team name',
+      themName: 'Them team name',
       dealerDirection: 'Dealer Direction',
       dealerHint: 'Tap to change dealer',
       addHandScore: 'Add hand score',
@@ -440,6 +469,7 @@ function balootText(key) {
       enterUs: 'Please enter Us score',
       enterThem: 'Please enter Them score',
       hand: 'Hand',
+      shareResult: 'Share Result',
       notFinished: 'Not finished yet',
       tie: 'Tie - play one more hand',
       won: (winner) => `${winner} reached 152 and won.`,
@@ -450,6 +480,9 @@ function balootText(key) {
       us: 'لنا',
       them: 'لهم',
       winner: 'الفائز',
+      teamNames: 'أسماء الفرق',
+      usName: 'اسم فريقنا',
+      themName: 'اسم فريقهم',
       dealerDirection: 'اتجاه الموزع',
       dealerHint: 'اضغط لتغيير الموزع',
       addHandScore: 'إضافة نقاط الجولة',
@@ -466,6 +499,7 @@ function balootText(key) {
       enterUs: 'أدخل نقاط لنا',
       enterThem: 'أدخل نقاط لهم',
       hand: 'جولة',
+      shareResult: 'مشاركة النتيجة',
       notFinished: 'لم تنته بعد',
       tie: 'تعادل - العب جولة إضافية',
       won: (winner) => `${winner} وصل إلى 152 وفاز.`,
@@ -481,11 +515,16 @@ function gymText(key) {
       title: 'Gym Workout',
       chooseWorkoutDay: 'Choose workout day',
       currentExercise: 'Current Exercise',
-      exerciseLibrary: 'Exercise Library',
-      exerciseLibraryHint: 'Choose a workout day, then tap an exercise to use it.',
       exerciseName: 'Exercise name',
       exercisePlaceholder: 'Exercise name, example: Bench Press',
+      setWeight: 'Weight',
       setReps: 'Set reps',
+      restTimer: 'Rest Timer',
+      pause: 'Pause',
+      reset: 'Reset',
+      progressSummary: 'Progress Summary',
+      bestSet: 'Best set',
+      addWeightForPr: 'Add weight to your sets to track personal records.',
       set: 'Set',
       setsForThisExercise: 'Sets for This Exercise',
       saveExercise: 'Save Exercise',
@@ -510,11 +549,16 @@ function gymText(key) {
       title: 'تمرين النادي',
       chooseWorkoutDay: 'اختر يوم التمرين',
       currentExercise: 'التمرين الحالي',
-      exerciseLibrary: 'مكتبة التمارين',
-      exerciseLibraryHint: 'اختر يوم التمرين، ثم اضغط على تمرين لاستخدامه.',
       exerciseName: 'اسم التمرين',
       exercisePlaceholder: 'اسم التمرين، مثال: Bench Press',
+      setWeight: 'الوزن',
       setReps: 'تكرارات المجموعة',
+      restTimer: 'مؤقت الراحة',
+      pause: 'إيقاف مؤقت',
+      reset: 'إعادة ضبط',
+      progressSummary: 'ملخص التقدم',
+      bestSet: 'أفضل مجموعة',
+      addWeightForPr: 'أضف الوزن للمجموعات لتتبع الأرقام الشخصية.',
       set: 'مجموعة',
       setsForThisExercise: 'المجموعات لهذا التمرين',
       saveExercise: 'حفظ التمرين',
@@ -548,6 +592,16 @@ function studyText(key) {
       subjectPlaceholder: 'Math',
       studyType: 'Study type',
       studyTypePlaceholder: 'Exam, coursework, review',
+      examDate: 'Exam date',
+      examDatePlaceholder: '20/08/2026',
+      coursework: 'Coursework',
+      courseworkPlaceholder: 'Chapter 4 assignment',
+      pomodoroPlan: 'Pomodoro plan',
+      pomodoroPlaceholder: '25/5 x 4',
+      streak: 'Study streak',
+      streakPlaceholder: '5 days',
+      totalStudyHours: 'Total study hours',
+      totalHoursPlaceholder: '12.5',
       candleTimer: 'Candle Timer',
       candleHint: 'Start, pause, or stop your study session.',
       start: 'Start',
@@ -561,6 +615,16 @@ function studyText(key) {
       subjectPlaceholder: 'رياضيات',
       studyType: 'نوع الدراسة',
       studyTypePlaceholder: 'اختبار، واجب، مراجعة',
+      examDate: 'تاريخ الاختبار',
+      examDatePlaceholder: '20/08/2026',
+      coursework: 'الواجبات',
+      courseworkPlaceholder: 'واجب الفصل الرابع',
+      pomodoroPlan: 'خطة بومودورو',
+      pomodoroPlaceholder: '25/5 x 4',
+      streak: 'استمرارية الدراسة',
+      streakPlaceholder: '5 أيام',
+      totalStudyHours: 'إجمالي ساعات الدراسة',
+      totalHoursPlaceholder: '12.5',
       candleTimer: 'مؤقت الشمعة',
       candleHint: 'ابدأ، أوقف مؤقتاً، أو أنهِ جلسة الدراسة.',
       start: 'بدء',
@@ -640,6 +704,7 @@ function applyLanguage() {
   setText('#last-activity-label', text('lastActivity'));
   setText('#custom-count-label', text('customActivities'));
   setText('#custom-activity-label', text('addCustomActivity'));
+  setText('#custom-fields-label', text('customFields'));
   setText('#custom-activity-button', text('add'));
   setText('#tracker-eyebrow', text('activity'));
   setText('#tracker-history-button', text('history'));
@@ -672,6 +737,16 @@ function readJson(key, fallback) {
 
 function writeJson(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
+}
+
+function restorePersistentData() {
+  const savedSessions = readJson(storageKeys.sessions, []);
+  const savedActivities = readJson(storageKeys.customActivities, []);
+  const savedTemplates = readJson(storageKeys.customTemplates, {});
+
+  state.sessions = Array.isArray(savedSessions) ? savedSessions : [];
+  state.customActivities = Array.isArray(savedActivities) ? savedActivities : [];
+  state.customTemplates = savedTemplates && typeof savedTemplates === 'object' ? savedTemplates : {};
 }
 
 function bytesToBase64(bytes) {
@@ -753,6 +828,48 @@ function formatDuration(seconds) {
 
 function getActivities() {
   return [...defaultActivities, ...state.customActivities];
+}
+
+function getCustomTemplateFields(activity) {
+  const fields = state.customTemplates[activity];
+  return Array.isArray(fields) && fields.length > 0 ? fields : ['Session title', 'Notes'];
+}
+
+function supportsReminders(activity) {
+  return ['Gym', 'Horse Riding', 'Studying', 'Vehicle Maintenance'].includes(activity);
+}
+
+function isNonTimedActivity(activity) {
+  return activity === 'Vehicle Maintenance' || activity === 'Personal Info';
+}
+
+function getSensitiveEnding(value) {
+  const cleanValue = String(value || '').trim();
+  return cleanValue ? cleanValue.slice(-4) : '';
+}
+
+function reminderFields() {
+  const labels = state.language === 'ar'
+    ? { title: 'تذكير', date: 'تاريخ التذكير', time: 'وقت التذكير', note: 'ملاحظة التذكير' }
+    : { title: 'Reminder', date: 'Reminder date', time: 'Reminder time', note: 'Reminder note' };
+
+  return fieldSection(labels.title, [
+    inputField(labels.date, 'reminderDate', '2026-08-01', 'date'),
+    inputField(labels.time, 'reminderTime', '18:30', 'time'),
+    textAreaField(labels.note, 'reminderNote', 'What should ActiveTrack remind you about?', true),
+  ]);
+}
+
+function getReminderDetails() {
+  if (!supportsReminders(state.selectedActivity)) {
+    return undefined;
+  }
+
+  const date = sessionForm.querySelector('[name="reminderDate"]')?.value.trim() || '';
+  const time = sessionForm.querySelector('[name="reminderTime"]')?.value.trim() || '';
+  const note = sessionForm.querySelector('[name="reminderNote"]')?.value.trim() || '';
+
+  return date || time || note ? { date, time, note } : undefined;
 }
 
 function setAuthMode(mode) {
@@ -862,6 +979,7 @@ async function loginWithPasskey() {
     });
 
     if (assertion) {
+      restorePersistentData();
       markSignedIn();
       authMessage.textContent = 'Face ID / passkey accepted.';
       showView('home');
@@ -909,15 +1027,48 @@ function renderHome() {
   lastActivity.textContent = state.sessions[0] ? activityLabel(state.sessions[0].activity) : text('none');
   customCount.textContent = String(state.customActivities.length);
 
-  const sectionHtml = activitySections
-    .map((section) => renderActivitySection(section.key, section.activities))
-    .join('');
-  const customHtml =
-    state.customActivities.length > 0
-      ? renderActivitySection('custom', state.customActivities)
-      : '';
+  customActivityForm.classList.toggle('collapsed', state.selectedCategory !== 'custom');
 
-  activityGrid.innerHTML = sectionHtml + customHtml;
+  if (!state.selectedCategory) {
+    const categories = [
+      ...activitySections.map((section) => ({
+        key: section.key,
+        count: section.activities.length,
+      })),
+      { key: 'custom', count: state.customActivities.length },
+    ];
+
+    activityGrid.innerHTML = `
+      <section class="activity-section">
+        <h2>${state.language === 'ar' ? 'أنواع الأنشطة' : 'Activity types'}</h2>
+        <div class="activity-section-grid category-grid">
+          ${categories
+            .map(
+              (category) => `
+                <button class="activity-card category-card" type="button" data-category="${category.key}">
+                  <strong>${translations[state.language].sections[category.key]}</strong>
+                  <span>${category.count} ${state.language === 'ar' ? 'أنشطة' : category.count === 1 ? 'activity' : 'activities'}</span>
+                  <b aria-hidden="true">›</b>
+                </button>
+              `
+            )
+            .join('')}
+        </div>
+      </section>
+    `;
+  } else {
+    const selectedSection = activitySections.find((section) => section.key === state.selectedCategory);
+    const selectedActivities = state.selectedCategory === 'custom'
+      ? state.customActivities
+      : selectedSection?.activities || [];
+
+    activityGrid.innerHTML = `
+      <button class="category-back" type="button" data-category-back>
+        ${state.language === 'ar' ? '→ أنواع الأنشطة' : '← Activity types'}
+      </button>
+      ${renderActivitySection(state.selectedCategory, selectedActivities)}
+    `;
+  }
   renderFeatureUpgrades();
 }
 
@@ -971,8 +1122,10 @@ function openTracker(activity) {
   trackerHelper.textContent =
     activity === 'Vehicle Maintenance'
       ? text('trackerVehicle')
+      : activity === 'Personal Info'
+        ? text('trackerRecord')
       : text('trackerTimed');
-  trackerView.classList.toggle('vehicle-mode', activity === 'Vehicle Maintenance');
+  trackerView.classList.toggle('vehicle-mode', isNonTimedActivity(activity));
   activityFields.innerHTML = getFieldsForActivity(activity);
   bindConditionalFields();
   if (activity === 'Studying') {
@@ -1000,7 +1153,71 @@ function openTracker(activity) {
   showView('tracker');
 }
 
+function getMovementDistanceKm() {
+  const laps = Number(sessionForm.querySelector('[name="laps"]')?.value || 0);
+  const lapDistance = Number(sessionForm.querySelector('[name="lapDistance"]')?.value || 0);
+  const unit = sessionForm.querySelector('[name="lapDistanceUnit"]')?.value || 'm';
+
+  if (!laps || !lapDistance) {
+    return 0;
+  }
+
+  const totalDistance = laps * lapDistance;
+
+  return unit === 'm' ? totalDistance / 1000 : totalDistance;
+}
+
+function getMovementTotalDistance() {
+  const laps = Number(sessionForm.querySelector('[name="laps"]')?.value || 0);
+  const lapDistance = Number(sessionForm.querySelector('[name="lapDistance"]')?.value || 0);
+  const unit = sessionForm.querySelector('[name="lapDistanceUnit"]')?.value || 'm';
+
+  if (!laps || !lapDistance) {
+    return `0 ${unit}`;
+  }
+
+  const totalDistance = laps * lapDistance;
+
+  if (unit === 'm' && totalDistance >= 1000) {
+    return `${(totalDistance / 1000).toFixed(2)} km`;
+  }
+
+  return `${totalDistance} ${unit}`;
+}
+
+function getMovementAveragePace(durationSeconds) {
+  const totalKm = getMovementDistanceKm();
+
+  if (!totalKm || !durationSeconds) {
+    return 'Not calculated';
+  }
+
+  const secondsPerKm = durationSeconds / totalKm;
+  const minutes = Math.floor(secondsPerKm / 60);
+  const seconds = Math.round(secondsPerKm % 60);
+
+  return `${minutes}:${String(seconds).padStart(2, '0')} min/km`;
+}
+
+function getMovementAverageSpeed(durationSeconds) {
+  const totalKm = getMovementDistanceKm();
+
+  if (!totalKm || !durationSeconds) {
+    return 'Not calculated';
+  }
+
+  return `${(totalKm / (durationSeconds / 3600)).toFixed(2)} km/h`;
+}
+
 function getFieldsForActivity(activity) {
+  if (state.customActivities.includes(activity)) {
+    return fieldGrid(
+      getCustomTemplateFields(activity).map((field, index) =>
+        inputField(escapeHtml(field), `customField${index}`, escapeHtml(field))
+      )
+    );
+  }
+
   if (activity === 'Football') {
     return fieldGrid([
       inputField('Team 1', 'teamOneName', 'Home team'),
@@ -1032,18 +1249,22 @@ function getFieldsForActivity(activity) {
         </div>
 
         <h2 class="gym-section-title">${gymText('currentExercise')}</h2>
-        <div class="gym-library-box">
-          <div>
-            <h2>${gymText('exerciseLibrary')}</h2>
-            <p>${gymText('exerciseLibraryHint')}</p>
-          </div>
-          <div class="gym-library-grid" id="gym-exercise-library"></div>
-        </div>
         ${inputField(gymText('exerciseName'), 'gymExerciseName', gymText('exercisePlaceholder'))}
 
         <div class="gym-set-row">
+          ${inputField(gymText('setWeight'), 'gymSetWeight', gymText('setWeight'), 'number')}
           ${inputField(gymText('setReps'), 'gymSetReps', gymText('setReps'), 'number')}
           <button class="button secondary" id="gym-add-set" type="button">+ ${gymText('set')}</button>
+        </div>
+
+        <div class="gym-list-box">
+          <h2>${gymText('restTimer')}</h2>
+          <strong class="gym-rest-time" id="gym-rest-time">00:00</strong>
+          <div class="button-row">
+            <button class="button secondary" id="gym-rest-start" type="button">${text('start')}</button>
+            <button class="button secondary" id="gym-rest-pause" type="button">${gymText('pause')}</button>
+            <button class="button secondary" id="gym-rest-reset" type="button">${gymText('reset')}</button>
+          </div>
         </div>
 
         <div class="gym-list-box">
@@ -1057,25 +1278,54 @@ function getFieldsForActivity(activity) {
           <h2>${gymText('exercisesAdded')}</h2>
           <div id="gym-exercise-list" class="gym-entry-list"></div>
         </div>
+
+        <div class="gym-list-box">
+          <h2>${gymText('progressSummary')}</h2>
+          <div id="gym-progress-summary" class="gym-entry-list"></div>
+        </div>
+        ${reminderFields()}
       </div>
     `;
   }
 
   if (lapActivities.includes(activity)) {
-    return fieldGrid([
+    const fields = [
       inputField('Laps', 'laps', '4', 'number'),
       inputField('Lap distance', 'lapDistance', activity === 'Cycling' ? '1' : '400', 'number'),
       selectField('Unit', 'lapDistanceUnit', ['m', 'km']),
-      textAreaField('Notes', 'notes', 'How did it feel?', true),
-    ]);
+    ];
+
+    if (movementActivities.includes(activity)) {
+      fields.push(
+        inputField('Route name', 'routeName', 'Park loop'),
+        inputField('Goal', 'goal', '5 km easy pace'),
+        inputField('Elevation gain', 'elevationGain', '120 m'),
+        textAreaField('Splits', 'splits', '1km 6:10, 2km 6:05', true),
+        textAreaField('Personal record', 'personalRecord', 'Fastest 5 km', true)
+      );
+    }
+
+    fields.push(textAreaField('Notes', 'notes', 'How did it feel?', true));
+
+    return fieldGrid(fields);
   }
 
   if (matchActivities.includes(activity)) {
     return fieldGrid([
       inputField('Team 1', 'matchTeamOneName', 'Us'),
       inputField('Team 2', 'matchTeamTwoName', 'Them'),
+      inputField('Set number', 'matchSetNumber', '1', 'number'),
       inputField('Team 1 games', 'matchTeamOneTotal', '0', 'number'),
       inputField('Team 2 games', 'matchTeamTwoTotal', '0', 'number'),
+      inputField('Team 1 points', 'matchTeamOnePoints', '40'),
+      inputField('Team 2 points', 'matchTeamTwoPoints', '30'),
+      inputField('Server', 'matchServer', 'Team 1'),
+      inputField('Tiebreak score', 'matchTiebreakScore', '7-5'),
+      inputField('Winner', 'matchWinner', 'Team 1'),
+      inputField('Team 1 winners', 'matchTeamOneWinners', '12', 'number'),
+      inputField('Team 2 winners', 'matchTeamTwoWinners', '9', 'number'),
+      inputField('Team 1 errors', 'matchTeamOneErrors', '6', 'number'),
+      inputField('Team 2 errors', 'matchTeamTwoErrors', '8', 'number'),
       textAreaField('Rounds notes', 'matchRounds', 'Round 1: 6-4', true),
     ]);
   }
@@ -1090,13 +1340,19 @@ function getFieldsForActivity(activity) {
           </div>
         </header>
 
+        <h2 class="baloot-section-title">${balootText('teamNames')}</h2>
+        <div class="field-grid">
+          ${inputField(balootText('usName'), 'balootUsName', balootText('us'))}
+          ${inputField(balootText('themName'), 'balootThemName', balootText('them'))}
+        </div>
+
         <div class="baloot-total-box">
           <div class="baloot-total-card">
-            <span>${balootText('us')}</span>
+            <span id="baloot-us-label">${balootText('us')}</span>
             <strong id="baloot-us-total">0</strong>
           </div>
           <div class="baloot-total-card">
-            <span>${balootText('them')}</span>
+            <span id="baloot-them-label">${balootText('them')}</span>
             <strong id="baloot-them-total">0</strong>
           </div>
         </div>
@@ -1128,6 +1384,11 @@ function getFieldsForActivity(activity) {
           <h2>${balootText('scoreHistory')}</h2>
           <div id="baloot-score-list" class="baloot-score-list"></div>
         </div>
+
+        <div class="baloot-winner-box">
+          <span>${balootText('shareResult')}</span>
+          <strong id="baloot-share-result"></strong>
+        </div>
       </div>
     `;
   }
@@ -1152,6 +1413,18 @@ function getFieldsForActivity(activity) {
           inputField(horseText('walkMinutes'), 'walkMinutes', '10', 'number'),
           inputField(horseText('trotMinutes'), 'trotMinutes', '15', 'number'),
           inputField(horseText('canterMinutes'), 'canterMinutes', '8', 'number'),
+        ])}
+        ${fieldSection(horseText('rideMetricsSection'), [
+          inputField(horseText('rideDistance'), 'rideDistance', '4.2 km'),
+          inputField(horseText('averageSpeed'), 'averageSpeed', '8.5 km/h'),
+          inputField(horseText('leftTurns'), 'leftTurns', '12', 'number'),
+          inputField(horseText('rightTurns'), 'rightTurns', '12', 'number'),
+        ])}
+        ${fieldSection(horseText('calendarSafetySection'), [
+          inputField(horseText('rideDate'), 'rideDate', '17/07/2026'),
+          textAreaField(horseText('calendarNote'), 'calendarNote', horseText('calendarNotePlaceholder'), true),
+          inputField(horseText('safetyLocation'), 'safetyLocation', horseText('safetyLocationPlaceholder')),
+          inputField(horseText('safetyContact'), 'safetyContact', horseText('safetyContactPlaceholder')),
         ])}
         ${fieldSection(horseText('dailyCareSection'), [
           checkboxField(horseText('hayGiven'), 'hayGiven'),
@@ -1192,6 +1465,7 @@ function getFieldsForActivity(activity) {
         ${fieldSection(horseText('notesSection'), [
           textAreaField(horseText('horseNotes'), 'horseNotes', horseText('horseNotes'), true),
         ])}
+        ${reminderFields()}
       </div>
     `;
   }
@@ -1199,11 +1473,61 @@ function getFieldsForActivity(activity) {
   if (activity === 'Vehicle Maintenance') {
     return fieldGrid([
       inputField('Vehicle name', 'vehicleName', 'Car name'),
-      selectField('Service type', 'serviceType', ['Tire service', 'Battery service', 'Oil service', 'Gas', 'Other service']),
+      inputField('Plate number', 'plateNumber', 'ABC 1234'),
+      inputField('Model / Year', 'modelYear', 'Camry 2022'),
+      selectField('Service type', 'serviceType', [
+        'Tire service',
+        'Battery service',
+        'Oil service',
+        'Gas',
+        'Insurance',
+        'Registration',
+        'Repair',
+        'Other service',
+      ]),
+      inputField('Service date', 'serviceDate', '2026-07-17', 'date'),
       inputField('Mileage', 'mileage', '12000'),
       inputField('Cost', 'cost', '150'),
+      inputField('Shop / place name', 'shopName', 'Service center'),
+      inputField('Next service date', 'nextServiceDate', '2026-10-17', 'date'),
+      inputField('Next service mileage', 'nextServiceMileage', '17000'),
+      inputField('Insurance expiration date', 'insuranceExpirationDate', '2027-07-17', 'date'),
+      inputField('Registration end date', 'registrationEndDate', '2027-07-17', 'date'),
+      inputField('Reminder date', 'reminderDate', '2026-08-01', 'date'),
+      inputField('Reminder time', 'reminderTime', '18:30', 'time'),
+      textAreaField('Reminder note', 'reminderNote', 'Renew insurance or book service', true),
       textAreaField('Notes', 'notes', 'What was done?', true),
     ]);
+  }
+
+  if (activity === 'Personal Info') {
+    const labels = state.language === 'ar'
+      ? {
+          title: 'المعلومات الشخصية', privacy: 'للخصوصية، يتم حفظ آخر أربعة أحرف فقط من أرقام الوثائق.',
+          idNumber: 'رقم الهوية', idExpiration: 'تاريخ انتهاء الهوية',
+          dlExpiration: 'تاريخ انتهاء رخصة القيادة', passportNumber: 'رقم الجواز',
+          passportExpiration: 'تاريخ انتهاء الجواز',
+        }
+      : {
+          title: 'Personal Info', privacy: 'For privacy, only the last four characters of document numbers are saved.',
+          idNumber: 'ID number', idExpiration: 'ID expiration date',
+          dlExpiration: 'Driving license expiration date', passportNumber: 'Passport number',
+          passportExpiration: 'Passport expiration date',
+        };
+
+    return `
+      <section class="field-section personal-info-form">
+        <h2>${labels.title}</h2>
+        <p class="privacy-note">${labels.privacy}</p>
+        <div class="field-grid">
+          ${inputField(labels.idNumber, 'personalIdNumber', labels.idNumber, 'password')}
+          ${inputField(labels.idExpiration, 'personalIdExpirationDate', '2027-01-01', 'date')}
+          ${inputField(labels.dlExpiration, 'personalDlExpirationDate', '2027-01-01', 'date')}
+          ${inputField(labels.passportNumber, 'personalPassportNumber', labels.passportNumber, 'password')}
+          ${inputField(labels.passportExpiration, 'personalPassportExpirationDate', '2027-01-01', 'date')}
+        </div>
+      </section>
+    `;
   }
 
   if (activity === 'Golf') {
@@ -1225,6 +1549,11 @@ function getFieldsForActivity(activity) {
         <div class="field-grid">
           ${inputField(studyText('subject'), 'subject', studyText('subjectPlaceholder'))}
           ${inputField(studyText('studyType'), 'studyType', studyText('studyTypePlaceholder'))}
+          ${inputField(studyText('examDate'), 'examDate', studyText('examDatePlaceholder'))}
+          ${inputField(studyText('coursework'), 'coursework', studyText('courseworkPlaceholder'))}
+          ${inputField(studyText('pomodoroPlan'), 'pomodoroPlan', studyText('pomodoroPlaceholder'))}
+          ${inputField(studyText('streak'), 'streak', studyText('streakPlaceholder'))}
+          ${inputField(studyText('totalStudyHours'), 'totalStudyHours', studyText('totalHoursPlaceholder'), 'number')}
         </div>
         <div class="study-candle-card">
           <span>${studyText('candleTimer')}</span>
@@ -1240,6 +1569,7 @@ function getFieldsForActivity(activity) {
           </div>
         </div>
         ${textAreaField(studyText('notes'), 'notes', studyText('notes'), true)}
+        ${reminderFields()}
       </div>
     `;
   }
@@ -1376,6 +1706,7 @@ function renderStudyCandle() {
 function resetGymState() {
   state.currentGymSets = [];
   state.gymExercises = [];
+  resetGymRestTimer();
 }
 
 function bindGymWorkoutBuilder() {
@@ -1388,21 +1719,53 @@ function bindGymWorkoutBuilder() {
   });
   document.querySelector('#gym-add-set')?.addEventListener('click', addGymSet);
   document.querySelector('#gym-save-exercise')?.addEventListener('click', saveGymExercise);
+  document.querySelector('#gym-rest-start')?.addEventListener('click', startGymRestTimer);
+  document.querySelector('#gym-rest-pause')?.addEventListener('click', pauseGymRestTimer);
+  document.querySelector('#gym-rest-reset')?.addEventListener('click', resetGymRestTimer);
 }
 
-function chooseGymExercise(exerciseName) {
-  const exerciseInput = sessionForm.querySelector('[name="gymExerciseName"]');
+function formatGymRestTime() {
+  const minutes = Math.floor(state.gymRestSeconds / 60);
+  const seconds = state.gymRestSeconds % 60;
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
 
-  if (exerciseInput) {
-    exerciseInput.value = exerciseName;
+function startGymRestTimer() {
+  if (state.gymRestTimerId) {
+    return;
   }
 
+  state.gymRestTimerId = window.setInterval(() => {
+    state.gymRestSeconds += 1;
+    renderGymWorkoutBuilder();
+  }, 1000);
+  renderGymWorkoutBuilder();
+}
+
+function pauseGymRestTimer() {
+  if (state.gymRestTimerId) {
+    window.clearInterval(state.gymRestTimerId);
+  }
+
+  state.gymRestTimerId = null;
+  renderGymWorkoutBuilder();
+}
+
+function resetGymRestTimer() {
+  if (state.gymRestTimerId) {
+    window.clearInterval(state.gymRestTimerId);
+  }
+
+  state.gymRestTimerId = null;
+  state.gymRestSeconds = 0;
   renderGymWorkoutBuilder();
 }
 
 function addGymSet() {
   const repsInput = sessionForm.querySelector('[name="gymSetReps"]');
+  const weightInput = sessionForm.querySelector('[name="gymSetWeight"]');
   const cleanReps = repsInput.value.trim();
+  const cleanWeight = weightInput.value.trim();
 
   if (cleanReps === '') {
     sessionMessage.textContent = gymText('enterReps');
@@ -1414,10 +1777,14 @@ function addGymSet() {
     {
       id: Date.now(),
       reps: cleanReps,
+      weight: cleanWeight,
     },
   ];
   repsInput.value = '';
+  weightInput.value = '';
   sessionMessage.textContent = '';
+  state.gymRestSeconds = 0;
+  startGymRestTimer();
   renderGymWorkoutBuilder();
 }
 
@@ -1429,6 +1796,7 @@ function deleteCurrentGymSet(setId) {
 function saveGymExercise() {
   const exerciseInput = sessionForm.querySelector('[name="gymExerciseName"]');
   const repsInput = sessionForm.querySelector('[name="gymSetReps"]');
+  const weightInput = sessionForm.querySelector('[name="gymSetWeight"]');
   const cleanExerciseName = exerciseInput.value.trim();
 
   if (cleanExerciseName === '') {
@@ -1452,6 +1820,7 @@ function saveGymExercise() {
   state.currentGymSets = [];
   exerciseInput.value = '';
   repsInput.value = '';
+  weightInput.value = '';
   sessionMessage.textContent = '';
   renderGymWorkoutBuilder();
 }
@@ -1461,36 +1830,40 @@ function deleteGymExercise(exerciseId) {
   renderGymWorkoutBuilder();
 }
 
+function getBestGymSet() {
+  const allSets = state.gymExercises.flatMap((exercise) =>
+    exercise.sets.map((set) => ({
+      exerciseName: exercise.name,
+      reps: String(set.reps || ''),
+      weight: String(set.weight || ''),
+      numericWeight: Number(set.weight) || 0,
+    }))
+  );
+
+  const weightedSets = allSets.filter((set) => set.numericWeight > 0);
+
+  if (weightedSets.length === 0) {
+    return null;
+  }
+
+  return weightedSets.reduce((bestSet, set) =>
+    set.numericWeight > bestSet.numericWeight ? set : bestSet
+  );
+}
+
 function renderGymWorkoutBuilder() {
   const selectedDay = document.querySelector('#gym-workout-day')?.value || '';
-  const selectedExercise = sessionForm.querySelector('[name="gymExerciseName"]')?.value || '';
-  const exerciseLibrary = document.querySelector('#gym-exercise-library');
+  const restTimer = document.querySelector('#gym-rest-time');
   const currentSetList = document.querySelector('#gym-current-set-list');
   const exerciseList = document.querySelector('#gym-exercise-list');
+  const progressSummary = document.querySelector('#gym-progress-summary');
 
   document.querySelectorAll('[data-gym-day]').forEach((button) => {
     button.classList.toggle('selected', button.dataset.gymDay === selectedDay);
   });
 
-  if (exerciseLibrary) {
-    const suggestions = gymExerciseLibrary[selectedDay] || [];
-
-    exerciseLibrary.innerHTML =
-      suggestions.length === 0
-        ? `<div class="empty-state">${gymText('chooseWorkoutDay')}</div>`
-        : suggestions
-            .map(
-              (exercise) => `
-                <button class="gym-library-button ${exercise === selectedExercise ? 'selected' : ''}" type="button" data-gym-exercise="${escapeHtml(exercise)}">
-                  ${escapeHtml(exercise)}
-                </button>
-              `
-            )
-            .join('');
-
-    exerciseLibrary.querySelectorAll('[data-gym-exercise]').forEach((button) => {
-      button.addEventListener('click', () => chooseGymExercise(button.dataset.gymExercise));
-    });
+  if (restTimer) {
+    restTimer.textContent = formatGymRestTime();
   }
 
   if (currentSetList) {
@@ -1501,7 +1874,7 @@ function renderGymWorkoutBuilder() {
             .map(
               (set, index) => `
                 <div class="gym-entry-row">
-                  <span>${gymText('set')} ${index + 1}: ${escapeHtml(set.reps)} ${gymText('reps')}</span>
+                  <span>${gymText('set')} ${index + 1}: ${set.weight ? `${escapeHtml(set.weight)} kg, ` : ''}${escapeHtml(set.reps)} ${gymText('reps')}</span>
                   <button class="icon-button" type="button" data-delete-gym-set="${set.id}">X</button>
                 </div>
               `
@@ -1524,7 +1897,7 @@ function renderGymWorkoutBuilder() {
                   <span>
                     <strong>${index + 1}. ${escapeHtml(exercise.name)}</strong>
                     ${exercise.sets
-                      .map((set, setIndex) => `<small>${gymText('set')} ${setIndex + 1}: ${escapeHtml(set.reps)} ${gymText('reps')}</small>`)
+                      .map((set, setIndex) => `<small>${gymText('set')} ${setIndex + 1}: ${set.weight ? `${escapeHtml(set.weight)} kg, ` : ''}${escapeHtml(set.reps)} ${gymText('reps')}</small>`)
                       .join('')}
                   </span>
                   <button class="icon-button" type="button" data-delete-gym-exercise="${exercise.id}">X</button>
@@ -1536,6 +1909,14 @@ function renderGymWorkoutBuilder() {
     exerciseList.querySelectorAll('[data-delete-gym-exercise]').forEach((button) => {
       button.addEventListener('click', () => deleteGymExercise(Number(button.dataset.deleteGymExercise)));
     });
+  }
+
+  if (progressSummary) {
+    const bestSet = getBestGymSet();
+
+    progressSummary.innerHTML = bestSet
+      ? `<div class="gym-entry-row"><span>${gymText('bestSet')}: <strong>${escapeHtml(bestSet.exerciseName)}</strong><small>${escapeHtml(bestSet.weight)} kg x ${escapeHtml(bestSet.reps)} ${gymText('reps')}</small></span></div>`
+      : `<div class="empty-state">${gymText('addWeightForPr')}</div>`;
   }
 }
 
@@ -1552,13 +1933,24 @@ function getBalootThemTotalFromScores(scores) {
   return scores.reduce((total, score) => total + Number(score.them || 0), 0);
 }
 
+function getBalootUsName() {
+  return sessionForm.querySelector('[name="balootUsName"]')?.value.trim() || balootText('us');
+}
+
+function getBalootThemName() {
+  return sessionForm.querySelector('[name="balootThemName"]')?.value.trim() || balootText('them');
+}
+
 function getBalootWinner(usTotal, themTotal) {
+  const usName = getBalootUsName();
+  const themName = getBalootThemName();
+
   if (usTotal >= 152 && usTotal > themTotal) {
-    return balootText('us');
+    return usName;
   }
 
   if (themTotal >= 152 && themTotal > usTotal) {
-    return balootText('them');
+    return themName;
   }
 
   if (usTotal >= 152 && themTotal >= 152 && usTotal === themTotal) {
@@ -1568,11 +1960,21 @@ function getBalootWinner(usTotal, themTotal) {
   return balootText('notFinished');
 }
 
+function getBalootShareText(scores, usTotal, themTotal) {
+  const usName = getBalootUsName();
+  const themName = getBalootThemName();
+  const winner = getBalootWinner(usTotal, themTotal);
+
+  return `Baloot result: ${usName} ${usTotal} - ${themName} ${themTotal}. Winner: ${winner}. Hands played: ${scores.length}.`;
+}
+
 function bindBalootCalculator() {
   document.querySelector('#baloot-add-score')?.addEventListener('click', addBalootScore);
   document.querySelector('#baloot-delete-last')?.addEventListener('click', deleteLastBalootScore);
   document.querySelector('#baloot-reset')?.addEventListener('click', resetBalootScores);
   document.querySelector('#baloot-dealer-button')?.addEventListener('click', changeBalootDealerDirection);
+  sessionForm.querySelector('[name="balootUsName"]')?.addEventListener('input', renderBalootCalculator);
+  sessionForm.querySelector('[name="balootThemName"]')?.addEventListener('input', renderBalootCalculator);
 }
 
 function addBalootScore() {
@@ -1622,7 +2024,7 @@ function addBalootScore() {
     getBalootThemTotalFromScores(state.balootScores)
   );
 
-  if (winner === balootText('us') || winner === balootText('them')) {
+  if (winner === getBalootUsName() || winner === getBalootThemName()) {
     sessionMessage.textContent = balootText('won')(winner);
   }
 }
@@ -1661,12 +2063,17 @@ function changeBalootDealerDirection() {
 function renderBalootCalculator() {
   const usTotal = getBalootUsTotalFromScores(state.balootScores);
   const themTotal = getBalootThemTotalFromScores(state.balootScores);
+  const usName = getBalootUsName();
+  const themName = getBalootThemName();
   const scoreList = document.querySelector('#baloot-score-list');
 
+  setText('#baloot-us-label', usName);
+  setText('#baloot-them-label', themName);
   setText('#baloot-us-total', usTotal);
   setText('#baloot-them-total', themTotal);
   setText('#baloot-winner', getBalootWinner(usTotal, themTotal));
   setText('#baloot-dealer-direction', state.balootDealerDirection);
+  setText('#baloot-share-result', getBalootShareText(state.balootScores, usTotal, themTotal));
 
   if (!scoreList) {
     return;
@@ -1681,7 +2088,7 @@ function renderBalootCalculator() {
     .map(
       (score, index) => `
         <div class="baloot-score-row">
-          <span>${balootText('hand')} ${index + 1}: ${balootText('us')} ${escapeHtml(score.us)} - ${balootText('them')} ${escapeHtml(score.them)}</span>
+          <span>${balootText('hand')} ${index + 1}: ${escapeHtml(usName)} ${escapeHtml(score.us)} - ${escapeHtml(themName)} ${escapeHtml(score.them)}</span>
           <button class="icon-button" type="button" data-delete-baloot-score="${score.id}">X</button>
         </div>
       `
@@ -1734,6 +2141,19 @@ function horseText(key) {
       walkMinutes: 'Walk minutes',
       trotMinutes: 'Trot minutes',
       canterMinutes: 'Canter minutes',
+      rideMetricsSection: 'Ride Metrics',
+      rideDistance: 'Ride distance',
+      averageSpeed: 'Average speed',
+      leftTurns: 'Left turns',
+      rightTurns: 'Right turns',
+      calendarSafetySection: 'Calendar and Safety',
+      rideDate: 'Ride date',
+      calendarNote: 'Calendar note',
+      calendarNotePlaceholder: 'Farrier visit next week',
+      safetyLocation: 'Safety location',
+      safetyLocationPlaceholder: 'Riyadh stable',
+      safetyContact: 'Safety contact',
+      safetyContactPlaceholder: 'Emergency contact',
       dailyCareSection: 'Daily Care',
       hayGiven: 'Hay Given',
       waterChecked: 'Water Checked',
@@ -1784,6 +2204,19 @@ function horseText(key) {
       walkMinutes: 'دقائق المشي',
       trotMinutes: 'دقائق التروت',
       canterMinutes: 'دقائق الكانتر',
+      rideMetricsSection: 'مقاييس الركوب',
+      rideDistance: 'مسافة الركوب',
+      averageSpeed: 'متوسط السرعة',
+      leftTurns: 'اللفات يسار',
+      rightTurns: 'اللفات يمين',
+      calendarSafetySection: 'التقويم والسلامة',
+      rideDate: 'تاريخ الركوب',
+      calendarNote: 'ملاحظة التقويم',
+      calendarNotePlaceholder: 'زيارة البيطار الأسبوع القادم',
+      safetyLocation: 'موقع السلامة',
+      safetyLocationPlaceholder: 'إسطبل الرياض',
+      safetyContact: 'جهة اتصال السلامة',
+      safetyContactPlaceholder: 'رقم الطوارئ',
       dailyCareSection: 'العناية اليومية',
       hayGiven: 'تم إعطاء التبن',
       waterChecked: 'تم فحص الماء',
@@ -1858,18 +2291,18 @@ function saveSession(event) {
   event.preventDefault();
 
   const activity = state.selectedActivity;
-  const isVehicle = activity === 'Vehicle Maintenance';
+  const isNonTimed = isNonTimedActivity(activity);
 
   if (!activity) {
     return;
   }
 
-  if (!isVehicle && !state.startTime) {
+  if (!isNonTimed && !state.startTime) {
     sessionMessage.textContent = 'Start the timer before saving.';
     return;
   }
 
-  if (!isVehicle && !state.endTime) {
+  if (!isNonTimed && !state.endTime) {
     state.endTime = new Date();
     stopTimer();
   }
@@ -1885,16 +2318,16 @@ function saveSession(event) {
   }
 
   const details = getSessionDetails();
-  const durationSeconds = isVehicle ? 0 : Math.floor((state.endTime - state.startTime) / 1000);
+  const durationSeconds = isNonTimed ? 0 : Math.floor((state.endTime - state.startTime) / 1000);
   const now = new Date();
 
   const session = {
     id: Date.now(),
     activity,
     date: now.toISOString(),
-    start: isVehicle ? '' : state.startTime.toISOString(),
-    end: isVehicle ? '' : state.endTime.toISOString(),
-    duration: isVehicle ? '' : formatDuration(durationSeconds),
+    start: isNonTimed ? '' : state.startTime.toISOString(),
+    end: isNonTimed ? '' : state.endTime.toISOString(),
+    duration: isNonTimed ? '' : formatDuration(durationSeconds),
     durationSeconds,
     details,
   };
@@ -1910,15 +2343,42 @@ function saveSession(event) {
 }
 
 function getSessionDetails() {
+  if (state.selectedActivity === 'Personal Info') {
+    return {
+      personalInfo: {
+        idNumberEnding: getSensitiveEnding(sessionForm.querySelector('[name="personalIdNumber"]')?.value),
+        idExpirationDate: sessionForm.querySelector('[name="personalIdExpirationDate"]')?.value || '',
+        drivingLicenseExpirationDate: sessionForm.querySelector('[name="personalDlExpirationDate"]')?.value || '',
+        passportNumberEnding: getSensitiveEnding(sessionForm.querySelector('[name="personalPassportNumber"]')?.value),
+        passportExpirationDate: sessionForm.querySelector('[name="personalPassportExpirationDate"]')?.value || '',
+      },
+    };
+  }
+
+  if (state.customActivities.includes(state.selectedActivity)) {
+    return {
+      customFields: getCustomTemplateFields(state.selectedActivity).map((label, index) => ({
+        label,
+        value: sessionForm.querySelector(`[name="customField${index}"]`)?.value.trim() || '',
+      })),
+    };
+  }
+
   if (state.selectedActivity === 'Studying') {
     return {
       studying: {
         subject: sessionForm.querySelector('[name="subject"]').value.trim(),
         studyType: sessionForm.querySelector('[name="studyType"]').value.trim(),
+        examDate: sessionForm.querySelector('[name="examDate"]').value.trim(),
+        coursework: sessionForm.querySelector('[name="coursework"]').value.trim(),
+        pomodoroPlan: sessionForm.querySelector('[name="pomodoroPlan"]').value.trim(),
+        streak: sessionForm.querySelector('[name="streak"]').value.trim(),
+        totalStudyHours: sessionForm.querySelector('[name="totalStudyHours"]').value.trim(),
         candleSeconds: state.studyCandleSeconds,
         candleTime: formatStudyCandleTime(),
         notes: sessionForm.querySelector('[name="notes"]').value.trim(),
       },
+      reminder: getReminderDetails(),
     };
   }
 
@@ -1949,12 +2409,15 @@ function getSessionDetails() {
     return {
       gymWorkoutDay: workoutDay,
       gymExercises,
+      reminder: getReminderDetails(),
     };
   }
 
   if (state.selectedActivity === 'Baloot') {
     const cleanUsScore = sessionForm.querySelector('[name="balootUsScore"]').value.trim();
     const cleanThemScore = sessionForm.querySelector('[name="balootThemScore"]').value.trim();
+    const usName = getBalootUsName();
+    const themName = getBalootThemName();
     const balootScores =
       cleanUsScore !== '' && cleanThemScore !== ''
         ? [
@@ -1971,10 +2434,13 @@ function getSessionDetails() {
 
     return {
       balootScores,
+      balootUsName: usName,
+      balootThemName: themName,
       balootUsTotal: usTotal,
       balootThemTotal: themTotal,
       balootWinner: getBalootWinner(usTotal, themTotal),
       balootDealerDirection: state.balootDealerDirection,
+      balootShareText: getBalootShareText(balootScores, usTotal, themTotal),
     };
   }
 
@@ -1992,6 +2458,23 @@ function getSessionDetails() {
 
     details[field.name] = field.value;
   });
+
+  if (supportsReminders(state.selectedActivity)) {
+    details.reminder = getReminderDetails();
+    delete details.reminderDate;
+    delete details.reminderTime;
+    delete details.reminderNote;
+  }
+
+  if (movementActivities.includes(state.selectedActivity)) {
+    const durationSeconds = state.startTime && state.endTime
+      ? Math.floor((state.endTime - state.startTime) / 1000)
+      : 0;
+
+    details.totalDistance = getMovementTotalDistance();
+    details.averagePace = getMovementAveragePace(durationSeconds);
+    details.averageSpeed = getMovementAverageSpeed(durationSeconds);
+  }
 
   return details;
 }
@@ -2012,6 +2495,8 @@ function renderHistory() {
       ? state.sessions
       : state.sessions.filter((session) => session.activity === historyFilter.value);
 
+  renderProgressDashboard();
+
   if (filteredSessions.length === 0) {
     historyList.innerHTML = `<div class="empty-state">${text('noSessions')}</div>`;
     return;
@@ -2031,24 +2516,161 @@ function renderHistory() {
             <button class="button danger" type="button" data-delete-session="${session.id}">${text('delete')}</button>
           </header>
           ${
-            session.activity === 'Vehicle Maintenance'
-              ? `<p>${text('maintenanceRecord')}</p>`
+            isNonTimedActivity(session.activity)
+              ? `<p>${session.activity === 'Personal Info' ? text('personalRecord') : text('maintenanceRecord')}</p>`
               : `<p>${formatTime(session.start)} to ${formatTime(session.end)} - ${session.duration}</p>`
           }
-          <div class="history-details">${details || `<div><span>${text('details')}</span>${text('noDetails')}</div>`}</div>
+          <div class="history-details">
+            ${details || `<div><span>${text('details')}</span>${text('noDetails')}</div>`}
+            ${renderReminderDetails(session)}
+          </div>
         </article>
       `;
     })
     .join('');
 }
 
+function getRecentSessions(days) {
+  const now = Date.now();
+  const rangeMilliseconds = days * 24 * 60 * 60 * 1000;
+
+  return state.sessions.filter((session) => {
+    const sessionTime = new Date(session.date).getTime();
+    return Number.isFinite(sessionTime) && now - sessionTime >= 0 && now - sessionTime <= rangeMilliseconds;
+  });
+}
+
+function formatProgressTime(sessions) {
+  const totalMinutes = Math.round(
+    sessions.reduce((total, session) => total + Number(session.durationSeconds || 0), 0) / 60
+  );
+
+  if (totalMinutes < 60) {
+    return `${totalMinutes} min`;
+  }
+
+  return `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}m`;
+}
+
+function renderProgressDashboard() {
+  if (!progressDashboard) {
+    return;
+  }
+
+  const weeklySessions = getRecentSessions(7);
+  const monthlySessions = getRecentSessions(30);
+  const activityCounts = monthlySessions.reduce((counts, session) => {
+    counts[session.activity] = (counts[session.activity] || 0) + 1;
+    return counts;
+  }, {});
+  const sortedActivities = Object.entries(activityCounts).sort(([, first], [, second]) => second - first);
+  const highestCount = sortedActivities[0]?.[1] || 1;
+  const labels = state.language === 'ar'
+    ? {
+        title: 'التقدم', weekly: 'آخر 7 أيام', monthly: 'آخر 30 يوماً', sessions: 'جلسات',
+        breakdown: 'توزيع النشاط خلال 30 يوماً', empty: 'لا يوجد نشاط خلال آخر 30 يوماً',
+      }
+    : {
+        title: 'Progress', weekly: 'Last 7 days', monthly: 'Last 30 days', sessions: 'sessions',
+        breakdown: 'Activity breakdown (30 days)', empty: 'No activity in the last 30 days.',
+      };
+
+  progressDashboard.innerHTML = `
+    <h2>${labels.title}</h2>
+    <div class="progress-summary">
+      <article>
+        <span>${labels.weekly}</span>
+        <strong>${weeklySessions.length} ${labels.sessions}</strong>
+        <small>${formatProgressTime(weeklySessions)}</small>
+      </article>
+      <article>
+        <span>${labels.monthly}</span>
+        <strong>${monthlySessions.length} ${labels.sessions}</strong>
+        <small>${formatProgressTime(monthlySessions)}</small>
+      </article>
+    </div>
+    <h3>${labels.breakdown}</h3>
+    <div class="progress-bars">
+      ${
+        sortedActivities.length
+          ? sortedActivities
+              .map(
+                ([activity, count]) => `
+                  <div class="progress-row">
+                    <div><span>${escapeHtml(activityLabel(activity))}</span><small>${count}</small></div>
+                    <div class="progress-track"><span style="width: ${Math.max(8, Math.round((count / highestCount) * 100))}%"></span></div>
+                  </div>
+                `
+              )
+              .join('')
+          : `<p>${labels.empty}</p>`
+      }
+    </div>
+  `;
+}
+
+function renderReminderDetails(session) {
+  const reminder = session.details?.reminder;
+
+  if (!reminder) {
+    return '';
+  }
+
+  const labels = state.language === 'ar'
+    ? { date: 'تاريخ التذكير', time: 'وقت التذكير', note: 'ملاحظة التذكير' }
+    : { date: 'Reminder date', time: 'Reminder time', note: 'Reminder note' };
+
+  return `
+    <div><span>${labels.date}</span>${escapeHtml(reminder.date || text('noDetails'))}</div>
+    <div><span>${labels.time}</span>${escapeHtml(reminder.time || text('noDetails'))}</div>
+    <div><span>${labels.note}</span>${escapeHtml(reminder.note || text('noDetails'))}</div>
+  `;
+}
+
 function renderSessionDetails(session) {
+  if (session.activity === 'Personal Info' && session.details?.personalInfo) {
+    const personalInfo = session.details.personalInfo;
+    const labels = state.language === 'ar'
+      ? {
+          idNumber: 'رقم الهوية ينتهي بـ', idExpiration: 'انتهاء الهوية',
+          dlExpiration: 'انتهاء رخصة القيادة', passportNumber: 'رقم الجواز ينتهي بـ',
+          passportExpiration: 'انتهاء الجواز',
+        }
+      : {
+          idNumber: 'ID number ending', idExpiration: 'ID expiration',
+          dlExpiration: 'Driving license expiration', passportNumber: 'Passport ending',
+          passportExpiration: 'Passport expiration',
+        };
+
+    return `
+      <div><span>${labels.idNumber}</span>${personalInfo.idNumberEnding ? `•••• ${escapeHtml(personalInfo.idNumberEnding)}` : text('noDetails')}</div>
+      <div><span>${labels.idExpiration}</span>${escapeHtml(personalInfo.idExpirationDate || text('noDetails'))}</div>
+      <div><span>${labels.dlExpiration}</span>${escapeHtml(personalInfo.drivingLicenseExpirationDate || text('noDetails'))}</div>
+      <div><span>${labels.passportNumber}</span>${personalInfo.passportNumberEnding ? `•••• ${escapeHtml(personalInfo.passportNumberEnding)}` : text('noDetails')}</div>
+      <div><span>${labels.passportExpiration}</span>${escapeHtml(personalInfo.passportExpirationDate || text('noDetails'))}</div>
+    `;
+  }
+
+  if (Array.isArray(session.details?.customFields)) {
+    return session.details.customFields
+      .map(
+        (field) =>
+          `<div><span>${escapeHtml(field.label)}</span>${escapeHtml(field.value || text('noDetails'))}</div>`
+      )
+      .join('');
+  }
+
   if (session.activity === 'Studying' && session.details?.studying) {
     const study = session.details.studying;
 
     return `
       <div><span>${studyText('subject')}</span>${escapeHtml(study.subject || text('noDetails'))}</div>
       <div><span>${studyText('studyType')}</span>${escapeHtml(study.studyType || text('noDetails'))}</div>
+      <div><span>${studyText('examDate')}</span>${escapeHtml(study.examDate || text('noDetails'))}</div>
+      <div><span>${studyText('coursework')}</span>${escapeHtml(study.coursework || text('noDetails'))}</div>
+      <div><span>${studyText('pomodoroPlan')}</span>${escapeHtml(study.pomodoroPlan || text('noDetails'))}</div>
+      <div><span>${studyText('streak')}</span>${escapeHtml(study.streak || text('noDetails'))}</div>
+      <div><span>${studyText('totalStudyHours')}</span>${escapeHtml(study.totalStudyHours || text('noDetails'))}</div>
       <div><span>${studyText('candleTimer')}</span>${escapeHtml(study.candleTime || '00:00:00')}</div>
       <div><span>${studyText('notes')}</span>${escapeHtml(study.notes || text('noDetails'))}</div>
     `;
@@ -2072,7 +2694,7 @@ function renderSessionDetails(session) {
               <div>
                 <span>${index + 1}. ${escapeHtml(exercise.name)}</span>
                 ${exercise.sets
-                  .map((set, setIndex) => `${gymText('set')} ${setIndex + 1}: ${escapeHtml(set.reps)} ${gymText('reps')}`)
+                  .map((set, setIndex) => `${gymText('set')} ${setIndex + 1}: ${set.weight ? `${escapeHtml(set.weight)} kg, ` : ''}${escapeHtml(set.reps)} ${gymText('reps')}`)
                   .join('<br>')}
               </div>
             `
@@ -2088,20 +2710,23 @@ function renderSessionDetails(session) {
 
   if (session.activity === 'Baloot' && session.details) {
     const scores = Array.isArray(session.details.balootScores) ? session.details.balootScores : [];
+    const usName = session.details.balootUsName || balootText('us');
+    const themName = session.details.balootThemName || balootText('them');
     const handDetails = scores.length
       ? scores
           .map(
             (score, index) =>
-              `<div><span>${balootText('hand')} ${index + 1}</span>${balootText('us')} ${escapeHtml(score.us)} - ${balootText('them')} ${escapeHtml(score.them)}</div>`
+              `<div><span>${balootText('hand')} ${index + 1}</span>${escapeHtml(usName)} ${escapeHtml(score.us)} - ${escapeHtml(themName)} ${escapeHtml(score.them)}</div>`
           )
           .join('')
       : `<div><span>${balootText('scoreHistory')}</span>${balootText('noScores')}</div>`;
 
     return `
-      <div><span>${balootText('us')}</span>${session.details.balootUsTotal || 0}</div>
-      <div><span>${balootText('them')}</span>${session.details.balootThemTotal || 0}</div>
+      <div><span>${escapeHtml(usName)}</span>${session.details.balootUsTotal || 0}</div>
+      <div><span>${escapeHtml(themName)}</span>${session.details.balootThemTotal || 0}</div>
       <div><span>${balootText('winner')}</span>${session.details.balootWinner || balootText('notFinished')}</div>
       <div><span>${balootText('dealerDirection')}</span>${session.details.balootDealerDirection || '↑'}</div>
+      <div><span>${balootText('shareResult')}</span>${escapeHtml(session.details.balootShareText || '')}</div>
       ${handDetails}
     `;
   }
@@ -2164,6 +2789,7 @@ function exportHistory() {
         }
       : null,
     customActivities: state.customActivities,
+    customTemplates: state.customTemplates,
     sessions: state.sessions,
   };
   const blob = new Blob([JSON.stringify(exportData, null, 2)], {
@@ -2250,6 +2876,7 @@ authForm.addEventListener('submit', async (event) => {
         ...savedUser,
         identifier: savedUser.identifier || identifier,
       });
+      restorePersistentData();
       markSignedIn();
       showView('home');
       return;
@@ -2267,6 +2894,7 @@ authForm.addEventListener('submit', async (event) => {
       return;
     }
 
+    restorePersistentData();
     markSignedIn();
     showView('home');
     authForm.reset();
@@ -2295,6 +2923,9 @@ facebookSignupButton.addEventListener('click', () => {
 
 logoutButton.addEventListener('click', () => {
   stopTimer();
+  writeJson(storageKeys.sessions, state.sessions);
+  writeJson(storageKeys.customActivities, state.customActivities);
+  writeJson(storageKeys.customTemplates, state.customTemplates);
   sessionStorage.removeItem(storageKeys.activeSession);
   showView('auth', false);
 });
@@ -2311,6 +2942,8 @@ backButton.addEventListener('click', () => {
 document.addEventListener('click', (event) => {
   const viewButton = event.target.closest('[data-view]');
   const activityButton = event.target.closest('[data-activity]');
+  const categoryButton = event.target.closest('[data-category]');
+  const categoryBackButton = event.target.closest('[data-category-back]');
   const deleteButton = event.target.closest('[data-delete-session]');
 
   if (viewButton) {
@@ -2320,6 +2953,16 @@ document.addEventListener('click', (event) => {
 
   if (activityButton) {
     openTracker(activityButton.dataset.activity);
+  }
+
+  if (categoryButton) {
+    state.selectedCategory = categoryButton.dataset.category;
+    renderHome();
+  }
+
+  if (categoryBackButton) {
+    state.selectedCategory = null;
+    renderHome();
   }
 
   if (deleteButton) {
@@ -2334,13 +2977,23 @@ customActivityForm.addEventListener('submit', (event) => {
   event.preventDefault();
   const formData = new FormData(customActivityForm);
   const customActivity = String(formData.get('customActivity') || '').trim();
+  const customFields = String(formData.get('customFields') || '')
+    .split(',')
+    .map((field) => field.trim())
+    .filter((field, index, fields) => field && fields.indexOf(field) === index)
+    .slice(0, 8);
 
   if (!customActivity || getActivities().includes(customActivity)) {
     return;
   }
 
   state.customActivities = [...state.customActivities, customActivity];
+  state.customTemplates = {
+    ...state.customTemplates,
+    [customActivity]: customFields.length > 0 ? customFields : ['Session title', 'Notes'],
+  };
   writeJson(storageKeys.customActivities, state.customActivities);
+  writeJson(storageKeys.customTemplates, state.customTemplates);
   customActivityForm.reset();
   renderHome();
 });

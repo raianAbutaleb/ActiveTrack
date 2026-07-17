@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction } from 'react';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -19,16 +19,6 @@ const gymWorkoutDays = [
   'Rest',
 ];
 
-const gymExerciseLibrary: Record<string, string[]> = {
-  Chest: ['Bench Press', 'Incline Dumbbell Press', 'Chest Fly', 'Push-ups'],
-  Back: ['Lat Pulldown', 'Seated Row', 'Deadlift', 'Single-arm Dumbbell Row'],
-  Legs: ['Squat', 'Leg Press', 'Romanian Deadlift', 'Calf Raises'],
-  Shoulder: ['Shoulder Press', 'Lateral Raises', 'Front Raises', 'Face Pulls'],
-  Arms: ['Biceps Curl', 'Triceps Pushdown', 'Hammer Curl', 'Dips'],
-  Abs: ['Plank', 'Crunches', 'Leg Raises', 'Cable Crunch'],
-  Rest: ['Mobility Stretch', 'Light Walk', 'Foam Rolling', 'Breathing'],
-};
-
 type Props = {
   selectedActivity: string | null;
 
@@ -41,6 +31,9 @@ type Props = {
   gymSetReps: string;
   setGymSetReps: Dispatch<SetStateAction<string>>;
 
+  gymSetWeight: string;
+  setGymSetWeight: Dispatch<SetStateAction<string>>;
+
   currentGymSets: GymSet[];
   setCurrentGymSets: Dispatch<SetStateAction<GymSet[]>>;
 
@@ -49,14 +42,56 @@ type Props = {
 };
 
 export default function GymTracker(props: Props) {
+  const [restSeconds, setRestSeconds] = useState(0);
+  const [isRestTimerRunning, setIsRestTimerRunning] = useState(false);
+
+  useEffect(() => {
+    if (!isRestTimerRunning) {
+      return;
+    }
+
+    const intervalId = setInterval(() => {
+      setRestSeconds((seconds) => seconds + 1);
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [isRestTimerRunning]);
+
+  const formatRestTime = () => {
+    const minutes = Math.floor(restSeconds / 60);
+    const seconds = restSeconds % 60;
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  };
+
+  const getBestGymSet = () => {
+    const allSets = props.gymExercises.flatMap((exercise) =>
+      exercise.sets.map((set) => ({
+        exerciseName: exercise.name,
+        reps: Number(set.reps) || 0,
+        weight: Number(set.weight) || 0,
+      }))
+    );
+
+    const weightedSets = allSets.filter((set) => set.weight > 0);
+
+    if (weightedSets.length === 0) {
+      return null;
+    }
+
+    return weightedSets.reduce((bestSet, set) =>
+      set.weight > bestSet.weight ? set : bestSet
+    );
+  };
+
+  const bestGymSet = getBestGymSet();
+
   if (props.selectedActivity !== 'Gym') {
     return null;
   }
 
-  const exerciseSuggestions = gymExerciseLibrary[props.gymWorkoutDay] || [];
-
   const addGymSet = () => {
     const cleanReps = props.gymSetReps.trim();
+    const cleanWeight = props.gymSetWeight.trim();
 
     if (cleanReps === '') {
       alert('Please enter reps for this set');
@@ -66,10 +101,14 @@ export default function GymTracker(props: Props) {
     const newSet: GymSet = {
       id: Date.now(),
       reps: cleanReps,
+      weight: cleanWeight,
     };
 
     props.setCurrentGymSets([...props.currentGymSets, newSet]);
     props.setGymSetReps('');
+    props.setGymSetWeight('');
+    setRestSeconds(0);
+    setIsRestTimerRunning(true);
   };
 
   const deleteCurrentGymSet = (setId: number) => {
@@ -100,6 +139,7 @@ export default function GymTracker(props: Props) {
 
     props.setGymExerciseName('');
     props.setGymSetReps('');
+    props.setGymSetWeight('');
     props.setCurrentGymSets([]);
   };
 
@@ -140,26 +180,6 @@ export default function GymTracker(props: Props) {
 
       <Text style={styles.detailsSubtitle}>Current Exercise</Text>
 
-      {exerciseSuggestions.length > 0 && (
-        <View style={styles.libraryBox}>
-          <Text style={styles.libraryTitle}>Exercise Library</Text>
-          <View style={styles.libraryGrid}>
-            {exerciseSuggestions.map((exercise) => (
-              <TouchableOpacity
-                key={exercise}
-                style={[
-                  styles.libraryButton,
-                  props.gymExerciseName === exercise && styles.selectedLibraryButton,
-                ]}
-                onPress={() => props.setGymExerciseName(exercise)}
-              >
-                <Text style={styles.libraryButtonText}>{exercise}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      )}
-
       <TextInput
         style={styles.input}
         placeholder="Exercise name, example: Bench Press"
@@ -169,6 +189,15 @@ export default function GymTracker(props: Props) {
       />
 
       <View style={styles.scoreRow}>
+        <TextInput
+          style={styles.scoreInput}
+          placeholder="Weight"
+          placeholderTextColor="#8f8f92"
+          value={props.gymSetWeight}
+          onChangeText={props.setGymSetWeight}
+          keyboardType="decimal-pad"
+        />
+
         <TextInput
           style={styles.scoreInput}
           placeholder="Set reps"
@@ -183,6 +212,36 @@ export default function GymTracker(props: Props) {
         </TouchableOpacity>
       </View>
 
+      <View style={styles.restTimerBox}>
+        <Text style={styles.restTimerTitle}>Rest Timer</Text>
+        <Text style={styles.restTimerValue}>{formatRestTime()}</Text>
+        <View style={styles.restButtonRow}>
+          <TouchableOpacity
+            style={styles.restButton}
+            onPress={() => setIsRestTimerRunning(true)}
+          >
+            <Text style={styles.restButtonText}>Start</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.restButton}
+            onPress={() => setIsRestTimerRunning(false)}
+          >
+            <Text style={styles.restButtonText}>Pause</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.restButton}
+            onPress={() => {
+              setIsRestTimerRunning(false);
+              setRestSeconds(0);
+            }}
+          >
+            <Text style={styles.restButtonText}>Reset</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
       <View style={styles.exerciseListBox}>
         <Text style={styles.exerciseListTitle}>Sets for This Exercise</Text>
 
@@ -193,7 +252,7 @@ export default function GymTracker(props: Props) {
             <View key={set.id} style={styles.exerciseRow}>
               <View style={styles.exerciseInfo}>
                 <Text style={styles.exerciseName}>
-                  Set {index + 1}: {set.reps} reps
+                  Set {index + 1}: {set.weight ? `${set.weight} kg, ` : ''}{set.reps} reps
                 </Text>
               </View>
 
@@ -227,7 +286,7 @@ export default function GymTracker(props: Props) {
 
                 {exercise.sets.map((set, setIndex) => (
                   <Text key={set.id} style={styles.exerciseDetails}>
-                    Set {setIndex + 1}: {set.reps} reps
+                    Set {setIndex + 1}: {set.weight ? `${set.weight} kg, ` : ''}{set.reps} reps
                   </Text>
                 ))}
               </View>
@@ -240,6 +299,19 @@ export default function GymTracker(props: Props) {
               </TouchableOpacity>
             </View>
           ))
+        )}
+      </View>
+
+      <View style={styles.exerciseListBox}>
+        <Text style={styles.exerciseListTitle}>Progress Summary</Text>
+        {bestGymSet ? (
+          <Text style={styles.exerciseDetails}>
+            Best set: {bestGymSet.exerciseName} - {bestGymSet.weight} kg x {bestGymSet.reps} reps
+          </Text>
+        ) : (
+          <Text style={styles.emptyHistory}>
+            Add weight to your sets to track personal records.
+          </Text>
         )}
       </View>
     </View>
@@ -297,37 +369,6 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontWeight: '800',
   },
-  libraryBox: {
-    backgroundColor: '#0f0f10',
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 12,
-  },
-  libraryTitle: {
-    color: '#ffffff',
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  libraryGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  libraryButton: {
-    backgroundColor: '#2c2c2f',
-    borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-  },
-  selectedLibraryButton: {
-    backgroundColor: '#5a5a5d',
-  },
-  libraryButtonText: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '700',
-  },
   scoreRow: {
     flexDirection: 'row',
     gap: 10,
@@ -353,6 +394,39 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 16,
     fontWeight: '800',
+  },
+  restTimerBox: {
+    backgroundColor: '#0f0f10',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 12,
+  },
+  restTimerTitle: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  restTimerValue: {
+    color: '#ffffff',
+    fontSize: 34,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  restButtonRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  restButton: {
+    flex: 1,
+    backgroundColor: '#2c2c2f',
+    borderRadius: 10,
+    padding: 10,
+  },
+  restButtonText: {
+    color: '#ffffff',
+    textAlign: 'center',
+    fontWeight: '700',
   },
   addExerciseButton: {
     backgroundColor: '#5a5a5d',

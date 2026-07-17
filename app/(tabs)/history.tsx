@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import { Session } from '../../types';
+import { clearCloudSessions, deleteCloudSession } from '../../lib/sessionDatabase';
 
 export default function HistoryScreen() {
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -53,6 +54,12 @@ export default function HistoryScreen() {
 
     setSessions(updatedSessions);
     await saveSessions(updatedSessions);
+
+    try {
+      await deleteCloudSession(sessionId);
+    } catch {
+      alert('Deleted on this device, but cloud delete failed.');
+    }
   };
 
   const confirmDeleteSession = (sessionId: number) => {
@@ -89,6 +96,12 @@ export default function HistoryScreen() {
             setSessions([]);
             setHistoryFilter('All');
             await saveSessions([]);
+
+            try {
+              await clearCloudSessions();
+            } catch {
+              alert('Cleared on this device, but cloud clear failed.');
+            }
           },
         },
       ]
@@ -117,10 +130,48 @@ export default function HistoryScreen() {
     );
   };
 
+  const getRecentSessions = (days: number) => {
+    const now = Date.now();
+    const rangeMilliseconds = days * 24 * 60 * 60 * 1000;
+
+    return sessions.filter((session) => {
+      const sessionTime = new Date(session.date).getTime();
+      return Number.isFinite(sessionTime) && now - sessionTime >= 0 && now - sessionTime <= rangeMilliseconds;
+    });
+  };
+
+  const formatTotalTime = (selectedSessions: Session[]) => {
+    const totalMinutes = Math.round(
+      selectedSessions.reduce((total, session) => total + (session.durationSeconds || 0), 0) / 60
+    );
+
+    if (totalMinutes < 60) {
+      return `${totalMinutes} min`;
+    }
+
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    return `${hours}h ${minutes}m`;
+  };
+
+  const getMonthlyActivityCounts = () => {
+    const counts: Record<string, number> = {};
+
+    getRecentSessions(30).forEach((session) => {
+      counts[session.activity] = (counts[session.activity] || 0) + 1;
+    });
+
+    return Object.entries(counts).sort(([, firstCount], [, secondCount]) => secondCount - firstCount);
+  };
+
   const isVehicleMaintenanceActivity = (
     activity: string | null
   ) => {
     return activity === 'Vehicle Maintenance';
+  };
+
+  const isNonTimedActivity = (activity: string | null) => {
+    return activity === 'Vehicle Maintenance' || activity === 'Personal Info';
   };
 
   const renderSessionDetails = (session: Session) => {
@@ -515,7 +566,19 @@ export default function HistoryScreen() {
           </Text>
 
           <Text style={styles.detailsText}>
+            Plate: {vehicle.plateNumber || 'Not filled'}
+          </Text>
+
+          <Text style={styles.detailsText}>
+            Model / Year: {vehicle.modelYear || 'Not filled'}
+          </Text>
+
+          <Text style={styles.detailsText}>
             Service: {vehicle.serviceType || 'Not filled'}
+          </Text>
+
+          <Text style={styles.detailsText}>
+            Service Date: {vehicle.serviceDate || 'Not filled'}
           </Text>
 
           <Text style={styles.detailsText}>
@@ -527,7 +590,67 @@ export default function HistoryScreen() {
           </Text>
 
           <Text style={styles.detailsText}>
+            Shop / Place: {vehicle.shopName || 'Not filled'}
+          </Text>
+
+          <Text style={styles.detailsSectionTitle}>Upcoming</Text>
+
+          <Text style={styles.detailsText}>
+            Next Service Date: {vehicle.nextServiceDate || 'Not filled'}
+          </Text>
+
+          <Text style={styles.detailsText}>
+            Next Service Mileage: {vehicle.nextServiceMileage || 'Not filled'}
+          </Text>
+
+          <Text style={styles.detailsText}>
+            Insurance Expiration: {vehicle.insuranceExpirationDate || 'Not filled'}
+          </Text>
+
+          <Text style={styles.detailsText}>
+            Registration End Date: {vehicle.registrationEndDate || 'Not filled'}
+          </Text>
+
+          <Text style={styles.detailsText}>
             Notes: {vehicle.notes || 'None'}
+          </Text>
+        </View>
+      );
+    }
+
+    if (session.details?.customFields) {
+      return (
+        <View style={styles.detailsBox}>
+          <Text style={styles.detailsTitle}>Custom Details</Text>
+          {session.details.customFields.map((field, index) => (
+            <Text key={`${field.label}-${index}`} style={styles.detailsText}>
+              {field.label}: {field.value || 'Not filled'}
+            </Text>
+          ))}
+        </View>
+      );
+    }
+
+    if (session.activity === 'Personal Info' && session.details?.personalInfo) {
+      const personalInfo = session.details.personalInfo;
+
+      return (
+        <View style={styles.detailsBox}>
+          <Text style={styles.detailsTitle}>Personal Info</Text>
+          <Text style={styles.detailsText}>
+            ID number ending: {personalInfo.idNumberEnding || 'Not filled'}
+          </Text>
+          <Text style={styles.detailsText}>
+            ID expiration: {personalInfo.idExpirationDate || 'Not filled'}
+          </Text>
+          <Text style={styles.detailsText}>
+            Driving license expiration: {personalInfo.drivingLicenseExpirationDate || 'Not filled'}
+          </Text>
+          <Text style={styles.detailsText}>
+            Passport ending: {personalInfo.passportNumberEnding || 'Not filled'}
+          </Text>
+          <Text style={styles.detailsText}>
+            Passport expiration: {personalInfo.passportExpirationDate || 'Not filled'}
           </Text>
         </View>
       );
@@ -556,6 +679,46 @@ export default function HistoryScreen() {
       <Text style={styles.subtitle}>
         Your saved sessions and records
       </Text>
+
+      {sessions.length > 0 && (
+        <View style={styles.progressBox}>
+          <Text style={styles.progressTitle}>Progress</Text>
+          <View style={styles.progressSummaryRow}>
+            <View style={styles.progressSummaryCard}>
+              <Text style={styles.progressLabel}>Last 7 days</Text>
+              <Text style={styles.progressValue}>{getRecentSessions(7).length} sessions</Text>
+              <Text style={styles.progressMeta}>{formatTotalTime(getRecentSessions(7))}</Text>
+            </View>
+            <View style={styles.progressSummaryCard}>
+              <Text style={styles.progressLabel}>Last 30 days</Text>
+              <Text style={styles.progressValue}>{getRecentSessions(30).length} sessions</Text>
+              <Text style={styles.progressMeta}>{formatTotalTime(getRecentSessions(30))}</Text>
+            </View>
+          </View>
+
+          <Text style={styles.progressSectionTitle}>Activity breakdown (30 days)</Text>
+          {getMonthlyActivityCounts().length === 0 ? (
+            <Text style={styles.progressMeta}>No activity in the last 30 days.</Text>
+          ) : (
+            getMonthlyActivityCounts().map(([activity, count]) => {
+              const highestCount = getMonthlyActivityCounts()[0][1];
+              const barWidth = `${Math.max(8, Math.round((count / highestCount) * 100))}%` as `${number}%`;
+
+              return (
+                <View key={activity} style={styles.progressActivityRow}>
+                  <View style={styles.progressActivityHeader}>
+                    <Text style={styles.progressActivityName}>{activity}</Text>
+                    <Text style={styles.progressMeta}>{count}</Text>
+                  </View>
+                  <View style={styles.progressTrack}>
+                    <View style={[styles.progressBar, { width: barWidth }]} />
+                  </View>
+                </View>
+              );
+            })
+          )}
+        </View>
+      )}
 
       {sessions.length > 0 && (
         <ScrollView
@@ -610,7 +773,7 @@ export default function HistoryScreen() {
               </Text>
             </View>
 
-            {!isVehicleMaintenanceActivity(
+            {!isNonTimedActivity(
               session.activity
             ) && (
               <>
@@ -631,6 +794,21 @@ export default function HistoryScreen() {
             )}
 
             {renderSessionDetails(session)}
+
+            {session.details?.reminder && (
+              <View style={styles.detailsBox}>
+                <Text style={styles.detailsTitle}>Reminder</Text>
+                <Text style={styles.detailsText}>
+                  Date: {session.details.reminder.date || 'Not set'}
+                </Text>
+                <Text style={styles.detailsText}>
+                  Time: {session.details.reminder.time || 'Not set'}
+                </Text>
+                <Text style={styles.detailsText}>
+                  Note: {session.details.reminder.note || 'No note'}
+                </Text>
+              </View>
+            )}
 
             <TouchableOpacity
               style={styles.deleteButton}
@@ -693,6 +871,86 @@ const styles = StyleSheet.create({
 
   filterScroll: {
     marginBottom: 18,
+  },
+
+  progressBox: {
+    backgroundColor: '#1f1f22',
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 18,
+  },
+
+  progressTitle: {
+    color: '#ffffff',
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 12,
+  },
+
+  progressSummaryRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 16,
+  },
+
+  progressSummaryCard: {
+    flex: 1,
+    backgroundColor: '#0f0f10',
+    borderRadius: 10,
+    padding: 12,
+  },
+
+  progressLabel: {
+    color: '#b8b8bb',
+    fontSize: 13,
+    marginBottom: 5,
+  },
+
+  progressValue: {
+    color: '#ffffff',
+    fontSize: 17,
+    fontWeight: 'bold',
+  },
+
+  progressMeta: {
+    color: '#b8b8bb',
+    fontSize: 13,
+  },
+
+  progressSectionTitle: {
+    color: '#ffffff',
+    fontSize: 15,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+
+  progressActivityRow: {
+    marginBottom: 10,
+  },
+
+  progressActivityHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 5,
+  },
+
+  progressActivityName: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+
+  progressTrack: {
+    height: 8,
+    backgroundColor: '#343437',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+
+  progressBar: {
+    height: 8,
+    backgroundColor: '#d6d6d8',
+    borderRadius: 4,
   },
 
   filterButton: {

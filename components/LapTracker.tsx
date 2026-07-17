@@ -19,16 +19,34 @@ type Props = {
   lapDistanceUnit: string;
   setLapDistanceUnit: Dispatch<SetStateAction<string>>;
 
+  routeName: string;
+  setRouteName: Dispatch<SetStateAction<string>>;
+
+  elevationGain: string;
+  setElevationGain: Dispatch<SetStateAction<string>>;
+
+  splitNotes: string;
+  setSplitNotes: Dispatch<SetStateAction<string>>;
+
+  movementGoal: string;
+  setMovementGoal: Dispatch<SetStateAction<string>>;
+
+  personalRecord: string;
+  setPersonalRecord: Dispatch<SetStateAction<string>>;
+
   startTime: Date | null;
   endTime: Date | null;
 };
 
 const lapActivities = ['Run', 'Walking', 'Cycling', 'Swimming'];
+const movementActivities = ['Run', 'Walking', 'Cycling'];
 
 export default function LapTracker(props: Props) {
   if (!props.selectedActivity || !lapActivities.includes(props.selectedActivity)) {
     return null;
   }
+
+  const showMovementFields = movementActivities.includes(props.selectedActivity);
 
   const addLap = () => {
     if (!props.startTime) {
@@ -68,6 +86,28 @@ export default function LapTracker(props: Props) {
   return (
     <View style={styles.detailsBox}>
       <Text style={styles.detailsTitle}>{props.selectedActivity} Laps</Text>
+
+      {showMovementFields && (
+        <>
+          <Text style={styles.detailsSubtitle}>Route and goal</Text>
+
+          <TextInput
+            style={styles.input}
+            placeholder="Route name or location"
+            placeholderTextColor="#8f8f92"
+            value={props.routeName}
+            onChangeText={props.setRouteName}
+          />
+
+          <TextInput
+            style={styles.input}
+            placeholder="Goal, example: 5 km easy pace"
+            placeholderTextColor="#8f8f92"
+            value={props.movementGoal}
+            onChangeText={props.setMovementGoal}
+          />
+        </>
+      )}
 
       <Text style={styles.detailsSubtitle}>Lap distance</Text>
 
@@ -110,6 +150,39 @@ export default function LapTracker(props: Props) {
         </Text>
       </View>
 
+      {showMovementFields && (
+        <>
+          <Text style={styles.detailsSubtitle}>Performance notes</Text>
+
+          <TextInput
+            style={styles.input}
+            placeholder="Elevation gain"
+            placeholderTextColor="#8f8f92"
+            value={props.elevationGain}
+            onChangeText={props.setElevationGain}
+            keyboardType="decimal-pad"
+          />
+
+          <TextInput
+            style={styles.input}
+            placeholder="Splits, example: 1km 6:10, 2km 6:05"
+            placeholderTextColor="#8f8f92"
+            value={props.splitNotes}
+            onChangeText={props.setSplitNotes}
+            multiline
+          />
+
+          <TextInput
+            style={styles.input}
+            placeholder="Personal record note"
+            placeholderTextColor="#8f8f92"
+            value={props.personalRecord}
+            onChangeText={props.setPersonalRecord}
+            multiline
+          />
+        </>
+      )}
+
       <TouchableOpacity style={styles.addExerciseButton} onPress={addLap}>
         <Text style={styles.buttonText}>+ Add Lap</Text>
       </TouchableOpacity>
@@ -139,6 +212,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 12,
     marginTop: 6,
+  },
+  input: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    marginBottom: 12,
+    color: '#000000',
   },
   scoreRow: {
     flexDirection: 'row',

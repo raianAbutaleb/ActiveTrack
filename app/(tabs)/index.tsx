@@ -35,6 +35,7 @@ import {
 import { isSupabaseConfigured } from '../../lib/supabase';
 import {
   BalootScore,
+  CustomFieldValue,
   GymExercise,
   GymSet,
   MatchRound,
@@ -56,9 +57,11 @@ const defaultActivities = [
   'Work',
   'Baloot',
   'Vehicle Maintenance',
+  'Personal Info',
 ];
 
 const lapActivities = ['Run', 'Walking', 'Cycling', 'Swimming'];
+const movementActivities = ['Run', 'Walking', 'Cycling'];
 const matchActivities = ['Padel', 'Tennis'];
 
 const featureUpgradeList = [
@@ -83,9 +86,13 @@ export default function HomeScreen() {
   const [signupRepeatPassword, setSignupRepeatPassword] = useState('');
   const [activities, setActivities] = useState<string[]>(defaultActivities);
   const [selectedActivity, setSelectedActivity] = useState<string | null>(null);
+  const [selectedActivityCategory, setSelectedActivityCategory] = useState<string | null>(null);
 
   const [showOtherModal, setShowOtherModal] = useState(false);
   const [otherActivityName, setOtherActivityName] = useState('');
+  const [otherActivityFields, setOtherActivityFields] = useState('');
+  const [customActivityTemplates, setCustomActivityTemplates] = useState<Record<string, string[]>>({});
+  const [customFieldValues, setCustomFieldValues] = useState<Record<string, string>>({});
 
   const [startTime, setStartTime] = useState<Date | null>(null);
   const [endTime, setEndTime] = useState<Date | null>(null);
@@ -100,19 +107,36 @@ export default function HomeScreen() {
   const [gymWorkoutDay, setGymWorkoutDay] = useState('');
   const [gymExerciseName, setGymExerciseName] = useState('');
   const [gymSetReps, setGymSetReps] = useState('');
+  const [gymSetWeight, setGymSetWeight] = useState('');
   const [currentGymSets, setCurrentGymSets] = useState<GymSet[]>([]);
   const [gymExercises, setGymExercises] = useState<GymExercise[]>([]);
 
   const [lapCount, setLapCount] = useState(0);
   const [lapDistance, setLapDistance] = useState('');
   const [lapDistanceUnit, setLapDistanceUnit] = useState('m');
+  const [routeName, setRouteName] = useState('');
+  const [elevationGain, setElevationGain] = useState('');
+  const [splitNotes, setSplitNotes] = useState('');
+  const [movementGoal, setMovementGoal] = useState('');
+  const [personalRecord, setPersonalRecord] = useState('');
 
   const [matchTeamOneName, setMatchTeamOneName] = useState('');
   const [matchTeamTwoName, setMatchTeamTwoName] = useState('');
+  const [matchSetNumber, setMatchSetNumber] = useState('');
   const [matchTeamOneGames, setMatchTeamOneGames] = useState('');
   const [matchTeamTwoGames, setMatchTeamTwoGames] = useState('');
+  const [matchTeamOnePoints, setMatchTeamOnePoints] = useState('');
+  const [matchTeamTwoPoints, setMatchTeamTwoPoints] = useState('');
+  const [matchServer, setMatchServer] = useState('');
+  const [matchTiebreakScore, setMatchTiebreakScore] = useState('');
+  const [matchTeamOneWinners, setMatchTeamOneWinners] = useState('');
+  const [matchTeamTwoWinners, setMatchTeamTwoWinners] = useState('');
+  const [matchTeamOneErrors, setMatchTeamOneErrors] = useState('');
+  const [matchTeamTwoErrors, setMatchTeamTwoErrors] = useState('');
   const [matchRounds, setMatchRounds] = useState<MatchRound[]>([]);
 
+  const [balootUsName, setBalootUsName] = useState('');
+  const [balootThemName, setBalootThemName] = useState('');
   const [balootUsScore, setBalootUsScore] = useState('');
   const [balootThemScore, setBalootThemScore] = useState('');
   const [balootScores, setBalootScores] = useState<BalootScore[]>([]);
@@ -120,6 +144,11 @@ export default function HomeScreen() {
 
   const [studySubject, setStudySubject] = useState('');
   const [studyType, setStudyType] = useState('');
+  const [studyExamDate, setStudyExamDate] = useState('');
+  const [studyCoursework, setStudyCoursework] = useState('');
+  const [studyPomodoroPlan, setStudyPomodoroPlan] = useState('');
+  const [studyStreak, setStudyStreak] = useState('');
+  const [studyTotalHours, setStudyTotalHours] = useState('');
   const [studyNotes, setStudyNotes] = useState('');
   const [studyCandleSeconds, setStudyCandleSeconds] = useState(0);
   const [isStudyCandleRunning, setIsStudyCandleRunning] = useState(false);
@@ -137,6 +166,14 @@ export default function HomeScreen() {
   const [horseWalkMinutes, setHorseWalkMinutes] = useState('');
   const [horseTrotMinutes, setHorseTrotMinutes] = useState('');
   const [horseCanterMinutes, setHorseCanterMinutes] = useState('');
+  const [horseRideDistance, setHorseRideDistance] = useState('');
+  const [horseAverageSpeed, setHorseAverageSpeed] = useState('');
+  const [horseLeftTurns, setHorseLeftTurns] = useState('');
+  const [horseRightTurns, setHorseRightTurns] = useState('');
+  const [horseRideDate, setHorseRideDate] = useState('');
+  const [horseCalendarNote, setHorseCalendarNote] = useState('');
+  const [horseSafetyLocation, setHorseSafetyLocation] = useState('');
+  const [horseSafetyContact, setHorseSafetyContact] = useState('');
 
   const [horseHayGiven, setHorseHayGiven] = useState(false);
   const [horseWaterChecked, setHorseWaterChecked] = useState(false);
@@ -169,10 +206,26 @@ export default function HomeScreen() {
   const [horseNotes, setHorseNotes] = useState('');
 
   const [vehicleName, setVehicleName] = useState('');
-const [vehicleServiceType, setVehicleServiceType] = useState('');
-const [vehicleMileage, setVehicleMileage] = useState('');
+  const [vehiclePlateNumber, setVehiclePlateNumber] = useState('');
+  const [vehicleModelYear, setVehicleModelYear] = useState('');
+  const [vehicleServiceType, setVehicleServiceType] = useState('');
+  const [vehicleServiceDate, setVehicleServiceDate] = useState('');
+  const [vehicleMileage, setVehicleMileage] = useState('');
   const [vehicleCost, setVehicleCost] = useState('');
+  const [vehicleShopName, setVehicleShopName] = useState('');
+  const [vehicleNextServiceDate, setVehicleNextServiceDate] = useState('');
+  const [vehicleNextServiceMileage, setVehicleNextServiceMileage] = useState('');
+  const [vehicleInsuranceExpirationDate, setVehicleInsuranceExpirationDate] = useState('');
+  const [vehicleRegistrationEndDate, setVehicleRegistrationEndDate] = useState('');
   const [vehicleNotes, setVehicleNotes] = useState('');
+  const [reminderDate, setReminderDate] = useState('');
+  const [reminderTime, setReminderTime] = useState('');
+  const [reminderNote, setReminderNote] = useState('');
+  const [personalIdNumber, setPersonalIdNumber] = useState('');
+  const [personalIdExpirationDate, setPersonalIdExpirationDate] = useState('');
+  const [personalDlExpirationDate, setPersonalDlExpirationDate] = useState('');
+  const [personalPassportNumber, setPersonalPassportNumber] = useState('');
+  const [personalPassportExpirationDate, setPersonalPassportExpirationDate] = useState('');
 
   useEffect(() => {
     navigation.setOptions({
@@ -255,6 +308,8 @@ const signup = async () => {
   }
 };
 const logout = async () => {
+  await saveSessionsToStorage(sessions);
+
   try {
     await signOutFromSupabase();
   } catch {
@@ -266,12 +321,19 @@ const logout = async () => {
   setSignupRepeatPassword('');
 };
   const loadSavedData = async () => {
+    let localSessions: Session[] = [];
+
     try {
       const savedSessions = await AsyncStorage.getItem('sessions');
       const savedActivities = await AsyncStorage.getItem('activities');
+      const savedCustomTemplates = await AsyncStorage.getItem('customActivityTemplates');
 
       if (savedSessions) {
-        setSessions(JSON.parse(savedSessions));
+        const parsedSessions = JSON.parse(savedSessions);
+        if (Array.isArray(parsedSessions)) {
+          localSessions = parsedSessions;
+          setSessions(localSessions);
+        }
       }
 
       if (savedActivities) {
@@ -281,14 +343,33 @@ const logout = async () => {
         }
       }
 
-      const cloudSessions = await loadCloudSessions();
-
-      if (cloudSessions) {
-        setSessions(cloudSessions);
-        await AsyncStorage.setItem('sessions', JSON.stringify(cloudSessions));
+      if (savedCustomTemplates) {
+        const parsedTemplates = JSON.parse(savedCustomTemplates);
+        if (parsedTemplates && typeof parsedTemplates === 'object') {
+          setCustomActivityTemplates(parsedTemplates);
+        }
       }
+
     } catch {
       alert('Error loading saved data');
+      return;
+    }
+
+    try {
+      const cloudSessions = await loadCloudSessions();
+
+      if (Array.isArray(cloudSessions)) {
+        const mergedSessions = new Map<number, Session>();
+
+        localSessions.forEach((session) => mergedSessions.set(session.id, session));
+        cloudSessions.forEach((session) => mergedSessions.set(session.id, session));
+
+        const restoredSessions = [...mergedSessions.values()].sort((first, second) => second.id - first.id);
+        setSessions(restoredSessions);
+        await AsyncStorage.setItem('sessions', JSON.stringify(restoredSessions));
+      }
+    } catch {
+      // Local history remains available when cloud sync is offline or not signed in.
     }
   };
 
@@ -308,12 +389,36 @@ const logout = async () => {
     }
   };
 
+  const saveCustomTemplatesToStorage = async (templates: Record<string, string[]>) => {
+    try {
+      await AsyncStorage.setItem('customActivityTemplates', JSON.stringify(templates));
+    } catch {
+      alert('Error saving custom activity fields');
+    }
+  };
+
   const isLapActivity = (activity: string | null) => {
     if (!activity) {
       return false;
     }
 
     return lapActivities.includes(activity);
+  };
+
+  const isMovementActivity = (activity: string | null) => {
+    if (!activity) {
+      return false;
+    }
+
+    return movementActivities.includes(activity);
+  };
+
+  const isCustomActivity = (activity: string | null) => {
+    return Boolean(activity && !defaultActivities.includes(activity));
+  };
+
+  const getCustomTemplateFields = (activity: string) => {
+    return customActivityTemplates[activity] || ['Session title', 'Notes'];
   };
 
   const isMatchActivity = (activity: string | null) => {
@@ -336,12 +441,29 @@ const logout = async () => {
   return activity === 'Vehicle Maintenance';
 };
 
+  const isPersonalInfoActivity = (activity: string | null) => {
+    return activity === 'Personal Info';
+  };
+
+  const isNonTimedActivity = (activity: string | null) => {
+    return isVehicleMaintenanceActivity(activity) || isPersonalInfoActivity(activity);
+  };
+
+  const getSensitiveEnding = (value: string) => {
+    const cleanValue = value.trim();
+    return cleanValue ? cleanValue.slice(-4) : '';
+  };
+
   const isWorkActivity = (activity: string | null) => {
     return activity === 'Work';
   };
 
   const isStudyingActivity = (activity: string | null) => {
     return activity === 'Studying';
+  };
+
+  const supportsReminders = (activity: string | null) => {
+    return Boolean(activity && ['Gym', 'Horse Riding', 'Studying', 'Vehicle Maintenance'].includes(activity));
   };
 
   const formatStudyCandleTime = () => {
@@ -400,19 +522,36 @@ const logout = async () => {
     setGymWorkoutDay('');
     setGymExerciseName('');
     setGymSetReps('');
+    setGymSetWeight('');
     setCurrentGymSets([]);
     setGymExercises([]);
 
     setLapCount(0);
     setLapDistance('');
     setLapDistanceUnit('m');
+    setRouteName('');
+    setElevationGain('');
+    setSplitNotes('');
+    setMovementGoal('');
+    setPersonalRecord('');
 
     setMatchTeamOneName('');
     setMatchTeamTwoName('');
+    setMatchSetNumber('');
     setMatchTeamOneGames('');
     setMatchTeamTwoGames('');
+    setMatchTeamOnePoints('');
+    setMatchTeamTwoPoints('');
+    setMatchServer('');
+    setMatchTiebreakScore('');
+    setMatchTeamOneWinners('');
+    setMatchTeamTwoWinners('');
+    setMatchTeamOneErrors('');
+    setMatchTeamTwoErrors('');
     setMatchRounds([]);
 
+    setBalootUsName('');
+    setBalootThemName('');
     setBalootUsScore('');
     setBalootThemScore('');
     setBalootScores([]);
@@ -420,6 +559,11 @@ const logout = async () => {
 
     setStudySubject('');
     setStudyType('');
+    setStudyExamDate('');
+    setStudyCoursework('');
+    setStudyPomodoroPlan('');
+    setStudyStreak('');
+    setStudyTotalHours('');
     setStudyNotes('');
     setStudyCandleSeconds(0);
     setIsStudyCandleRunning(false);
@@ -428,10 +572,27 @@ const logout = async () => {
     setWorkNotes('');
 
     setVehicleName('');
+    setVehiclePlateNumber('');
+    setVehicleModelYear('');
     setVehicleServiceType('');
+    setVehicleServiceDate('');
     setVehicleMileage('');
     setVehicleCost('');
+    setVehicleShopName('');
+    setVehicleNextServiceDate('');
+    setVehicleNextServiceMileage('');
+    setVehicleInsuranceExpirationDate('');
+    setVehicleRegistrationEndDate('');
     setVehicleNotes('');
+    setReminderDate('');
+    setReminderTime('');
+    setReminderNote('');
+    setPersonalIdNumber('');
+    setPersonalIdExpirationDate('');
+    setPersonalDlExpirationDate('');
+    setPersonalPassportNumber('');
+    setPersonalPassportExpirationDate('');
+    setCustomFieldValues({});
 
     setHorseRiderName('');
     setHorseName('');
@@ -443,6 +604,14 @@ const logout = async () => {
     setHorseWalkMinutes('');
     setHorseTrotMinutes('');
     setHorseCanterMinutes('');
+    setHorseRideDistance('');
+    setHorseAverageSpeed('');
+    setHorseLeftTurns('');
+    setHorseRightTurns('');
+    setHorseRideDate('');
+    setHorseCalendarNote('');
+    setHorseSafetyLocation('');
+    setHorseSafetyContact('');
 
     setHorseHayGiven(false);
     setHorseWaterChecked(false);
@@ -490,6 +659,7 @@ const logout = async () => {
 
   const openOtherModal = () => {
     setOtherActivityName('');
+    setOtherActivityFields('');
     setShowOtherModal(true);
   };
 
@@ -511,9 +681,20 @@ const logout = async () => {
     }
 
     const newActivities = [...activities, cleanName];
+    const fields = otherActivityFields
+      .split(',')
+      .map((field) => field.trim())
+      .filter((field, index, list) => field !== '' && list.indexOf(field) === index)
+      .slice(0, 8);
+    const newTemplates = {
+      ...customActivityTemplates,
+      [cleanName]: fields.length > 0 ? fields : ['Session title', 'Notes'],
+    };
 
     setActivities(newActivities);
     saveActivitiesToStorage(newActivities);
+    setCustomActivityTemplates(newTemplates);
+    saveCustomTemplatesToStorage(newTemplates);
 
     setShowOtherModal(false);
     setSelectedActivity(cleanName);
@@ -524,9 +705,13 @@ const logout = async () => {
 
   const deleteActivity = (activityName: string) => {
     const newActivities = activities.filter((activity) => activity !== activityName);
+    const newTemplates = { ...customActivityTemplates };
+    delete newTemplates[activityName];
 
     setActivities(newActivities);
     saveActivitiesToStorage(newActivities);
+    setCustomActivityTemplates(newTemplates);
+    saveCustomTemplatesToStorage(newTemplates);
   };
 
   const confirmDeleteActivity = (activityName: string) => {
@@ -556,6 +741,8 @@ const logout = async () => {
           onPress: () => {
             setActivities(defaultActivities);
             saveActivitiesToStorage(defaultActivities);
+            setCustomActivityTemplates({});
+            saveCustomTemplatesToStorage({});
           },
         },
       ]
@@ -593,6 +780,18 @@ const logout = async () => {
     return `${total} ${lapDistanceUnit}`;
   };
 
+  const getTotalDistanceInKm = () => {
+    const distanceNumber = Number(lapDistance);
+
+    if (!distanceNumber || lapCount === 0) {
+      return 0;
+    }
+
+    const total = distanceNumber * lapCount;
+
+    return lapDistanceUnit === 'm' ? total / 1000 : total;
+  };
+
   const getDurationSeconds = () => {
     if (!startTime || !endTime) {
       return 0;
@@ -624,6 +823,34 @@ const logout = async () => {
 
     return formatDuration(getDurationSeconds());
   };
+
+  const getAveragePace = () => {
+    const totalKm = getTotalDistanceInKm();
+    const durationSeconds = getDurationSeconds();
+
+    if (!totalKm || !durationSeconds) {
+      return 'Not calculated';
+    }
+
+    const secondsPerKm = durationSeconds / totalKm;
+    const minutes = Math.floor(secondsPerKm / 60);
+    const seconds = Math.round(secondsPerKm % 60);
+
+    return `${minutes}:${String(seconds).padStart(2, '0')} min/km`;
+  };
+
+  const getAverageSpeed = () => {
+    const totalKm = getTotalDistanceInKm();
+    const durationSeconds = getDurationSeconds();
+
+    if (!totalKm || !durationSeconds) {
+      return 'Not calculated';
+    }
+
+    const hours = durationSeconds / 3600;
+
+    return `${(totalKm / hours).toFixed(2)} km/h`;
+  };
   
    
   const getBalootUsTotalFromScores = (scores: BalootScore[]) => {
@@ -639,12 +866,15 @@ const logout = async () => {
   };
 
   const getBalootWinner = (usTotal: number, themTotal: number) => {
+    const usName = balootUsName.trim() || 'Us';
+    const themName = balootThemName.trim() || 'Them';
+
     if (usTotal >= 152 && usTotal > themTotal) {
-      return 'Us';
+      return usName;
     }
 
     if (themTotal >= 152 && themTotal > usTotal) {
-      return 'Them';
+      return themName;
     }
 
     if (usTotal >= 152 && themTotal >= 152 && usTotal === themTotal) {
@@ -654,13 +884,21 @@ const logout = async () => {
     return 'Not finished yet';
   };
 
+  const getBalootShareText = (scores: BalootScore[], usTotal: number, themTotal: number) => {
+    const usName = balootUsName.trim() || 'Us';
+    const themName = balootThemName.trim() || 'Them';
+    const winner = getBalootWinner(usTotal, themTotal);
+
+    return `Baloot result: ${usName} ${usTotal} - ${themName} ${themTotal}. Winner: ${winner}. Hands played: ${scores.length}.`;
+  };
+
   const saveSession = async () => {
     if (!selectedActivity) {
   alert('Please choose an activity first');
   return;
 }
 
-if (!isVehicleMaintenanceActivity(selectedActivity) && (!startTime || !endTime)) {
+if (!isNonTimedActivity(selectedActivity) && (!startTime || !endTime)) {
   alert('Please start and end the activity first');
   return;
 }
@@ -715,10 +953,29 @@ if (!isVehicleMaintenanceActivity(selectedActivity) && (!startTime || !endTime))
       const cleanTeamTwoGames = matchTeamTwoGames.trim();
 
       if (cleanTeamOneGames !== '' && cleanTeamTwoGames !== '') {
+        const teamOneGamesNumber = Number(cleanTeamOneGames);
+        const teamTwoGamesNumber = Number(cleanTeamTwoGames);
+        const unfinishedWinner =
+          teamOneGamesNumber > teamTwoGamesNumber
+            ? matchTeamOneName.trim() || 'Team 1'
+            : teamTwoGamesNumber > teamOneGamesNumber
+              ? matchTeamTwoName.trim() || 'Team 2'
+              : 'Tie';
+
         const unfinishedRound: MatchRound = {
           id: Date.now(),
+          setNumber: matchSetNumber.trim(),
           teamOneGames: cleanTeamOneGames,
           teamTwoGames: cleanTeamTwoGames,
+          teamOnePoints: matchTeamOnePoints.trim(),
+          teamTwoPoints: matchTeamTwoPoints.trim(),
+          server: matchServer.trim(),
+          tiebreakScore: matchTiebreakScore.trim(),
+          winner: unfinishedWinner,
+          teamOneWinners: matchTeamOneWinners.trim(),
+          teamTwoWinners: matchTeamTwoWinners.trim(),
+          teamOneErrors: matchTeamOneErrors.trim(),
+          teamTwoErrors: matchTeamTwoErrors.trim(),
         };
 
         finalMatchRounds = [...matchRounds, unfinishedRound];
@@ -745,16 +1002,16 @@ if (!isVehicleMaintenanceActivity(selectedActivity) && (!startTime || !endTime))
     const newSession: Session = {
   id: Date.now(),
   activity: selectedActivity,
-  start: isVehicleMaintenanceActivity(selectedActivity)
+  start: isNonTimedActivity(selectedActivity)
     ? 'Not timed'
     : startTime!.toLocaleTimeString(),
-  end: isVehicleMaintenanceActivity(selectedActivity)
+  end: isNonTimedActivity(selectedActivity)
     ? 'Not timed'
     : endTime!.toLocaleTimeString(),
-  duration: isVehicleMaintenanceActivity(selectedActivity)
+  duration: isNonTimedActivity(selectedActivity)
     ? 'Not timed'
     : getDuration(),
-  durationSeconds: isVehicleMaintenanceActivity(selectedActivity)
+  durationSeconds: isNonTimedActivity(selectedActivity)
     ? 0
     : getDurationSeconds(),
   date: new Date().toLocaleDateString(),
@@ -783,6 +1040,19 @@ if (!isVehicleMaintenanceActivity(selectedActivity) && (!startTime || !endTime))
         lapDistanceUnit: lapDistanceUnit,
         totalDistance: getTotalLapDistance(),
       };
+
+      if (isMovementActivity(selectedActivity)) {
+        newSession.details = {
+          ...newSession.details,
+          routeName: routeName.trim(),
+          elevationGain: elevationGain.trim(),
+          splits: splitNotes.trim(),
+          goal: movementGoal.trim(),
+          personalRecord: personalRecord.trim(),
+          averagePace: getAveragePace(),
+          averageSpeed: getAverageSpeed(),
+        };
+      }
     }
 
     if (isMatchActivity(selectedActivity)) {
@@ -809,10 +1079,13 @@ if (!isVehicleMaintenanceActivity(selectedActivity) && (!startTime || !endTime))
 
       newSession.details = {
         balootScores: finalBalootScores,
+        balootUsName: balootUsName.trim(),
+        balootThemName: balootThemName.trim(),
         balootUsTotal: usTotal,
         balootThemTotal: themTotal,
         balootWinner: getBalootWinner(usTotal, themTotal),
         balootDealerDirection: balootDealerDirection,
+        balootShareText: getBalootShareText(finalBalootScores, usTotal, themTotal),
       };
     }
 
@@ -821,6 +1094,11 @@ if (!isVehicleMaintenanceActivity(selectedActivity) && (!startTime || !endTime))
         studying: {
           subject: studySubject.trim(),
           studyType: studyType.trim(),
+          examDate: studyExamDate.trim(),
+          coursework: studyCoursework.trim(),
+          pomodoroPlan: studyPomodoroPlan.trim(),
+          streak: studyStreak.trim(),
+          totalStudyHours: studyTotalHours.trim(),
           candleSeconds: studyCandleSeconds,
           candleTime: formatStudyCandleTime(),
           notes: studyNotes.trim(),
@@ -850,6 +1128,14 @@ if (!isVehicleMaintenanceActivity(selectedActivity) && (!startTime || !endTime))
           walkMinutes: horseWalkMinutes.trim(),
           trotMinutes: horseTrotMinutes.trim(),
           canterMinutes: horseCanterMinutes.trim(),
+          rideDistance: horseRideDistance.trim(),
+          averageSpeed: horseAverageSpeed.trim(),
+          leftTurns: horseLeftTurns.trim(),
+          rightTurns: horseRightTurns.trim(),
+          rideDate: horseRideDate.trim(),
+          calendarNote: horseCalendarNote.trim(),
+          safetyLocation: horseSafetyLocation.trim(),
+          safetyContact: horseSafetyContact.trim(),
 
           hayGiven: horseHayGiven,
           waterChecked: horseWaterChecked,
@@ -884,16 +1170,56 @@ if (!isVehicleMaintenanceActivity(selectedActivity) && (!startTime || !endTime))
       };
     }
     if (isVehicleMaintenanceActivity(selectedActivity)) {
-  newSession.details = {
+      newSession.details = {
     vehicleMaintenance: {
       vehicleName: vehicleName.trim(),
+      plateNumber: vehiclePlateNumber.trim(),
+      modelYear: vehicleModelYear.trim(),
       serviceType: vehicleServiceType.trim(),
+      serviceDate: vehicleServiceDate.trim(),
       mileage: vehicleMileage.trim(),
       cost: vehicleCost.trim(),
+      shopName: vehicleShopName.trim(),
+      nextServiceDate: vehicleNextServiceDate.trim(),
+      nextServiceMileage: vehicleNextServiceMileage.trim(),
+      insuranceExpirationDate: vehicleInsuranceExpirationDate.trim(),
+      registrationEndDate: vehicleRegistrationEndDate.trim(),
       notes: vehicleNotes.trim(),
     },
-  };
-}
+      };
+    }
+
+    if (isCustomActivity(selectedActivity)) {
+      const customFields: CustomFieldValue[] = getCustomTemplateFields(selectedActivity).map((label) => ({
+        label,
+        value: customFieldValues[label]?.trim() || '',
+      }));
+
+      newSession.details = { customFields };
+    }
+
+    if (isPersonalInfoActivity(selectedActivity)) {
+      newSession.details = {
+        personalInfo: {
+          idNumberEnding: getSensitiveEnding(personalIdNumber),
+          idExpirationDate: personalIdExpirationDate.trim(),
+          drivingLicenseExpirationDate: personalDlExpirationDate.trim(),
+          passportNumberEnding: getSensitiveEnding(personalPassportNumber),
+          passportExpirationDate: personalPassportExpirationDate.trim(),
+        },
+      };
+    }
+
+    if (supportsReminders(selectedActivity) && (reminderDate.trim() || reminderTime.trim() || reminderNote.trim())) {
+      newSession.details = {
+        ...newSession.details,
+        reminder: {
+          date: reminderDate.trim(),
+          time: reminderTime.trim(),
+          note: reminderNote.trim(),
+        },
+      };
+    }
 
     
     const newSessions = [newSession, ...sessions];
@@ -1018,34 +1344,45 @@ if (!isVehicleMaintenanceActivity(selectedActivity) && (!startTime || !endTime))
     );
   };
   const getActivityGroup = (activity: string) => {
-  if (['Football', 'Padel', 'Tennis', 'Golf'].includes(activity)) {
-    return 'Sports';
+  if (['Football', 'Padel', 'Tennis', 'Golf', 'Baloot'].includes(activity)) {
+    return 'Sports and Games';
   }
 
   if (['Gym', 'Run', 'Cycling', 'Walking', 'Swimming'].includes(activity)) {
-    return 'Training';
+    return 'Fitness and Movement';
   }
 
   if (activity === 'Horse Riding') {
-    return 'Horse';
-  }
-
-  if (activity === 'Baloot') {
-    return 'Games';
+    return 'Horse Activities';
   }
 
   if (activity === 'Studying' || activity === 'Work') {
-    return 'Study';
+    return 'Study and Work';
   }
 
-  return 'Other';
+  if (activity === 'Vehicle Maintenance') {
+    return 'Vehicle and Maintenance';
+  }
+
+  if (activity === 'Personal Info') {
+    return 'Life Tracking';
+  }
+
+  return 'Custom Activities';
 };
 
 const getGroupedActivities = () => {
-  const groupOrder = ['Sports', 'Training', 'Horse', 'Games', 'Study', 'Other'];
+  const groupOrder = [
+    'Sports and Games',
+    'Fitness and Movement',
+    'Horse Activities',
+    'Study and Work',
+    'Life Tracking',
+    'Vehicle and Maintenance',
+    'Custom Activities',
+  ];
 
-  return groupOrder
-    .map((groupName) => {
+  return groupOrder.map((groupName) => {
       const groupActivities = activities.filter(
         (activity) => getActivityGroup(activity) === groupName
       );
@@ -1054,8 +1391,7 @@ const getGroupedActivities = () => {
         groupName,
         groupActivities,
       };
-    })
-    .filter((group) => group.groupActivities.length > 0);
+    });
 };
 
   const renderSessionDeleteAction = (sessionId: number) => {
@@ -1106,7 +1442,7 @@ const getGroupedActivities = () => {
 
                 {exercise.sets.map((set, setIndex) => (
                   <Text key={set.id} style={styles.savedSetText}>
-                    Set {setIndex + 1}: {set.reps} reps
+                    Set {setIndex + 1}: {set.weight ? `${set.weight} kg, ` : ''}{set.reps} reps
                   </Text>
                 ))}
               </View>
@@ -1128,6 +1464,31 @@ const getGroupedActivities = () => {
           <Text style={styles.savedDetailsText}>
             Total Distance: {session.details.totalDistance || '0 m'}
           </Text>
+          {isMovementActivity(session.activity) && (
+            <>
+              <Text style={styles.savedDetailsText}>
+                Route: {session.details.routeName || 'Not filled'}
+              </Text>
+              <Text style={styles.savedDetailsText}>
+                Pace: {session.details.averagePace || 'Not calculated'}
+              </Text>
+              <Text style={styles.savedDetailsText}>
+                Speed: {session.details.averageSpeed || 'Not calculated'}
+              </Text>
+              <Text style={styles.savedDetailsText}>
+                Elevation: {session.details.elevationGain || 'Not filled'}
+              </Text>
+              <Text style={styles.savedDetailsText}>
+                Goal: {session.details.goal || 'Not filled'}
+              </Text>
+              <Text style={styles.savedDetailsText}>
+                Splits: {session.details.splits || 'Not filled'}
+              </Text>
+              <Text style={styles.savedDetailsText}>
+                Personal Record: {session.details.personalRecord || 'Not filled'}
+              </Text>
+            </>
+          )}
         </View>
       );
     }
@@ -1148,9 +1509,29 @@ const getGroupedActivities = () => {
             <Text style={styles.savedDetailsText}>No rounds saved</Text>
           ) : (
             session.details.matchRounds.map((round, index) => (
-              <Text key={round.id} style={styles.savedDetailsText}>
-                Round {index + 1}: {round.teamOneGames} - {round.teamTwoGames}
-              </Text>
+              <View key={round.id} style={styles.savedExerciseBlock}>
+                <Text style={styles.savedDetailsText}>
+                  Set {round.setNumber || index + 1}: {round.teamOneGames} - {round.teamTwoGames}
+                </Text>
+                <Text style={styles.savedSetText}>
+                  Points: {round.teamOnePoints || '0'} - {round.teamTwoPoints || '0'}
+                </Text>
+                <Text style={styles.savedSetText}>
+                  Server: {round.server || 'Not filled'}
+                </Text>
+                <Text style={styles.savedSetText}>
+                  Winner: {round.winner || 'Not finished'}
+                </Text>
+                <Text style={styles.savedSetText}>
+                  Tiebreak: {round.tiebreakScore || 'None'}
+                </Text>
+                <Text style={styles.savedSetText}>
+                  Winners: {round.teamOneWinners || '0'} - {round.teamTwoWinners || '0'}
+                </Text>
+                <Text style={styles.savedSetText}>
+                  Errors: {round.teamOneErrors || '0'} - {round.teamTwoErrors || '0'}
+                </Text>
+              </View>
             ))
           )}
 
@@ -1166,14 +1547,17 @@ const getGroupedActivities = () => {
     }
 
     if (isBalootActivity(session.activity) && session.details) {
+      const usName = session.details.balootUsName || 'Us';
+      const themName = session.details.balootThemName || 'Them';
+
       return (
         <View style={styles.savedDetailsBox}>
           <Text style={styles.savedDetailsHeader}>Baloot Total:</Text>
           <Text style={styles.savedDetailsText}>
-            Us: {session.details.balootUsTotal || 0}
+            {usName}: {session.details.balootUsTotal || 0}
           </Text>
           <Text style={styles.savedDetailsText}>
-            Them: {session.details.balootThemTotal || 0}
+            {themName}: {session.details.balootThemTotal || 0}
           </Text>
           <Text style={styles.savedDetailsText}>
             Winner: {session.details.balootWinner || 'Not finished yet'}
@@ -1189,10 +1573,15 @@ const getGroupedActivities = () => {
           ) : (
             session.details.balootScores.map((score, index) => (
               <Text key={score.id} style={styles.savedDetailsText}>
-                Hand {index + 1}: Us {score.us} - Them {score.them}
+                Hand {index + 1}: {usName} {score.us} - {themName} {score.them}
               </Text>
             ))
           )}
+
+          <Text style={styles.savedDetailsHeader}>Share Result:</Text>
+          <Text style={styles.savedDetailsText}>
+            {session.details.balootShareText || 'No share summary saved'}
+          </Text>
         </View>
       );
     }
@@ -1208,6 +1597,21 @@ const getGroupedActivities = () => {
           </Text>
           <Text style={styles.savedDetailsText}>
             Type: {study.studyType || 'Not filled'}
+          </Text>
+          <Text style={styles.savedDetailsText}>
+            Exam Date: {study.examDate || 'Not filled'}
+          </Text>
+          <Text style={styles.savedDetailsText}>
+            Coursework: {study.coursework || 'Not filled'}
+          </Text>
+          <Text style={styles.savedDetailsText}>
+            Pomodoro: {study.pomodoroPlan || 'Not filled'}
+          </Text>
+          <Text style={styles.savedDetailsText}>
+            Streak: {study.streak || 'Not filled'}
+          </Text>
+          <Text style={styles.savedDetailsText}>
+            Total Study Hours: {study.totalStudyHours || 'Not filled'}
           </Text>
           <Text style={styles.savedDetailsText}>
             Candle Timer: {study.candleTime || '00:00:00'}
@@ -1273,6 +1677,27 @@ const getGroupedActivities = () => {
           </Text>
           <Text style={styles.savedDetailsText}>
             Canter: {horse.canterMinutes || '0'} min
+          </Text>
+          <Text style={styles.savedDetailsText}>
+            Distance: {horse.rideDistance || 'Not filled'}
+          </Text>
+          <Text style={styles.savedDetailsText}>
+            Average Speed: {horse.averageSpeed || 'Not filled'}
+          </Text>
+          <Text style={styles.savedDetailsText}>
+            Turns: Left {horse.leftTurns || '0'} / Right {horse.rightTurns || '0'}
+          </Text>
+          <Text style={styles.savedDetailsText}>
+            Ride Date: {horse.rideDate || 'Not filled'}
+          </Text>
+          <Text style={styles.savedDetailsText}>
+            Calendar Note: {horse.calendarNote || 'None'}
+          </Text>
+          <Text style={styles.savedDetailsText}>
+            Safety Location: {horse.safetyLocation || 'Not filled'}
+          </Text>
+          <Text style={styles.savedDetailsText}>
+            Safety Contact: {horse.safetyContact || 'Not filled'}
           </Text>
 
           <Text style={styles.savedDetailsHeader}>Daily Care:</Text>
@@ -1370,7 +1795,19 @@ const getGroupedActivities = () => {
       </Text>
 
       <Text style={styles.savedDetailsText}>
+        Plate: {vehicle.plateNumber || 'Not filled'}
+      </Text>
+
+      <Text style={styles.savedDetailsText}>
+        Model / Year: {vehicle.modelYear || 'Not filled'}
+      </Text>
+
+      <Text style={styles.savedDetailsText}>
         Service: {vehicle.serviceType || 'Not filled'}
+      </Text>
+
+      <Text style={styles.savedDetailsText}>
+        Service Date: {vehicle.serviceDate || 'Not filled'}
       </Text>
 
       <Text style={styles.savedDetailsText}>
@@ -1382,11 +1819,46 @@ const getGroupedActivities = () => {
       </Text>
 
       <Text style={styles.savedDetailsText}>
+        Shop / Place: {vehicle.shopName || 'Not filled'}
+      </Text>
+
+      <Text style={styles.savedDetailsHeader}>Upcoming:</Text>
+
+      <Text style={styles.savedDetailsText}>
+        Next Service Date: {vehicle.nextServiceDate || 'Not filled'}
+      </Text>
+
+      <Text style={styles.savedDetailsText}>
+        Next Service Mileage: {vehicle.nextServiceMileage || 'Not filled'}
+      </Text>
+
+      <Text style={styles.savedDetailsText}>
+        Insurance Expiration: {vehicle.insuranceExpirationDate || 'Not filled'}
+      </Text>
+
+      <Text style={styles.savedDetailsText}>
+        Registration End Date: {vehicle.registrationEndDate || 'Not filled'}
+      </Text>
+
+      <Text style={styles.savedDetailsText}>
         Notes: {vehicle.notes || 'None'}
       </Text>
     </View>
   );
 }
+
+    if (isCustomActivity(session.activity) && session.details?.customFields) {
+      return (
+        <View style={styles.savedDetailsBox}>
+          <Text style={styles.savedDetailsHeader}>Custom Details:</Text>
+          {session.details.customFields.map((field, index) => (
+            <Text key={`${field.label}-${index}`} style={styles.savedDetailsText}>
+              {field.label}: {field.value || 'Not filled'}
+            </Text>
+          ))}
+        </View>
+      );
+    }
 
     return null;
   };
@@ -1513,11 +1985,80 @@ const getGroupedActivities = () => {
 
           <Text style={styles.title}>{selectedActivity}</Text>
           <Text style={styles.subtitle}>Track your activity session</Text>
-          {!isVehicleMaintenanceActivity(selectedActivity) && (
+          {!isNonTimedActivity(selectedActivity) && (
           <TouchableOpacity style={styles.startButton} onPress={startActivity}>
           <Text style={styles.buttonText}>Start Activity</Text>
         </TouchableOpacity>
 )}
+
+          {isPersonalInfoActivity(selectedActivity) && (
+            <View style={styles.infoBox}>
+              <Text style={styles.savedDetailsHeader}>Personal Info</Text>
+              <Text style={styles.candleHint}>
+                For privacy, only the last four characters of document numbers are saved.
+              </Text>
+              <TextInput
+                style={styles.input}
+                placeholder="ID number"
+                placeholderTextColor="#8f8f92"
+                value={personalIdNumber}
+                onChangeText={setPersonalIdNumber}
+                secureTextEntry
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="ID expiration date"
+                placeholderTextColor="#8f8f92"
+                value={personalIdExpirationDate}
+                onChangeText={setPersonalIdExpirationDate}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Driving license expiration date"
+                placeholderTextColor="#8f8f92"
+                value={personalDlExpirationDate}
+                onChangeText={setPersonalDlExpirationDate}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Passport number"
+                placeholderTextColor="#8f8f92"
+                value={personalPassportNumber}
+                onChangeText={setPersonalPassportNumber}
+                secureTextEntry
+                autoCapitalize="characters"
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Passport expiration date"
+                placeholderTextColor="#8f8f92"
+                value={personalPassportExpirationDate}
+                onChangeText={setPersonalPassportExpirationDate}
+              />
+            </View>
+          )}
+
+          {isCustomActivity(selectedActivity) && (
+            <View style={styles.infoBox}>
+              <Text style={styles.savedDetailsHeader}>Custom Details</Text>
+              {getCustomTemplateFields(selectedActivity).map((field) => (
+                <TextInput
+                  key={field}
+                  style={styles.input}
+                  placeholder={field}
+                  placeholderTextColor="#8f8f92"
+                  value={customFieldValues[field] || ''}
+                  onChangeText={(value) =>
+                    setCustomFieldValues((currentValues) => ({
+                      ...currentValues,
+                      [field]: value,
+                    }))
+                  }
+                  multiline={field.toLowerCase().includes('note')}
+                />
+              ))}
+            </View>
+          )}
 
           <FootballTracker
   selectedActivity={selectedActivity}
@@ -1539,6 +2080,8 @@ const getGroupedActivities = () => {
   setGymExerciseName={setGymExerciseName}
   gymSetReps={gymSetReps}
   setGymSetReps={setGymSetReps}
+  gymSetWeight={gymSetWeight}
+  setGymSetWeight={setGymSetWeight}
   currentGymSets={currentGymSets}
   setCurrentGymSets={setCurrentGymSets}
   gymExercises={gymExercises}
@@ -1552,6 +2095,16 @@ const getGroupedActivities = () => {
   setLapDistance={setLapDistance}
   lapDistanceUnit={lapDistanceUnit}
   setLapDistanceUnit={setLapDistanceUnit}
+  routeName={routeName}
+  setRouteName={setRouteName}
+  elevationGain={elevationGain}
+  setElevationGain={setElevationGain}
+  splitNotes={splitNotes}
+  setSplitNotes={setSplitNotes}
+  movementGoal={movementGoal}
+  setMovementGoal={setMovementGoal}
+  personalRecord={personalRecord}
+  setPersonalRecord={setPersonalRecord}
   startTime={startTime}
   endTime={endTime}
 />
@@ -1561,15 +2114,37 @@ const getGroupedActivities = () => {
   setMatchTeamOneName={setMatchTeamOneName}
   matchTeamTwoName={matchTeamTwoName}
   setMatchTeamTwoName={setMatchTeamTwoName}
+  matchSetNumber={matchSetNumber}
+  setMatchSetNumber={setMatchSetNumber}
   matchTeamOneGames={matchTeamOneGames}
   setMatchTeamOneGames={setMatchTeamOneGames}
   matchTeamTwoGames={matchTeamTwoGames}
   setMatchTeamTwoGames={setMatchTeamTwoGames}
+  matchTeamOnePoints={matchTeamOnePoints}
+  setMatchTeamOnePoints={setMatchTeamOnePoints}
+  matchTeamTwoPoints={matchTeamTwoPoints}
+  setMatchTeamTwoPoints={setMatchTeamTwoPoints}
+  matchServer={matchServer}
+  setMatchServer={setMatchServer}
+  matchTiebreakScore={matchTiebreakScore}
+  setMatchTiebreakScore={setMatchTiebreakScore}
+  matchTeamOneWinners={matchTeamOneWinners}
+  setMatchTeamOneWinners={setMatchTeamOneWinners}
+  matchTeamTwoWinners={matchTeamTwoWinners}
+  setMatchTeamTwoWinners={setMatchTeamTwoWinners}
+  matchTeamOneErrors={matchTeamOneErrors}
+  setMatchTeamOneErrors={setMatchTeamOneErrors}
+  matchTeamTwoErrors={matchTeamTwoErrors}
+  setMatchTeamTwoErrors={setMatchTeamTwoErrors}
   matchRounds={matchRounds}
   setMatchRounds={setMatchRounds}
 />          
 <BalootTracker
   selectedActivity={selectedActivity}
+  balootUsName={balootUsName}
+  setBalootUsName={setBalootUsName}
+  balootThemName={balootThemName}
+  setBalootThemName={setBalootThemName}
   balootUsScore={balootUsScore}
   setBalootUsScore={setBalootUsScore}
   balootThemScore={balootThemScore}
@@ -1598,6 +2173,47 @@ const getGroupedActivities = () => {
       placeholderTextColor="#8f8f92"
       value={studyType}
       onChangeText={setStudyType}
+    />
+
+    <TextInput
+      style={styles.input}
+      placeholder="Exam date, example: 20/08/2026"
+      placeholderTextColor="#8f8f92"
+      value={studyExamDate}
+      onChangeText={setStudyExamDate}
+    />
+
+    <TextInput
+      style={styles.input}
+      placeholder="Coursework, example: Chapter 4 assignment"
+      placeholderTextColor="#8f8f92"
+      value={studyCoursework}
+      onChangeText={setStudyCoursework}
+    />
+
+    <TextInput
+      style={styles.input}
+      placeholder="Pomodoro plan, example: 25/5 x 4"
+      placeholderTextColor="#8f8f92"
+      value={studyPomodoroPlan}
+      onChangeText={setStudyPomodoroPlan}
+    />
+
+    <TextInput
+      style={styles.input}
+      placeholder="Study streak, example: 5 days"
+      placeholderTextColor="#8f8f92"
+      value={studyStreak}
+      onChangeText={setStudyStreak}
+    />
+
+    <TextInput
+      style={styles.input}
+      placeholder="Total study hours"
+      placeholderTextColor="#8f8f92"
+      value={studyTotalHours}
+      onChangeText={setStudyTotalHours}
+      keyboardType="decimal-pad"
     />
 
     <View style={styles.candleBox}>
@@ -1681,6 +2297,22 @@ const getGroupedActivities = () => {
   setHorseTrotMinutes={setHorseTrotMinutes}
   horseCanterMinutes={horseCanterMinutes}
   setHorseCanterMinutes={setHorseCanterMinutes}
+  horseRideDistance={horseRideDistance}
+  setHorseRideDistance={setHorseRideDistance}
+  horseAverageSpeed={horseAverageSpeed}
+  setHorseAverageSpeed={setHorseAverageSpeed}
+  horseLeftTurns={horseLeftTurns}
+  setHorseLeftTurns={setHorseLeftTurns}
+  horseRightTurns={horseRightTurns}
+  setHorseRightTurns={setHorseRightTurns}
+  horseRideDate={horseRideDate}
+  setHorseRideDate={setHorseRideDate}
+  horseCalendarNote={horseCalendarNote}
+  setHorseCalendarNote={setHorseCalendarNote}
+  horseSafetyLocation={horseSafetyLocation}
+  setHorseSafetyLocation={setHorseSafetyLocation}
+  horseSafetyContact={horseSafetyContact}
+  setHorseSafetyContact={setHorseSafetyContact}
   horseHayGiven={horseHayGiven}
   setHorseHayGiven={setHorseHayGiven}
   horseWaterChecked={horseWaterChecked}
@@ -1740,9 +2372,25 @@ const getGroupedActivities = () => {
       onChangeText={setVehicleName}
     />
 
+    <TextInput
+      style={styles.input}
+      placeholder="Plate number"
+      placeholderTextColor="#8f8f92"
+      value={vehiclePlateNumber}
+      onChangeText={setVehiclePlateNumber}
+    />
+
+    <TextInput
+      style={styles.input}
+      placeholder="Model / Year, example: Camry 2022"
+      placeholderTextColor="#8f8f92"
+      value={vehicleModelYear}
+      onChangeText={setVehicleModelYear}
+    />
+
     <Text style={styles.savedDetailsText}>Service Type</Text>
 
-    {['Tire Change', 'Battery', 'Oil Change', 'Other Service', 'Gas Filling'].map((service) => (
+    {['Tire Change', 'Battery', 'Oil Change', 'Gas Filling', 'Insurance', 'Registration', 'Repair', 'Other Service'].map((service) => (
       <TouchableOpacity
         key={service}
         style={[
@@ -1754,6 +2402,14 @@ const getGroupedActivities = () => {
         <Text style={styles.activityText}>{service}</Text>
       </TouchableOpacity>
     ))}
+
+    <TextInput
+      style={styles.input}
+      placeholder="Service date, example: 2026-07-17"
+      placeholderTextColor="#8f8f92"
+      value={vehicleServiceDate}
+      onChangeText={setVehicleServiceDate}
+    />
 
     <TextInput
       style={styles.input}
@@ -1775,6 +2431,49 @@ const getGroupedActivities = () => {
 
     <TextInput
       style={styles.input}
+      placeholder="Shop / place name"
+      placeholderTextColor="#8f8f92"
+      value={vehicleShopName}
+      onChangeText={setVehicleShopName}
+    />
+
+    <Text style={styles.savedDetailsText}>Upcoming reminders</Text>
+
+    <TextInput
+      style={styles.input}
+      placeholder="Next service date"
+      placeholderTextColor="#8f8f92"
+      value={vehicleNextServiceDate}
+      onChangeText={setVehicleNextServiceDate}
+    />
+
+    <TextInput
+      style={styles.input}
+      placeholder="Next service mileage / KM"
+      placeholderTextColor="#8f8f92"
+      value={vehicleNextServiceMileage}
+      onChangeText={setVehicleNextServiceMileage}
+      keyboardType="numeric"
+    />
+
+    <TextInput
+      style={styles.input}
+      placeholder="Insurance expiration date"
+      placeholderTextColor="#8f8f92"
+      value={vehicleInsuranceExpirationDate}
+      onChangeText={setVehicleInsuranceExpirationDate}
+    />
+
+    <TextInput
+      style={styles.input}
+      placeholder="Registration end date"
+      placeholderTextColor="#8f8f92"
+      value={vehicleRegistrationEndDate}
+      onChangeText={setVehicleRegistrationEndDate}
+    />
+
+    <TextInput
+      style={styles.input}
       placeholder="Notes"
       placeholderTextColor="#8f8f92"
       value={vehicleNotes}
@@ -1784,13 +2483,41 @@ const getGroupedActivities = () => {
   </View>
 )}
 
-          {!isVehicleMaintenanceActivity(selectedActivity) && (
+          {supportsReminders(selectedActivity) && (
+            <View style={styles.infoBox}>
+              <Text style={styles.savedDetailsHeader}>Reminder</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Reminder date, example: 2026-08-01"
+                placeholderTextColor="#8f8f92"
+                value={reminderDate}
+                onChangeText={setReminderDate}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Reminder time, example: 18:30"
+                placeholderTextColor="#8f8f92"
+                value={reminderTime}
+                onChangeText={setReminderTime}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="What should ActiveTrack remind you about?"
+                placeholderTextColor="#8f8f92"
+                value={reminderNote}
+                onChangeText={setReminderNote}
+                multiline
+              />
+            </View>
+          )}
+
+          {!isNonTimedActivity(selectedActivity) && (
   <TouchableOpacity style={styles.endButton} onPress={endActivity}>
     <Text style={styles.buttonText}>End Activity</Text>
   </TouchableOpacity>
 )}
 
-          {!isVehicleMaintenanceActivity(selectedActivity) && (
+          {!isNonTimedActivity(selectedActivity) && (
   <View style={styles.infoBox}>
     <Text style={styles.infoText}>
       Start: {startTime ? startTime.toLocaleTimeString() : 'Not started'}
@@ -1806,7 +2533,11 @@ const getGroupedActivities = () => {
 
   <TouchableOpacity style={styles.saveButton} onPress={saveSession}>
   <Text style={styles.buttonText}>
-    {isVehicleMaintenanceActivity(selectedActivity) ? 'Save Maintenance' : 'Save Session'}
+    {isVehicleMaintenanceActivity(selectedActivity)
+      ? 'Save Maintenance'
+      : isPersonalInfoActivity(selectedActivity)
+        ? 'Save Personal Info'
+        : 'Save Session'}
   </Text>
 </TouchableOpacity>
 
@@ -1850,33 +2581,55 @@ const getGroupedActivities = () => {
             </View>
           </View>
 
-          <View style={styles.topActions}>
-            <TouchableOpacity style={styles.addButton} onPress={openOtherModal}>
-              <Text style={styles.smallActionText}>+ Add Activity</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.resetButton} onPress={resetActivityList}>
-              <Text style={styles.smallActionText}>Reset List</Text>
-            </TouchableOpacity>
-          </View>
-
-          <Text style={styles.hintText}>
-            Swipe left on an activity to delete it
-          </Text>
-
           <View style={styles.activityList}>
-            {activities.length === 0 ? (
-              <Text style={styles.emptyHistory}>
-                No activities available. Press Add Activity or Reset List.
-              </Text>
-            ) : (
-              getGroupedActivities().map((group) => (
-                <View key={group.groupName} style={styles.activityGroup}>
-                  <Text style={styles.activityGroupTitle}>
-                    {group.groupName}
-                  </Text>
+            {!selectedActivityCategory ? (
+              <>
+                <Text style={styles.activityGroupTitle}>Activity Types</Text>
+                {getGroupedActivities().map((group) => (
+                  <TouchableOpacity
+                    key={group.groupName}
+                    style={styles.categoryButton}
+                    onPress={() => setSelectedActivityCategory(group.groupName)}
+                  >
+                    <View>
+                      <Text style={styles.activityText}>{group.groupName}</Text>
+                      <Text style={styles.categoryCount}>
+                        {group.groupActivities.length} {group.groupActivities.length === 1 ? 'activity' : 'activities'}
+                      </Text>
+                    </View>
+                    <Text style={styles.categoryArrow}>›</Text>
+                  </TouchableOpacity>
+                ))}
 
-                  {group.groupActivities.map((activity) => (
+                <TouchableOpacity style={styles.resetButton} onPress={resetActivityList}>
+                  <Text style={styles.smallActionText}>Reset Activity List</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <TouchableOpacity
+                  style={styles.categoryBackButton}
+                  onPress={() => setSelectedActivityCategory(null)}
+                >
+                  <Text style={styles.backButtonText}>← Activity Types</Text>
+                </TouchableOpacity>
+
+                <Text style={styles.activityGroupTitle}>{selectedActivityCategory}</Text>
+
+                {selectedActivityCategory === 'Custom Activities' && (
+                  <TouchableOpacity style={styles.addButton} onPress={openOtherModal}>
+                    <Text style={styles.smallActionText}>+ Add Custom Activity</Text>
+                  </TouchableOpacity>
+                )}
+
+                <Text style={styles.hintText}>Swipe left on an activity to delete it</Text>
+
+                {activities.filter((activity) => getActivityGroup(activity) === selectedActivityCategory).length === 0 ? (
+                  <Text style={styles.emptyHistory}>No activities in this category yet.</Text>
+                ) : (
+                  activities
+                    .filter((activity) => getActivityGroup(activity) === selectedActivityCategory)
+                    .map((activity) => (
                     <Swipeable
                       key={activity}
                       renderRightActions={() =>
@@ -1890,9 +2643,9 @@ const getGroupedActivities = () => {
                         <Text style={styles.activityText}>{activity}</Text>
                       </TouchableOpacity>
                     </Swipeable>
-                  ))}
-                </View>
-              ))
+                    ))
+                )}
+              </>
             )}
           </View>
 
@@ -1922,6 +2675,19 @@ const getGroupedActivities = () => {
                 placeholderTextColor="#8f8f92"
                 value={otherActivityName}
                 onChangeText={setOtherActivityName}
+              />
+
+              <Text style={styles.modalSubtitle}>
+                Add reusable field names, separated by commas
+              </Text>
+
+              <TextInput
+                style={styles.input}
+                placeholder="Example: Location, Score, Notes"
+                placeholderTextColor="#8f8f92"
+                value={otherActivityFields}
+                onChangeText={setOtherActivityFields}
+                multiline
               />
 
               <TouchableOpacity
@@ -2045,6 +2811,33 @@ activityGroupTitle: {
   activityList: {
     gap: 12,
     paddingBottom: 30,
+  },
+  categoryButton: {
+    minHeight: 82,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    borderRadius: 14,
+    backgroundColor: '#1f1f22',
+    borderWidth: 1,
+    borderColor: '#3a3a3d',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  categoryCount: {
+    color: '#a7a7aa',
+    fontSize: 14,
+    marginTop: 5,
+  },
+  categoryArrow: {
+    color: '#ffffff',
+    fontSize: 34,
+    lineHeight: 36,
+  },
+  categoryBackButton: {
+    alignSelf: 'flex-start',
+    paddingVertical: 10,
+    marginBottom: 4,
   },
   featureUpgradeBox: {
     backgroundColor: '#1f1f22',

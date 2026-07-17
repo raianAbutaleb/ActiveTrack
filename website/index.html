@@ -8,7 +8,7 @@
       name="description"
       content="ActiveTrack is a local-first web app for tracking activity sessions, matches, workouts, rides, study, and maintenance."
     />
-    <link rel="stylesheet" href="./styles.css?v=20260717-feature-upgrades" />
+    <link rel="stylesheet" href="./styles.css?v=20260717-vehicle-upgrade" />
   </head>
   <body>
     <canvas id="activity-canvas" aria-hidden="true"></canvas>
@@ -106,10 +106,14 @@
             </article>
           </div>
 
-          <form class="custom-activity" id="custom-activity-form">
+          <form class="custom-activity collapsed" id="custom-activity-form">
             <label>
               <span id="custom-activity-label">Add custom activity</span>
               <input name="customActivity" type="text" placeholder="Example: Hiking" />
+            </label>
+            <label>
+              <span id="custom-fields-label">Reusable fields (separate with commas)</span>
+              <input name="customFields" type="text" placeholder="Location, Score, Notes" />
             </label>
             <button class="button secondary" type="submit" id="custom-activity-button">Add</button>
           </form>
@@ -168,6 +172,8 @@
             </div>
           </div>
 
+          <section class="progress-dashboard" id="progress-dashboard" aria-label="Progress"></section>
+
           <div class="history-tools">
             <label>
               <span id="history-filter-label">Filter activity</span>
@@ -180,6 +186,6 @@
       </main>
     </div>
 
-    <script src="./main.js?v=20260717-feature-upgrades"></script>
+    <script src="./main.js?v=20260717-history-persistence"></script>
   </body>
 </html>

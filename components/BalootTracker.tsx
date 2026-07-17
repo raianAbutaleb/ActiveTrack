@@ -13,6 +13,12 @@ import { BalootScore } from '../types';
 type Props = {
   selectedActivity: string | null;
 
+  balootUsName: string;
+  setBalootUsName: Dispatch<SetStateAction<string>>;
+
+  balootThemName: string;
+  setBalootThemName: Dispatch<SetStateAction<string>>;
+
   balootUsScore: string;
   setBalootUsScore: Dispatch<SetStateAction<string>>;
 
@@ -53,13 +59,21 @@ export default function BalootTracker(props: Props) {
     return getBalootThemTotalFromScores(props.balootScores);
   };
 
+  const getUsName = () => {
+    return props.balootUsName.trim() || 'Us';
+  };
+
+  const getThemName = () => {
+    return props.balootThemName.trim() || 'Them';
+  };
+
   const getBalootWinner = (usTotal: number, themTotal: number) => {
     if (usTotal >= 152 && usTotal > themTotal) {
-      return 'Us';
+      return getUsName();
     }
 
     if (themTotal >= 152 && themTotal > usTotal) {
-      return 'Them';
+      return getThemName();
     }
 
     if (usTotal >= 152 && themTotal >= 152 && usTotal === themTotal) {
@@ -115,7 +129,7 @@ export default function BalootTracker(props: Props) {
     props.setBalootUsScore('');
     props.setBalootThemScore('');
 
-    if (winner === 'Us' || winner === 'Them') {
+    if (winner === getUsName() || winner === getThemName()) {
       Alert.alert('Baloot Winner', `${winner} reached 152 and won.`);
     }
   };
@@ -153,14 +167,34 @@ export default function BalootTracker(props: Props) {
       <Text style={styles.detailsTitle}>Baloot Calculator</Text>
       <Text style={styles.detailsSubtitle}>First side to 152 wins</Text>
 
+      <Text style={styles.detailsSubtitle}>Team names</Text>
+
+      <View style={styles.scoreRow}>
+        <TextInput
+          style={styles.scoreInput}
+          placeholder="Us team name"
+          placeholderTextColor="#8f8f92"
+          value={props.balootUsName}
+          onChangeText={props.setBalootUsName}
+        />
+
+        <TextInput
+          style={styles.scoreInput}
+          placeholder="Them team name"
+          placeholderTextColor="#8f8f92"
+          value={props.balootThemName}
+          onChangeText={props.setBalootThemName}
+        />
+      </View>
+
       <View style={styles.balootTotalBox}>
         <View style={styles.balootTotalColumn}>
-          <Text style={styles.balootSideTitle}>Us</Text>
+          <Text style={styles.balootSideTitle}>{getUsName()}</Text>
           <Text style={styles.balootTotalNumber}>{getBalootUsTotal()}</Text>
         </View>
 
         <View style={styles.balootTotalColumn}>
-          <Text style={styles.balootSideTitle}>Them</Text>
+          <Text style={styles.balootSideTitle}>{getThemName()}</Text>
           <Text style={styles.balootTotalNumber}>{getBalootThemTotal()}</Text>
         </View>
       </View>
@@ -220,7 +254,7 @@ export default function BalootTracker(props: Props) {
             <View key={score.id} style={styles.exerciseRow}>
               <View style={styles.exerciseInfo}>
                 <Text style={styles.exerciseName}>
-                  Hand {index + 1}: Us {score.us} - Them {score.them}
+                  Hand {index + 1}: {getUsName()} {score.us} - {getThemName()} {score.them}
                 </Text>
               </View>
 
