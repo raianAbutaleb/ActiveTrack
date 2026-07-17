@@ -19,6 +19,7 @@ const defaultActivities = [
   'Walking',
   'Swimming',
   'Studying',
+  'Work',
   'Baloot',
   'Vehicle Maintenance',
 ];
@@ -34,7 +35,7 @@ const activitySections = [
   },
   {
     key: 'life',
-    activities: ['Studying', 'Vehicle Maintenance'],
+    activities: ['Studying', 'Work', 'Vehicle Maintenance'],
   },
 ];
 
@@ -123,6 +124,7 @@ const translations = {
       'Horse Riding': 'Horse, training, care notes',
       Golf: 'Balls, club, range notes',
       Studying: 'Subject, study type, notes',
+      Work: 'Project, time, notes',
       default: 'Timed session and notes',
     },
     activities: {},
@@ -211,6 +213,7 @@ const translations = {
       'Horse Riding': 'الخيل، التدريب، ملاحظات العناية',
       Golf: 'عدد الكرات، العصا، ملاحظات الملعب',
       Studying: 'المادة، نوع الدراسة، الملاحظات',
+      Work: 'المشروع، الوقت، الملاحظات',
       default: 'جلسة بوقت وملاحظات',
     },
     activities: {
@@ -225,6 +228,7 @@ const translations = {
       Walking: 'المشي',
       Swimming: 'السباحة',
       Studying: 'الدراسة',
+      Work: 'العمل',
       Baloot: 'بلوت',
       'Vehicle Maintenance': 'صيانة السيارة',
     },
@@ -235,6 +239,15 @@ const lapActivities = ['Run', 'Walking', 'Cycling', 'Swimming'];
 const matchActivities = ['Padel', 'Tennis'];
 const balootDealerDirections = ['↑', '→', '↓', '←'];
 const gymWorkoutDays = ['Chest', 'Back', 'Legs', 'Shoulder', 'Arms', 'Abs', 'Rest'];
+const gymExerciseLibrary = {
+  Chest: ['Bench Press', 'Incline Dumbbell Press', 'Chest Fly', 'Push-ups'],
+  Back: ['Lat Pulldown', 'Seated Row', 'Deadlift', 'Single-arm Dumbbell Row'],
+  Legs: ['Squat', 'Leg Press', 'Romanian Deadlift', 'Calf Raises'],
+  Shoulder: ['Shoulder Press', 'Lateral Raises', 'Front Raises', 'Face Pulls'],
+  Arms: ['Biceps Curl', 'Triceps Pushdown', 'Hammer Curl', 'Dips'],
+  Abs: ['Plank', 'Crunches', 'Leg Raises', 'Cable Crunch'],
+  Rest: ['Mobility Stretch', 'Light Walk', 'Foam Rolling', 'Breathing'],
+};
 const views = {
   auth: document.querySelector('#auth-view'),
   home: document.querySelector('#home-view'),
@@ -255,6 +268,9 @@ const state = {
   customActivities: readJson(storageKeys.customActivities, []),
   currentGymSets: [],
   gymExercises: [],
+  studyCandleSeconds: 0,
+  studyCandleRunning: false,
+  studyCandleTimerId: null,
   balootScores: [],
   balootDealerDirection: '↑',
 };
@@ -374,6 +390,8 @@ function gymText(key) {
       title: 'Gym Workout',
       chooseWorkoutDay: 'Choose workout day',
       currentExercise: 'Current Exercise',
+      exerciseLibrary: 'Exercise Library',
+      exerciseLibraryHint: 'Choose a workout day, then tap an exercise to use it.',
       exerciseName: 'Exercise name',
       exercisePlaceholder: 'Exercise name, example: Bench Press',
       setReps: 'Set reps',
@@ -401,6 +419,8 @@ function gymText(key) {
       title: 'تمرين النادي',
       chooseWorkoutDay: 'اختر يوم التمرين',
       currentExercise: 'التمرين الحالي',
+      exerciseLibrary: 'مكتبة التمارين',
+      exerciseLibraryHint: 'اختر يوم التمرين، ثم اضغط على تمرين لاستخدامه.',
       exerciseName: 'اسم التمرين',
       exercisePlaceholder: 'اسم التمرين، مثال: Bench Press',
       setReps: 'تكرارات المجموعة',
@@ -423,6 +443,58 @@ function gymText(key) {
       Arms: 'ذراع',
       Abs: 'بطن',
       Rest: 'راحة',
+    },
+  };
+
+  return labels[state.language][key] || labels.en[key] || key;
+}
+
+function studyText(key) {
+  const labels = {
+    en: {
+      title: 'Study Focus',
+      subject: 'Subject',
+      subjectPlaceholder: 'Math',
+      studyType: 'Study type',
+      studyTypePlaceholder: 'Exam, coursework, review',
+      candleTimer: 'Candle Timer',
+      candleHint: 'Start, pause, or stop your study session.',
+      start: 'Start',
+      pause: 'Pause',
+      stop: 'Stop',
+      notes: 'Study notes',
+    },
+    ar: {
+      title: 'تركيز الدراسة',
+      subject: 'المادة',
+      subjectPlaceholder: 'رياضيات',
+      studyType: 'نوع الدراسة',
+      studyTypePlaceholder: 'اختبار، واجب، مراجعة',
+      candleTimer: 'مؤقت الشمعة',
+      candleHint: 'ابدأ، أوقف مؤقتاً، أو أنهِ جلسة الدراسة.',
+      start: 'بدء',
+      pause: 'إيقاف مؤقت',
+      stop: 'إيقاف',
+      notes: 'ملاحظات الدراسة',
+    },
+  };
+
+  return labels[state.language][key] || labels.en[key] || key;
+}
+
+function workText(key) {
+  const labels = {
+    en: {
+      projectName: 'Project name',
+      projectPlaceholder: 'ActiveTrack website',
+      notes: 'Work notes',
+      projectRequired: 'Please enter project name.',
+    },
+    ar: {
+      projectName: 'اسم المشروع',
+      projectPlaceholder: 'موقع ActiveTrack',
+      notes: 'ملاحظات العمل',
+      projectRequired: 'أدخل اسم المشروع.',
     },
   };
 
@@ -775,6 +847,7 @@ function renderActivitySection(sectionKey, activities) {
 }
 
 function openTracker(activity) {
+  resetStudyCandle();
   state.selectedActivity = activity;
   state.startTime = null;
   state.endTime = null;
@@ -790,6 +863,10 @@ function openTracker(activity) {
   trackerView.classList.toggle('vehicle-mode', activity === 'Vehicle Maintenance');
   activityFields.innerHTML = getFieldsForActivity(activity);
   bindConditionalFields();
+  if (activity === 'Studying') {
+    resetStudyCandle();
+    bindStudyCandle();
+  }
   if (activity === 'Gym') {
     resetGymState();
     bindGymWorkoutBuilder();
@@ -799,6 +876,9 @@ function openTracker(activity) {
     bindBalootCalculator();
   }
   sessionForm.reset();
+  if (activity === 'Studying') {
+    renderStudyCandle();
+  }
   if (activity === 'Gym') {
     renderGymWorkoutBuilder();
   }
@@ -840,6 +920,13 @@ function getFieldsForActivity(activity) {
         </div>
 
         <h2 class="gym-section-title">${gymText('currentExercise')}</h2>
+        <div class="gym-library-box">
+          <div>
+            <h2>${gymText('exerciseLibrary')}</h2>
+            <p>${gymText('exerciseLibraryHint')}</p>
+          </div>
+          <div class="gym-library-grid" id="gym-exercise-library"></div>
+        </div>
         ${inputField(gymText('exerciseName'), 'gymExerciseName', gymText('exercisePlaceholder'))}
 
         <div class="gym-set-row">
@@ -1017,10 +1104,38 @@ function getFieldsForActivity(activity) {
   }
 
   if (activity === 'Studying') {
+    return `
+      <div class="study-focus">
+        <header>
+          <h2>${studyText('title')}</h2>
+          <p>${studyText('candleHint')}</p>
+        </header>
+        <div class="field-grid">
+          ${inputField(studyText('subject'), 'subject', studyText('subjectPlaceholder'))}
+          ${inputField(studyText('studyType'), 'studyType', studyText('studyTypePlaceholder'))}
+        </div>
+        <div class="study-candle-card">
+          <span>${studyText('candleTimer')}</span>
+          <div class="study-candle-visual">
+            <div class="study-candle-flame" id="study-candle-flame"></div>
+            <div class="study-candle-body"></div>
+          </div>
+          <strong id="study-candle-time">00:00:00</strong>
+          <div class="button-row">
+            <button class="button secondary" id="study-candle-start" type="button">${studyText('start')}</button>
+            <button class="button secondary" id="study-candle-pause" type="button">${studyText('pause')}</button>
+            <button class="button secondary" id="study-candle-stop" type="button">${studyText('stop')}</button>
+          </div>
+        </div>
+        ${textAreaField(studyText('notes'), 'notes', studyText('notes'), true)}
+      </div>
+    `;
+  }
+
+  if (activity === 'Work') {
     return fieldGrid([
-      inputField('Subject', 'subject', 'Math'),
-      inputField('Study type', 'studyType', 'Exam, coursework, review'),
-      textAreaField('Notes', 'notes', 'What did you study?', true),
+      inputField(workText('projectName'), 'projectName', workText('projectPlaceholder')),
+      textAreaField(workText('notes'), 'notes', workText('notes'), true),
     ]);
   }
 
@@ -1086,6 +1201,66 @@ function bindConditionalFields() {
   });
 }
 
+function formatStudyCandleTime() {
+  return formatDuration(state.studyCandleSeconds);
+}
+
+function resetStudyCandle() {
+  if (state.studyCandleTimerId) {
+    window.clearInterval(state.studyCandleTimerId);
+  }
+
+  state.studyCandleSeconds = 0;
+  state.studyCandleRunning = false;
+  state.studyCandleTimerId = null;
+}
+
+function bindStudyCandle() {
+  document.querySelector('#study-candle-start')?.addEventListener('click', startStudyCandle);
+  document.querySelector('#study-candle-pause')?.addEventListener('click', pauseStudyCandle);
+  document.querySelector('#study-candle-stop')?.addEventListener('click', stopStudyCandle);
+}
+
+function startStudyCandle() {
+  if (!state.startTime) {
+    startTimer();
+  }
+
+  if (state.studyCandleTimerId) {
+    return;
+  }
+
+  state.studyCandleRunning = true;
+  state.studyCandleTimerId = window.setInterval(() => {
+    state.studyCandleSeconds += 1;
+    renderStudyCandle();
+  }, 1000);
+  renderStudyCandle();
+}
+
+function pauseStudyCandle() {
+  if (state.studyCandleTimerId) {
+    window.clearInterval(state.studyCandleTimerId);
+  }
+
+  state.studyCandleRunning = false;
+  state.studyCandleTimerId = null;
+  renderStudyCandle();
+}
+
+function stopStudyCandle() {
+  pauseStudyCandle();
+
+  if (state.startTime && !state.endTime) {
+    endTimer();
+  }
+}
+
+function renderStudyCandle() {
+  setText('#study-candle-time', formatStudyCandleTime());
+  document.querySelector('#study-candle-flame')?.classList.toggle('active', state.studyCandleRunning);
+}
+
 function resetGymState() {
   state.currentGymSets = [];
   state.gymExercises = [];
@@ -1101,6 +1276,16 @@ function bindGymWorkoutBuilder() {
   });
   document.querySelector('#gym-add-set')?.addEventListener('click', addGymSet);
   document.querySelector('#gym-save-exercise')?.addEventListener('click', saveGymExercise);
+}
+
+function chooseGymExercise(exerciseName) {
+  const exerciseInput = sessionForm.querySelector('[name="gymExerciseName"]');
+
+  if (exerciseInput) {
+    exerciseInput.value = exerciseName;
+  }
+
+  renderGymWorkoutBuilder();
 }
 
 function addGymSet() {
@@ -1166,12 +1351,35 @@ function deleteGymExercise(exerciseId) {
 
 function renderGymWorkoutBuilder() {
   const selectedDay = document.querySelector('#gym-workout-day')?.value || '';
+  const selectedExercise = sessionForm.querySelector('[name="gymExerciseName"]')?.value || '';
+  const exerciseLibrary = document.querySelector('#gym-exercise-library');
   const currentSetList = document.querySelector('#gym-current-set-list');
   const exerciseList = document.querySelector('#gym-exercise-list');
 
   document.querySelectorAll('[data-gym-day]').forEach((button) => {
     button.classList.toggle('selected', button.dataset.gymDay === selectedDay);
   });
+
+  if (exerciseLibrary) {
+    const suggestions = gymExerciseLibrary[selectedDay] || [];
+
+    exerciseLibrary.innerHTML =
+      suggestions.length === 0
+        ? `<div class="empty-state">${gymText('chooseWorkoutDay')}</div>`
+        : suggestions
+            .map(
+              (exercise) => `
+                <button class="gym-library-button ${exercise === selectedExercise ? 'selected' : ''}" type="button" data-gym-exercise="${escapeHtml(exercise)}">
+                  ${escapeHtml(exercise)}
+                </button>
+              `
+            )
+            .join('');
+
+    exerciseLibrary.querySelectorAll('[data-gym-exercise]').forEach((button) => {
+      button.addEventListener('click', () => chooseGymExercise(button.dataset.gymExercise));
+    });
+  }
 
   if (currentSetList) {
     currentSetList.innerHTML =
@@ -1559,6 +1767,11 @@ function saveSession(event) {
     return;
   }
 
+  if (activity === 'Work' && !sessionForm.querySelector('[name="projectName"]').value.trim()) {
+    sessionMessage.textContent = workText('projectRequired');
+    return;
+  }
+
   const details = getSessionDetails();
   const durationSeconds = isVehicle ? 0 : Math.floor((state.endTime - state.startTime) / 1000);
   const now = new Date();
@@ -1576,12 +1789,36 @@ function saveSession(event) {
 
   state.sessions = [session, ...state.sessions];
   writeJson(storageKeys.sessions, state.sessions);
+  if (activity === 'Studying') {
+    pauseStudyCandle();
+  }
   sessionMessage.textContent = 'Saved to History.';
   renderHome();
   renderHistory();
 }
 
 function getSessionDetails() {
+  if (state.selectedActivity === 'Studying') {
+    return {
+      studying: {
+        subject: sessionForm.querySelector('[name="subject"]').value.trim(),
+        studyType: sessionForm.querySelector('[name="studyType"]').value.trim(),
+        candleSeconds: state.studyCandleSeconds,
+        candleTime: formatStudyCandleTime(),
+        notes: sessionForm.querySelector('[name="notes"]').value.trim(),
+      },
+    };
+  }
+
+  if (state.selectedActivity === 'Work') {
+    return {
+      work: {
+        projectName: sessionForm.querySelector('[name="projectName"]').value.trim(),
+        notes: sessionForm.querySelector('[name="notes"]').value.trim(),
+      },
+    };
+  }
+
   if (state.selectedActivity === 'Gym') {
     const workoutDay = sessionForm.querySelector('[name="gymWorkoutDay"]').value;
     const exerciseName = sessionForm.querySelector('[name="gymExerciseName"]').value.trim();
@@ -1694,6 +1931,26 @@ function renderHistory() {
 }
 
 function renderSessionDetails(session) {
+  if (session.activity === 'Studying' && session.details?.studying) {
+    const study = session.details.studying;
+
+    return `
+      <div><span>${studyText('subject')}</span>${escapeHtml(study.subject || text('noDetails'))}</div>
+      <div><span>${studyText('studyType')}</span>${escapeHtml(study.studyType || text('noDetails'))}</div>
+      <div><span>${studyText('candleTimer')}</span>${escapeHtml(study.candleTime || '00:00:00')}</div>
+      <div><span>${studyText('notes')}</span>${escapeHtml(study.notes || text('noDetails'))}</div>
+    `;
+  }
+
+  if (session.activity === 'Work' && session.details?.work) {
+    const work = session.details.work;
+
+    return `
+      <div><span>${workText('projectName')}</span>${escapeHtml(work.projectName || text('noDetails'))}</div>
+      <div><span>${workText('notes')}</span>${escapeHtml(work.notes || text('noDetails'))}</div>
+    `;
+  }
+
   if (session.activity === 'Gym' && session.details) {
     const exercises = Array.isArray(session.details.gymExercises) ? session.details.gymExercises : [];
     const exerciseDetails = exercises.length

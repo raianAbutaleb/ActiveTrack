@@ -599,6 +599,66 @@ textarea:focus {
   display: none;
 }
 
+.study-focus {
+  display: grid;
+  gap: 16px;
+}
+
+.study-focus header p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.study-candle-card {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  text-align: center;
+}
+
+.study-candle-card span {
+  color: var(--muted);
+  font-weight: 900;
+}
+
+.study-candle-visual {
+  display: grid;
+  justify-items: center;
+  align-items: end;
+  height: 78px;
+}
+
+.study-candle-flame {
+  width: 18px;
+  height: 28px;
+  margin-bottom: -2px;
+  border-radius: 999px 999px 999px 0;
+  background: #7a5a2d;
+  transform: rotate(-12deg);
+  transition: background 180ms ease, box-shadow 180ms ease;
+}
+
+.study-candle-flame.active {
+  background: #f6c177;
+  box-shadow: 0 0 24px rgba(246, 193, 119, 0.62);
+}
+
+.study-candle-body {
+  width: 34px;
+  height: 48px;
+  border-radius: 8px;
+  background: #f4f4f5;
+}
+
+.study-candle-card strong {
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
 .gym-workout-builder {
   display: grid;
   gap: 16px;
@@ -637,6 +697,45 @@ textarea:focus {
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 12px;
   align-items: end;
+}
+
+.gym-library-box {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.gym-library-box h2,
+.gym-library-box p {
+  margin: 0;
+}
+
+.gym-library-box p {
+  color: var(--muted);
+}
+
+.gym-library-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.gym-library-button {
+  min-height: 40px;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  font-weight: 900;
+}
+
+.gym-library-button.selected {
+  border-color: rgba(110, 231, 183, 0.42);
+  background: rgba(110, 231, 183, 0.18);
 }
 
 .gym-list-box {

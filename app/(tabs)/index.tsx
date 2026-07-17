@@ -22,6 +22,18 @@ import HorseRidingTracker from '../../components/HorseRidingTracker';
 import LapTracker from '../../components/LapTracker';
 import MatchTracker from '../../components/MatchTracker';
 import {
+  signInWithSupabase,
+  signOutFromSupabase,
+  signUpWithSupabase,
+} from '../../lib/authDatabase';
+import {
+  clearCloudSessions,
+  deleteCloudSession,
+  loadCloudSessions,
+  saveCloudSession,
+} from '../../lib/sessionDatabase';
+import { isSupabaseConfigured } from '../../lib/supabase';
+import {
   BalootScore,
   GymExercise,
   GymSet,
@@ -41,6 +53,7 @@ const defaultActivities = [
   'Walking',
   'Swimming',
   'Studying',
+  'Work',
   'Baloot',
   'Vehicle Maintenance',
 ];
@@ -92,6 +105,15 @@ export default function HomeScreen() {
   const [balootThemScore, setBalootThemScore] = useState('');
   const [balootScores, setBalootScores] = useState<BalootScore[]>([]);
   const [balootDealerDirection, setBalootDealerDirection] = useState('↑');
+
+  const [studySubject, setStudySubject] = useState('');
+  const [studyType, setStudyType] = useState('');
+  const [studyNotes, setStudyNotes] = useState('');
+  const [studyCandleSeconds, setStudyCandleSeconds] = useState(0);
+  const [isStudyCandleRunning, setIsStudyCandleRunning] = useState(false);
+
+  const [workProjectName, setWorkProjectName] = useState('');
+  const [workNotes, setWorkNotes] = useState('');
 
   const [horseRiderName, setHorseRiderName] = useState('');
   const [horseName, setHorseName] = useState('');
@@ -158,7 +180,20 @@ const [vehicleMileage, setVehicleMileage] = useState('');
   useEffect(() => {
     loadSavedData();
   }, []);
-  const login = () => {
+
+  useEffect(() => {
+    if (!isStudyCandleRunning) {
+      return;
+    }
+
+    const intervalId = setInterval(() => {
+      setStudyCandleSeconds((seconds) => seconds + 1);
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [isStudyCandleRunning]);
+
+  const login = async () => {
   if (loginUsername.trim() === '') {
     alert('Please enter username or phone number');
     return;
@@ -169,9 +204,18 @@ const [vehicleMileage, setVehicleMileage] = useState('');
     return;
   }
 
-  setIsLoggedIn(true);
+  try {
+    if (isSupabaseConfigured) {
+      await signInWithSupabase(loginUsername.trim(), loginPassword);
+    }
+
+    setIsLoggedIn(true);
+    await loadSavedData();
+  } catch {
+    alert('Could not sign in. Check your email and password.');
+  }
 };
-const signup = () => {
+const signup = async () => {
   if (loginUsername.trim() === '') {
     alert('Please enter email or phone number');
     return;
@@ -187,9 +231,24 @@ const signup = () => {
     return;
   }
 
-  setIsLoggedIn(true);
+  try {
+    if (isSupabaseConfigured) {
+      await signUpWithSupabase(loginUsername.trim(), loginPassword);
+    }
+
+    setIsLoggedIn(true);
+    await loadSavedData();
+  } catch {
+    alert('Could not create account. Use a valid email and try again.');
+  }
 };
-const logout = () => {
+const logout = async () => {
+  try {
+    await signOutFromSupabase();
+  } catch {
+    alert('Could not sign out from the cloud account.');
+  }
+
   setIsLoggedIn(false);
   setLoginPassword('');
   setSignupRepeatPassword('');
@@ -204,9 +263,19 @@ const logout = () => {
       }
 
       if (savedActivities) {
-        setActivities(JSON.parse(savedActivities));
+        const savedActivityList = JSON.parse(savedActivities);
+        if (Array.isArray(savedActivityList)) {
+          setActivities([...new Set([...defaultActivities, ...savedActivityList])]);
+        }
       }
-    } catch (error) {
+
+      const cloudSessions = await loadCloudSessions();
+
+      if (cloudSessions) {
+        setSessions(cloudSessions);
+        await AsyncStorage.setItem('sessions', JSON.stringify(cloudSessions));
+      }
+    } catch {
       alert('Error loading saved data');
     }
   };
@@ -214,7 +283,7 @@ const logout = () => {
   const saveSessionsToStorage = async (newSessions: Session[]) => {
     try {
       await AsyncStorage.setItem('sessions', JSON.stringify(newSessions));
-    } catch (error) {
+    } catch {
       alert('Error saving session');
     }
   };
@@ -222,7 +291,7 @@ const logout = () => {
   const saveActivitiesToStorage = async (newActivities: string[]) => {
     try {
       await AsyncStorage.setItem('activities', JSON.stringify(newActivities));
-    } catch (error) {
+    } catch {
       alert('Error saving activity list');
     }
   };
@@ -254,6 +323,40 @@ const logout = () => {
   const isVehicleMaintenanceActivity = (activity: string | null) => {
   return activity === 'Vehicle Maintenance';
 };
+
+  const isWorkActivity = (activity: string | null) => {
+    return activity === 'Work';
+  };
+
+  const isStudyingActivity = (activity: string | null) => {
+    return activity === 'Studying';
+  };
+
+  const formatStudyCandleTime = () => {
+    const hours = Math.floor(studyCandleSeconds / 3600);
+    const minutes = Math.floor((studyCandleSeconds % 3600) / 60);
+    const seconds = studyCandleSeconds % 60;
+
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  };
+
+  const startStudyCandle = () => {
+    if (!startTime) {
+      setStartTime(new Date());
+      setEndTime(null);
+    }
+
+    setIsStudyCandleRunning(true);
+  };
+
+  const pauseStudyCandle = () => {
+    setIsStudyCandleRunning(false);
+  };
+
+  const stopStudyCandle = () => {
+    setIsStudyCandleRunning(false);
+    setEndTime(new Date());
+  };
 
   const getDefaultLapDistance = (activity: string) => {
     if (activity === 'Cycling') {
@@ -302,6 +405,15 @@ const logout = () => {
     setBalootThemScore('');
     setBalootScores([]);
     setBalootDealerDirection('↑');
+
+    setStudySubject('');
+    setStudyType('');
+    setStudyNotes('');
+    setStudyCandleSeconds(0);
+    setIsStudyCandleRunning(false);
+
+    setWorkProjectName('');
+    setWorkNotes('');
 
     setVehicleName('');
     setVehicleServiceType('');
@@ -530,7 +642,7 @@ const logout = () => {
     return 'Not finished yet';
   };
 
-  const saveSession = () => {
+  const saveSession = async () => {
     if (!selectedActivity) {
   alert('Please choose an activity first');
   return;
@@ -561,6 +673,11 @@ if (!isVehicleMaintenanceActivity(selectedActivity) && (!startTime || !endTime))
         alert('Please enter Team 2 name');
         return;
       }
+    }
+
+    if (isWorkActivity(selectedActivity) && workProjectName.trim() === '') {
+      alert('Please enter project name');
+      return;
     }
 
     let finalGymExercises = gymExercises;
@@ -687,6 +804,27 @@ if (!isVehicleMaintenanceActivity(selectedActivity) && (!startTime || !endTime))
       };
     }
 
+    if (isStudyingActivity(selectedActivity)) {
+      newSession.details = {
+        studying: {
+          subject: studySubject.trim(),
+          studyType: studyType.trim(),
+          candleSeconds: studyCandleSeconds,
+          candleTime: formatStudyCandleTime(),
+          notes: studyNotes.trim(),
+        },
+      };
+    }
+
+    if (isWorkActivity(selectedActivity)) {
+      newSession.details = {
+        work: {
+          projectName: workProjectName.trim(),
+          notes: workNotes.trim(),
+        },
+      };
+    }
+
     if (isHorseRidingActivity(selectedActivity)) {
       newSession.details = {
         horseRiding: {
@@ -749,7 +887,13 @@ if (!isVehicleMaintenanceActivity(selectedActivity) && (!startTime || !endTime))
     const newSessions = [newSession, ...sessions];
 
     setSessions(newSessions);
-    saveSessionsToStorage(newSessions);
+    await saveSessionsToStorage(newSessions);
+
+    try {
+      await saveCloudSession(newSession);
+    } catch {
+      alert('Saved on this device, but cloud sync failed.');
+    }
 
     alert('Session saved successfully');
 
@@ -759,11 +903,17 @@ if (!isVehicleMaintenanceActivity(selectedActivity) && (!startTime || !endTime))
     resetActivityFields();
   };
 
-  const deleteSession = (sessionId: number) => {
+  const deleteSession = async (sessionId: number) => {
     const newSessions = sessions.filter((session) => session.id !== sessionId);
 
     setSessions(newSessions);
-    saveSessionsToStorage(newSessions);
+    await saveSessionsToStorage(newSessions);
+
+    try {
+      await deleteCloudSession(sessionId);
+    } catch {
+      alert('Deleted on this device, but cloud delete failed.');
+    }
   };
 
   const confirmDeleteSession = (sessionId: number) => {
@@ -775,7 +925,9 @@ if (!isVehicleMaintenanceActivity(selectedActivity) && (!startTime || !endTime))
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: () => deleteSession(sessionId),
+          onPress: () => {
+            deleteSession(sessionId);
+          },
         },
       ]
     );
@@ -790,9 +942,15 @@ if (!isVehicleMaintenanceActivity(selectedActivity) && (!startTime || !endTime))
         {
           text: 'Clear All',
           style: 'destructive',
-          onPress: () => {
+          onPress: async () => {
             setSessions([]);
-            saveSessionsToStorage([]);
+            await saveSessionsToStorage([]);
+
+            try {
+              await clearCloudSessions();
+            } catch {
+              alert('Cleared on this device, but cloud clear failed.');
+            }
           },
         },
       ]
@@ -864,7 +1022,7 @@ if (!isVehicleMaintenanceActivity(selectedActivity) && (!startTime || !endTime))
     return 'Games';
   }
 
-  if (activity === 'Studying') {
+  if (activity === 'Studying' || activity === 'Work') {
     return 'Study';
   }
 
@@ -1023,6 +1181,44 @@ const getGroupedActivities = () => {
               </Text>
             ))
           )}
+        </View>
+      );
+    }
+
+    if (session.activity === 'Studying' && session.details?.studying) {
+      const study = session.details.studying;
+
+      return (
+        <View style={styles.savedDetailsBox}>
+          <Text style={styles.savedDetailsHeader}>Studying:</Text>
+          <Text style={styles.savedDetailsText}>
+            Subject: {study.subject || 'Not filled'}
+          </Text>
+          <Text style={styles.savedDetailsText}>
+            Type: {study.studyType || 'Not filled'}
+          </Text>
+          <Text style={styles.savedDetailsText}>
+            Candle Timer: {study.candleTime || '00:00:00'}
+          </Text>
+          <Text style={styles.savedDetailsText}>
+            Notes: {study.notes || 'None'}
+          </Text>
+        </View>
+      );
+    }
+
+    if (session.activity === 'Work' && session.details?.work) {
+      const work = session.details.work;
+
+      return (
+        <View style={styles.savedDetailsBox}>
+          <Text style={styles.savedDetailsHeader}>Work:</Text>
+          <Text style={styles.savedDetailsText}>
+            Project: {work.projectName || 'Not filled'}
+          </Text>
+          <Text style={styles.savedDetailsText}>
+            Notes: {work.notes || 'None'}
+          </Text>
         </View>
       );
     }
@@ -1360,7 +1556,7 @@ const getGroupedActivities = () => {
   matchRounds={matchRounds}
   setMatchRounds={setMatchRounds}
 />          
-          <BalootTracker
+<BalootTracker
   selectedActivity={selectedActivity}
   balootUsScore={balootUsScore}
   setBalootUsScore={setBalootUsScore}
@@ -1371,6 +1567,85 @@ const getGroupedActivities = () => {
   balootDealerDirection={balootDealerDirection}
   setBalootDealerDirection={setBalootDealerDirection}
 />
+
+{isStudyingActivity(selectedActivity) && (
+  <View style={styles.infoBox}>
+    <Text style={styles.savedDetailsHeader}>Study Focus</Text>
+
+    <TextInput
+      style={styles.input}
+      placeholder="Subject, example: Math"
+      placeholderTextColor="#8f8f92"
+      value={studySubject}
+      onChangeText={setStudySubject}
+    />
+
+    <TextInput
+      style={styles.input}
+      placeholder="Study type, example: Exam, coursework, review"
+      placeholderTextColor="#8f8f92"
+      value={studyType}
+      onChangeText={setStudyType}
+    />
+
+    <View style={styles.candleBox}>
+      <View style={styles.candleVisual}>
+        <View style={[styles.candleFlame, isStudyCandleRunning && styles.candleFlameActive]} />
+        <View style={styles.candleBody} />
+      </View>
+      <Text style={styles.candleTime}>{formatStudyCandleTime()}</Text>
+      <Text style={styles.candleHint}>
+        Candle focus timer. Start, pause, or stop your study session.
+      </Text>
+    </View>
+
+    <View style={styles.candleButtonRow}>
+      <TouchableOpacity style={styles.candleButton} onPress={startStudyCandle}>
+        <Text style={styles.smallActionText}>Start</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.candleButton} onPress={pauseStudyCandle}>
+        <Text style={styles.smallActionText}>Pause</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.candleButton} onPress={stopStudyCandle}>
+        <Text style={styles.smallActionText}>Stop</Text>
+      </TouchableOpacity>
+    </View>
+
+    <TextInput
+      style={styles.input}
+      placeholder="Study notes"
+      placeholderTextColor="#8f8f92"
+      value={studyNotes}
+      onChangeText={setStudyNotes}
+      multiline
+    />
+  </View>
+)}
+
+{isWorkActivity(selectedActivity) && (
+  <View style={styles.infoBox}>
+    <Text style={styles.savedDetailsHeader}>Work</Text>
+
+    <TextInput
+      style={styles.input}
+      placeholder="Project name"
+      placeholderTextColor="#8f8f92"
+      value={workProjectName}
+      onChangeText={setWorkProjectName}
+    />
+
+    <TextInput
+      style={styles.input}
+      placeholder="Work notes"
+      placeholderTextColor="#8f8f92"
+      value={workNotes}
+      onChangeText={setWorkNotes}
+      multiline
+    />
+  </View>
+)}
           
           <HorseRidingTracker
   selectedActivity={selectedActivity}
@@ -1928,6 +2203,7 @@ activityGroupTitle: {
     backgroundColor: '#1f1f22',
     padding: 18,
     borderRadius: 14,
+    marginBottom: 18,
   },
   infoText: {
     color: '#ffffff',
@@ -1969,6 +2245,58 @@ activityGroupTitle: {
     fontSize: 18,
     marginBottom: 12,
     color: '#000000',
+  },
+  candleBox: {
+    alignItems: 'center',
+    backgroundColor: '#0f0f10',
+    borderRadius: 14,
+    padding: 18,
+    marginBottom: 12,
+  },
+  candleVisual: {
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    height: 78,
+    marginBottom: 10,
+  },
+  candleFlame: {
+    width: 18,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#7a5a2d',
+    marginBottom: -2,
+  },
+  candleFlameActive: {
+    backgroundColor: '#f6c177',
+  },
+  candleBody: {
+    width: 34,
+    height: 48,
+    borderRadius: 8,
+    backgroundColor: '#f4f4f5',
+  },
+  candleTime: {
+    color: '#ffffff',
+    fontSize: 36,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  candleHint: {
+    color: '#b8b8bb',
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  candleButtonRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 12,
+  },
+  candleButton: {
+    flex: 1,
+    backgroundColor: '#3a3a3d',
+    borderRadius: 12,
+    padding: 14,
   },
   historyFilterScroll: {
   marginBottom: 14,

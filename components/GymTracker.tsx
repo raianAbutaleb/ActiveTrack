@@ -19,6 +19,16 @@ const gymWorkoutDays = [
   'Rest',
 ];
 
+const gymExerciseLibrary: Record<string, string[]> = {
+  Chest: ['Bench Press', 'Incline Dumbbell Press', 'Chest Fly', 'Push-ups'],
+  Back: ['Lat Pulldown', 'Seated Row', 'Deadlift', 'Single-arm Dumbbell Row'],
+  Legs: ['Squat', 'Leg Press', 'Romanian Deadlift', 'Calf Raises'],
+  Shoulder: ['Shoulder Press', 'Lateral Raises', 'Front Raises', 'Face Pulls'],
+  Arms: ['Biceps Curl', 'Triceps Pushdown', 'Hammer Curl', 'Dips'],
+  Abs: ['Plank', 'Crunches', 'Leg Raises', 'Cable Crunch'],
+  Rest: ['Mobility Stretch', 'Light Walk', 'Foam Rolling', 'Breathing'],
+};
+
 type Props = {
   selectedActivity: string | null;
 
@@ -42,6 +52,8 @@ export default function GymTracker(props: Props) {
   if (props.selectedActivity !== 'Gym') {
     return null;
   }
+
+  const exerciseSuggestions = gymExerciseLibrary[props.gymWorkoutDay] || [];
 
   const addGymSet = () => {
     const cleanReps = props.gymSetReps.trim();
@@ -127,6 +139,26 @@ export default function GymTracker(props: Props) {
       </View>
 
       <Text style={styles.detailsSubtitle}>Current Exercise</Text>
+
+      {exerciseSuggestions.length > 0 && (
+        <View style={styles.libraryBox}>
+          <Text style={styles.libraryTitle}>Exercise Library</Text>
+          <View style={styles.libraryGrid}>
+            {exerciseSuggestions.map((exercise) => (
+              <TouchableOpacity
+                key={exercise}
+                style={[
+                  styles.libraryButton,
+                  props.gymExerciseName === exercise && styles.selectedLibraryButton,
+                ]}
+                onPress={() => props.setGymExerciseName(exercise)}
+              >
+                <Text style={styles.libraryButtonText}>{exercise}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      )}
 
       <TextInput
         style={styles.input}
@@ -264,6 +296,37 @@ const styles = StyleSheet.create({
   selectedWorkoutButtonText: {
     color: '#ffffff',
     fontWeight: '800',
+  },
+  libraryBox: {
+    backgroundColor: '#0f0f10',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 12,
+  },
+  libraryTitle: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  libraryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  libraryButton: {
+    backgroundColor: '#2c2c2f',
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+  selectedLibraryButton: {
+    backgroundColor: '#5a5a5d',
+  },
+  libraryButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '700',
   },
   scoreRow: {
     flexDirection: 'row',

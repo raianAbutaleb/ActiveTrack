@@ -64,6 +64,19 @@ export type HorseRidingDetails = {
   horseNotes?: string;
 };
 
+export type StudyingDetails = {
+  subject?: string;
+  studyType?: string;
+  candleSeconds?: number;
+  candleTime?: string;
+  notes?: string;
+};
+
+export type WorkDetails = {
+  projectName?: string;
+  notes?: string;
+};
+
 export type SessionDetails = {
   teamOneName?: string;
   teamTwoName?: string;
@@ -91,6 +104,8 @@ export type SessionDetails = {
   balootDealerDirection?: string;
 
   horseRiding?: HorseRidingDetails;
+  studying?: StudyingDetails;
+  work?: WorkDetails;
 
   vehicleMaintenance?: VehicleMaintenanceDetails;
 };
