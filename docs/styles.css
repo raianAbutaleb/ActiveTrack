@@ -507,6 +507,53 @@ textarea:focus {
   font-size: 0.9rem;
 }
 
+.feature-upgrades {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  margin-top: 22px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.feature-upgrades h2,
+.feature-upgrades p,
+.feature-upgrade-card h3,
+.feature-upgrade-card p {
+  margin: 0;
+}
+
+.feature-upgrades > div > p:not(.eyebrow),
+.feature-upgrade-card p {
+  color: var(--muted);
+}
+
+.feature-upgrade-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.feature-upgrade-card {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.16);
+}
+
+.feature-upgrade-card h3 {
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.feature-upgrade-card p {
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
 .tracker-layout {
   display: grid;
   grid-template-columns: minmax(260px, 0.45fr) minmax(0, 1fr);
@@ -924,6 +971,7 @@ textarea:focus {
 
   .quick-stats,
   .activity-section-grid,
+  .feature-upgrade-grid,
   .field-grid,
   .history-details {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -945,6 +993,7 @@ textarea:focus {
 
   .quick-stats,
   .activity-section-grid,
+  .feature-upgrade-grid,
   .field-grid,
   .history-details,
   .gym-set-row,

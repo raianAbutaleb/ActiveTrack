@@ -77,6 +77,9 @@ const translations = {
     homeTitle: 'What do you want to track?',
     welcome: 'Choose an activity and save it to History.',
     welcomeUser: (name) => `Welcome, ${name}. Choose an activity and save it to History.`,
+    featureUpgradesEyebrow: 'Roadmap',
+    featureUpgradesTitle: 'Feature upgrades',
+    featureUpgradesCopy: 'Planned improvements to make ActiveTrack more useful.',
     history: 'History',
     totalSessions: 'Total sessions',
     lastActivity: 'Last activity',
@@ -128,6 +131,48 @@ const translations = {
       default: 'Timed session and notes',
     },
     activities: {},
+    featureUpgrades: [
+      {
+        title: 'Gym',
+        copy: 'Exercise library, weight, reps, sets, rest timer, saved workout templates, PRs, and progress charts.',
+      },
+      {
+        title: 'Run, Walking, Cycling',
+        copy: 'GPS route, distance, pace or speed, splits, elevation, goals, and personal records.',
+      },
+      {
+        title: 'Padel and Tennis',
+        copy: 'Real scoring with points, games, sets, tiebreaks, server, winner, and team stats.',
+      },
+      {
+        title: 'Horse Riding',
+        copy: 'Walk, trot, canter, distance, speed, turns, training intensity, calendar, care log, and safety location.',
+      },
+      {
+        title: 'Studying',
+        copy: 'Focus timer, Pomodoro, subject, exam date, coursework, streaks, and total study hours.',
+      },
+      {
+        title: 'Baloot',
+        copy: 'Dealer rotation, score to 152, hand history, undo, team names, winner, and share result.',
+      },
+      {
+        title: 'Vehicle Maintenance',
+        copy: 'Multi-car garage, mileage, cost, next service reminder, receipts, and oil, tire, battery history.',
+      },
+      {
+        title: 'Custom Activity',
+        copy: 'Custom fields that can be saved as reusable templates.',
+      },
+      {
+        title: 'Templates and reminders',
+        copy: 'Reusable gym workouts, horse plans, service plans, study subjects, match formats, and reminders.',
+      },
+      {
+        title: 'Progress dashboard',
+        copy: 'Charts, weekly and monthly stats, cloud accounts, and a stronger History dashboard.',
+      },
+    ],
   },
   ar: {
     languageButton: 'English',
@@ -166,6 +211,9 @@ const translations = {
     homeTitle: 'ماذا تريد أن تتتبع؟',
     welcome: 'اختر نشاطاً واحفظه في السجل.',
     welcomeUser: (name) => `مرحباً ${name}. اختر نشاطاً واحفظه في السجل.`,
+    featureUpgradesEyebrow: 'الخطة',
+    featureUpgradesTitle: 'تطوير الميزات',
+    featureUpgradesCopy: 'تحسينات مخططة لجعل ActiveTrack أكثر فائدة.',
     history: 'السجل',
     totalSessions: 'عدد الجلسات',
     lastActivity: 'آخر نشاط',
@@ -232,6 +280,48 @@ const translations = {
       Baloot: 'بلوت',
       'Vehicle Maintenance': 'صيانة السيارة',
     },
+    featureUpgrades: [
+      {
+        title: 'النادي',
+        copy: 'مكتبة تمارين، أوزان، تكرارات، مجموعات، مؤقت راحة، قوالب تمرين، أرقام شخصية، ورسوم تقدم.',
+      },
+      {
+        title: 'الجري والمشي والدراجات',
+        copy: 'مسار GPS، المسافة، السرعة أو الوتيرة، التقسيمات، الارتفاع، الأهداف، والأرقام الشخصية.',
+      },
+      {
+        title: 'بادل وتنس',
+        copy: 'تسجيل حقيقي للنقاط، الأشواط، المجموعات، كسر التعادل، المرسل، الفائز، وإحصائيات الفرق.',
+      },
+      {
+        title: 'ركوب الخيل',
+        copy: 'المشي، التروت، الكانتر، المسافة، السرعة، الالتفافات، شدة التدريب، التقويم، العناية، وموقع السلامة.',
+      },
+      {
+        title: 'الدراسة',
+        copy: 'مؤقت تركيز، بومودورو، المادة، تاريخ الاختبار، الواجبات، الاستمرارية، وإجمالي ساعات الدراسة.',
+      },
+      {
+        title: 'بلوت',
+        copy: 'دوران الموزع، التسجيل حتى 152، سجل الجولات، تراجع، أسماء الفرق، الفائز، ومشاركة النتيجة.',
+      },
+      {
+        title: 'صيانة السيارة',
+        copy: 'أكثر من سيارة، العداد، التكلفة، تذكير الخدمة القادمة، الإيصالات، وسجل الزيت والكفرات والبطارية.',
+      },
+      {
+        title: 'نشاط مخصص',
+        copy: 'حقول مخصصة يمكن حفظها كقوالب قابلة لإعادة الاستخدام.',
+      },
+      {
+        title: 'القوالب والتذكيرات',
+        copy: 'قوالب للنادي، خطط الخيل، خطط الصيانة، مواد الدراسة، صيغ المباريات، والتذكيرات.',
+      },
+      {
+        title: 'لوحة التقدم',
+        copy: 'رسوم بيانية، إحصائيات أسبوعية وشهرية، حسابات سحابية، وسجل أقوى.',
+      },
+    ],
   },
 };
 
@@ -293,6 +383,7 @@ const languageButton = document.querySelector('#language-button');
 const logoutButton = document.querySelector('#logout-button');
 const welcomeText = document.querySelector('#welcome-text');
 const activityGrid = document.querySelector('#activity-grid');
+const featureUpgradeGrid = document.querySelector('#feature-upgrade-grid');
 const customActivityForm = document.querySelector('#custom-activity-form');
 const trackerView = document.querySelector('#tracker-view');
 const trackerTitle = document.querySelector('#tracker-title');
@@ -541,6 +632,9 @@ function applyLanguage() {
   setText('#security-text', text('securityText'));
   setText('#home-eyebrow', text('home'));
   setText('#home-title', text('homeTitle'));
+  setText('#feature-upgrades-eyebrow', text('featureUpgradesEyebrow'));
+  setText('#feature-upgrades-title', text('featureUpgradesTitle'));
+  setText('#feature-upgrades-copy', text('featureUpgradesCopy'));
   setText('#home-history-button', text('history'));
   setText('#total-sessions-label', text('totalSessions'));
   setText('#last-activity-label', text('lastActivity'));
@@ -824,6 +918,24 @@ function renderHome() {
       : '';
 
   activityGrid.innerHTML = sectionHtml + customHtml;
+  renderFeatureUpgrades();
+}
+
+function renderFeatureUpgrades() {
+  if (!featureUpgradeGrid) {
+    return;
+  }
+
+  featureUpgradeGrid.innerHTML = translations[state.language].featureUpgrades
+    .map(
+      (feature) => `
+        <article class="feature-upgrade-card">
+          <h3>${escapeHtml(feature.title)}</h3>
+          <p>${escapeHtml(feature.copy)}</p>
+        </article>
+      `
+    )
+    .join('');
 }
 
 function renderActivitySection(sectionKey, activities) {

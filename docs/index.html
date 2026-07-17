@@ -8,7 +8,7 @@
       name="description"
       content="ActiveTrack is a local-first web app for tracking activity sessions, matches, workouts, rides, study, and maintenance."
     />
-    <link rel="stylesheet" href="./styles.css?v=20260717-gym-library" />
+    <link rel="stylesheet" href="./styles.css?v=20260717-feature-upgrades" />
   </head>
   <body>
     <canvas id="activity-canvas" aria-hidden="true"></canvas>
@@ -115,6 +115,15 @@
           </form>
 
           <div class="activity-sections" id="activity-grid" aria-label="Activities"></div>
+
+          <section class="feature-upgrades" aria-labelledby="feature-upgrades-title">
+            <div>
+              <p class="eyebrow" id="feature-upgrades-eyebrow">Roadmap</p>
+              <h2 id="feature-upgrades-title">Feature upgrades</h2>
+              <p id="feature-upgrades-copy">Planned improvements to make ActiveTrack more useful.</p>
+            </div>
+            <div class="feature-upgrade-grid" id="feature-upgrade-grid"></div>
+          </section>
         </section>
 
         <section class="view" id="tracker-view" aria-labelledby="tracker-title">
@@ -171,6 +180,6 @@
       </main>
     </div>
 
-    <script src="./main.js?v=20260717-gym-library"></script>
+    <script src="./main.js?v=20260717-feature-upgrades"></script>
   </body>
 </html>

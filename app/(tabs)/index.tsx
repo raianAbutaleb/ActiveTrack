@@ -61,6 +61,18 @@ const defaultActivities = [
 const lapActivities = ['Run', 'Walking', 'Cycling', 'Swimming'];
 const matchActivities = ['Padel', 'Tennis'];
 
+const featureUpgradeList = [
+  'Gym: exercise library, weight, reps, sets, rest timer, saved templates, PRs, progress charts',
+  'Run, Walking, Cycling: GPS route, distance, pace or speed, splits, elevation, goals, personal records',
+  'Padel and Tennis: real scoring, points, games, sets, tiebreaks, server, winner, team stats',
+  'Horse Riding: walk, trot, canter, distance, speed, turns, intensity, calendar, care log, safety location',
+  'Studying: focus timer, Pomodoro, subject, exam date, coursework, streaks, total study hours',
+  'Baloot: dealer rotation, score to 152, hand history, undo, team names, winner, share result',
+  'Vehicle Maintenance: multi-car garage, mileage, cost, next service reminder, receipts, service history',
+  'Custom Activity: custom fields and reusable activity templates',
+  'Templates, reminders, charts, weekly and monthly stats, accounts, and cloud database',
+];
+
 
 export default function HomeScreen() {
   const navigation = useNavigation();
@@ -1883,6 +1895,19 @@ const getGroupedActivities = () => {
               ))
             )}
           </View>
+
+          <View style={styles.featureUpgradeBox}>
+            <Text style={styles.featureUpgradeTitle}>Feature Upgrades</Text>
+            <Text style={styles.featureUpgradeSubtitle}>
+              Planned improvements to make ActiveTrack more useful.
+            </Text>
+
+            {featureUpgradeList.map((feature) => (
+              <Text key={feature} style={styles.featureUpgradeItem}>
+                {feature}
+              </Text>
+            ))}
+          </View>
         </ScrollView>
 
         <Modal visible={showOtherModal} transparent animationType="slide">
@@ -2020,6 +2045,30 @@ activityGroupTitle: {
   activityList: {
     gap: 12,
     paddingBottom: 30,
+  },
+  featureUpgradeBox: {
+    backgroundColor: '#1f1f22',
+    borderRadius: 16,
+    padding: 18,
+    marginBottom: 30,
+  },
+  featureUpgradeTitle: {
+    color: '#ffffff',
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 6,
+  },
+  featureUpgradeSubtitle: {
+    color: '#b8b8bb',
+    fontSize: 15,
+    lineHeight: 21,
+    marginBottom: 12,
+  },
+  featureUpgradeItem: {
+    color: '#e5e5e7',
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 10,
   },
   activityButton: {
     backgroundColor: '#4a4a4d',

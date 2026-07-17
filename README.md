@@ -1,50 +1,134 @@
-# Welcome to your Expo app 👋
+# ActiveTrack
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+ActiveTrack is a personal activity tracker for sports, training, horse riding, studying, games, work, and vehicle maintenance.
 
-## Get started
+The project includes:
 
-1. Install dependencies
+- Expo React Native mobile app
+- Local-first web version
+- GitHub Pages publishing from `docs/`
+- Supabase setup for future cloud accounts and history sync
 
-   ```bash
-   npm install
-   ```
+## Current Feature Roadmap
 
-2. Start the app
+### Gym
 
-   ```bash
-   npx expo start
-   ```
+- Exercise library
+- Weight, reps, sets
+- Rest timer
+- Saved workout templates
+- Personal records
+- Progress charts
 
-In the output, you'll find options to open the app in a
+### Run, Walking, and Cycling
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- GPS route
+- Distance
+- Pace or speed
+- Splits
+- Elevation
+- Goals
+- Personal records
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### Padel and Tennis
 
-## Get a fresh project
+- Real scoring
+- Points, games, sets
+- Tiebreaks
+- Server tracking
+- Winner
+- Team stats
 
-When you're ready, run:
+### Horse Riding
+
+- Walk, trot, and canter tracking
+- Distance and speed
+- Turns
+- Training intensity
+- Horse calendar
+- Care log
+- Safety location
+
+### Studying
+
+- Focus timer
+- Pomodoro
+- Subject
+- Exam date
+- Coursework
+- Streaks
+- Total study hours
+
+### Baloot
+
+- Dealer rotation
+- Score to 152
+- Hand history
+- Undo
+- Team names
+- Winner
+- Share result
+
+### Vehicle Maintenance
+
+- Multi-car garage
+- Mileage
+- Cost
+- Next service reminder
+- Receipts
+- Oil, tire, and battery history
+
+### Custom Activity
+
+- Custom fields
+- Save custom activity as a reusable template
+
+### Templates
+
+- Gym workouts
+- Horse training plans
+- Vehicle service plans
+- Study subjects
+- Match formats
+
+### Reminders
+
+- Study reminders
+- Vehicle maintenance reminders
+- Horse care reminders
+- Workout schedule reminders
+
+### Progress
+
+- Weekly stats
+- Monthly stats
+- Charts
+- Improved History dashboard
+- Cloud database and accounts
+
+## Development
+
+Install dependencies:
 
 ```bash
-npm run reset-project
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Start Expo:
 
-## Learn more
+```bash
+npx expo start
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+Run checks:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```bash
+npm run lint
+npx tsc --noEmit
+```
 
-## Join the community
+## Website
 
-Join our community of developers creating universal apps.
+The live GitHub Pages site uses the files in `docs/`.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Local website source lives in `website/`.
