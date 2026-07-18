@@ -269,6 +269,7 @@ const movementActivities = ['Run', 'Walking', 'Cycling'];
 const matchActivities = ['Padel', 'Tennis'];
 const balootDealerDirections = ['↑', '→', '↓', '←'];
 const gymWorkoutDays = ['Chest', 'Back', 'Legs', 'Shoulder', 'Arms', 'Abs', 'Rest'];
+const STUDY_CANDLE_DURATION_SECONDS = 3 * 60 * 60;
 const views = {
   auth: document.querySelector('#auth-view'),
   home: document.querySelector('#home-view'),
@@ -296,6 +297,9 @@ const state = {
   studyCandleSeconds: 0,
   studyCandleRunning: false,
   studyCandleTimerId: null,
+  studyCandleStartedAt: null,
+  studyCandleBaseSeconds: 0,
+  studyCandleAutoSaved: false,
   balootScores: [],
   balootDealerDirection: '↑',
 };
@@ -512,7 +516,10 @@ function studyText(key) {
       totalStudyHours: 'Total study hours',
       totalHoursPlaceholder: '12.5',
       candleTimer: 'Candle Timer',
-      candleHint: 'Start, pause, or stop your study session.',
+      candleHint: 'Three-hour study focus',
+      candleComplete: 'Your three-hour study session was automatically saved. Continue studying?',
+      startAnother: 'Start another candle',
+      finishStudying: 'Not now',
       start: 'Start',
       pause: 'Pause',
       stop: 'Stop',
@@ -535,7 +542,10 @@ function studyText(key) {
       totalStudyHours: 'إجمالي ساعات الدراسة',
       totalHoursPlaceholder: '12.5',
       candleTimer: 'مؤقت الشمعة',
-      candleHint: 'ابدأ، أوقف مؤقتاً، أو أنهِ جلسة الدراسة.',
+      candleHint: 'تركيز دراسي لمدة ثلاث ساعات',
+      candleComplete: 'تم حفظ جلسة الدراسة لمدة ثلاث ساعات تلقائياً. هل تريد متابعة الدراسة؟',
+      startAnother: 'بدء شمعة جديدة',
+      finishStudying: 'ليس الآن',
       start: 'بدء',
       pause: 'إيقاف مؤقت',
       stop: 'إيقاف',
@@ -1447,13 +1457,27 @@ function getFieldsForActivity(activity) {
           <span>${studyText('candleTimer')}</span>
           <div class="study-candle-visual">
             <div class="study-candle-flame" id="study-candle-flame"></div>
-            <div class="study-candle-body"></div>
+            <div class="study-candle-body" id="study-candle-body">
+              <div class="study-candle-wick"></div>
+              <div class="study-candle-wax-lip"></div>
+              <div class="study-candle-wax-drip"></div>
+            </div>
           </div>
-          <strong id="study-candle-time">00:00:00</strong>
+          <strong id="study-candle-time">03:00:00</strong>
+          <div class="study-candle-progress" aria-hidden="true">
+            <div id="study-candle-progress-fill"></div>
+          </div>
           <div class="button-row">
             <button class="button secondary" id="study-candle-start" type="button">${studyText('start')}</button>
             <button class="button secondary" id="study-candle-pause" type="button">${studyText('pause')}</button>
             <button class="button secondary" id="study-candle-stop" type="button">${studyText('stop')}</button>
+          </div>
+          <div class="study-candle-complete hidden" id="study-candle-complete" role="status">
+            <p>${studyText('candleComplete')}</p>
+            <div class="button-row">
+              <button class="button primary" id="study-candle-restart" type="button">${studyText('startAnother')}</button>
+              <button class="button secondary" id="study-candle-finish" type="button">${studyText('finishStudying')}</button>
+            </div>
           </div>
         </div>
         ${textAreaField(studyText('notes'), 'notes', studyText('notes'), true)}
@@ -1531,8 +1555,12 @@ function bindConditionalFields() {
   });
 }
 
-function formatStudyCandleTime() {
+function formatStudyCandleElapsedTime() {
   return formatDuration(state.studyCandleSeconds);
+}
+
+function formatStudyCandleRemainingTime() {
+  return formatDuration(Math.max(0, STUDY_CANDLE_DURATION_SECONDS - state.studyCandleSeconds));
 }
 
 function resetStudyCandle() {
@@ -1543,15 +1571,28 @@ function resetStudyCandle() {
   state.studyCandleSeconds = 0;
   state.studyCandleRunning = false;
   state.studyCandleTimerId = null;
+  state.studyCandleStartedAt = null;
+  state.studyCandleBaseSeconds = 0;
+  state.studyCandleAutoSaved = false;
+  document.querySelector('#save-session-button')?.removeAttribute('disabled');
 }
 
 function bindStudyCandle() {
   document.querySelector('#study-candle-start')?.addEventListener('click', startStudyCandle);
   document.querySelector('#study-candle-pause')?.addEventListener('click', pauseStudyCandle);
   document.querySelector('#study-candle-stop')?.addEventListener('click', stopStudyCandle);
+  document.querySelector('#study-candle-restart')?.addEventListener('click', startAnotherStudyCandle);
+  document.querySelector('#study-candle-finish')?.addEventListener('click', () => {
+    document.querySelector('#study-candle-complete')?.classList.add('hidden');
+  });
 }
 
 function startStudyCandle() {
+  if (state.studyCandleSeconds >= STUDY_CANDLE_DURATION_SECONDS) {
+    startAnotherStudyCandle();
+    return;
+  }
+
   if (!state.startTime) {
     startTimer();
   }
@@ -1561,20 +1602,25 @@ function startStudyCandle() {
   }
 
   state.studyCandleRunning = true;
-  state.studyCandleTimerId = window.setInterval(() => {
-    state.studyCandleSeconds += 1;
-    renderStudyCandle();
-  }, 1000);
+  state.studyCandleBaseSeconds = state.studyCandleSeconds;
+  state.studyCandleStartedAt = Date.now();
+  state.studyCandleAutoSaved = false;
+  state.studyCandleTimerId = window.setInterval(updateStudyCandle, 1000);
+  updateStudyCandle();
   renderStudyCandle();
 }
 
 function pauseStudyCandle() {
+  updateStudyCandle(false);
+
   if (state.studyCandleTimerId) {
     window.clearInterval(state.studyCandleTimerId);
   }
 
   state.studyCandleRunning = false;
   state.studyCandleTimerId = null;
+  state.studyCandleStartedAt = null;
+  state.studyCandleBaseSeconds = state.studyCandleSeconds;
   renderStudyCandle();
 }
 
@@ -1586,9 +1632,92 @@ function stopStudyCandle() {
   }
 }
 
+function updateStudyCandle(allowAutoSave = true) {
+  if (!state.studyCandleRunning || !state.studyCandleStartedAt) {
+    return;
+  }
+
+  const elapsedSinceStart = Math.floor((Date.now() - state.studyCandleStartedAt) / 1000);
+  state.studyCandleSeconds = Math.min(
+    STUDY_CANDLE_DURATION_SECONDS,
+    state.studyCandleBaseSeconds + elapsedSinceStart
+  );
+
+  if (
+    allowAutoSave &&
+    state.studyCandleSeconds >= STUDY_CANDLE_DURATION_SECONDS &&
+    !state.studyCandleAutoSaved
+  ) {
+    autoSaveCompletedStudyCandle();
+    return;
+  }
+
+  renderStudyCandle();
+}
+
+function autoSaveCompletedStudyCandle() {
+  const completedAt = new Date(
+    state.studyCandleStartedAt +
+      (STUDY_CANDLE_DURATION_SECONDS - state.studyCandleBaseSeconds) * 1000
+  );
+
+  state.studyCandleSeconds = STUDY_CANDLE_DURATION_SECONDS;
+  state.studyCandleBaseSeconds = STUDY_CANDLE_DURATION_SECONDS;
+  state.studyCandleStartedAt = null;
+  state.studyCandleRunning = false;
+  state.endTime = completedAt;
+  state.startTime = new Date(completedAt.getTime() - STUDY_CANDLE_DURATION_SECONDS * 1000);
+
+  if (state.studyCandleTimerId) {
+    window.clearInterval(state.studyCandleTimerId);
+    state.studyCandleTimerId = null;
+  }
+
+  stopTimer();
+  updateTimer();
+  sessionForm.requestSubmit();
+  state.studyCandleAutoSaved = true;
+  document.querySelector('#save-session-button')?.setAttribute('disabled', '');
+  renderStudyCandle();
+}
+
+function syncStudyCandleWithClock() {
+  if (state.studyCandleRunning) {
+    updateStudyCandle();
+  }
+}
+
+function startAnotherStudyCandle() {
+  resetStudyCandle();
+  state.startTime = null;
+  state.endTime = null;
+  updateTimer();
+  startStudyCandle();
+}
+
 function renderStudyCandle() {
-  setText('#study-candle-time', formatStudyCandleTime());
-  document.querySelector('#study-candle-flame')?.classList.toggle('active', state.studyCandleRunning);
+  const progress = Math.min(1, state.studyCandleSeconds / STUDY_CANDLE_DURATION_SECONDS);
+  const candleBody = document.querySelector('#study-candle-body');
+  const flame = document.querySelector('#study-candle-flame');
+
+  setText('#study-candle-time', formatStudyCandleRemainingTime());
+  flame?.classList.toggle('active', state.studyCandleRunning);
+  flame?.classList.toggle('burned-out', progress >= 1);
+
+  if (candleBody) {
+    candleBody.style.height = `${Math.max(3, 82 * (1 - progress))}px`;
+    candleBody.classList.toggle('burned-out', progress >= 1);
+  }
+
+  const progressFill = document.querySelector('#study-candle-progress-fill');
+  if (progressFill) {
+    progressFill.style.width = `${progress * 100}%`;
+  }
+
+  document.querySelector('#study-candle-complete')?.classList.toggle(
+    'hidden',
+    !state.studyCandleAutoSaved
+  );
 }
 
 function resetGymState() {
@@ -2185,6 +2314,11 @@ function saveSession(event) {
     return;
   }
 
+  if (activity === 'Studying' && state.studyCandleAutoSaved) {
+    sessionMessage.textContent = 'This three-hour candle is already saved.';
+    return;
+  }
+
   if (!isNonTimed && !state.startTime) {
     sessionMessage.textContent = 'Start the timer before saving.';
     return;
@@ -2263,7 +2397,7 @@ function getSessionDetails() {
         streak: sessionForm.querySelector('[name="streak"]').value.trim(),
         totalStudyHours: sessionForm.querySelector('[name="totalStudyHours"]').value.trim(),
         candleSeconds: state.studyCandleSeconds,
-        candleTime: formatStudyCandleTime(),
+        candleTime: formatStudyCandleElapsedTime(),
         notes: sessionForm.querySelector('[name="notes"]').value.trim(),
       },
       reminder: getReminderDetails(),
@@ -2892,6 +3026,9 @@ sessionForm.addEventListener('submit', saveSession);
 historyFilter.addEventListener('change', renderHistory);
 clearHistoryButton.addEventListener('click', clearHistory);
 exportHistoryButton.addEventListener('click', exportHistory);
+document.addEventListener('visibilitychange', syncStudyCandleWithClock);
+window.addEventListener('focus', syncStudyCandleWithClock);
+window.addEventListener('pageshow', syncStudyCandleWithClock);
 
 setAuthMode('signin');
 applyLanguage();

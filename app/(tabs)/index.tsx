@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Alert,
   Modal,
@@ -63,6 +63,7 @@ const defaultActivities = [
 const lapActivities = ['Run', 'Walking', 'Cycling', 'Swimming'];
 const movementActivities = ['Run', 'Walking', 'Cycling'];
 const matchActivities = ['Padel', 'Tennis'];
+const STUDY_CANDLE_DURATION_SECONDS = 3 * 60 * 60;
 
 export default function HomeScreen() {
   const navigation = useNavigation();
@@ -139,6 +140,9 @@ export default function HomeScreen() {
   const [studyNotes, setStudyNotes] = useState('');
   const [studyCandleSeconds, setStudyCandleSeconds] = useState(0);
   const [isStudyCandleRunning, setIsStudyCandleRunning] = useState(false);
+  const studyCandleStartedAtRef = useRef<number | null>(null);
+  const studyCandleBaseSecondsRef = useRef(0);
+  const studyCandleAutoSaveStartedRef = useRef(false);
 
   const [workProjectName, setWorkProjectName] = useState('');
   const [workNotes, setWorkNotes] = useState('');
@@ -214,6 +218,42 @@ export default function HomeScreen() {
   const [personalPassportNumber, setPersonalPassportNumber] = useState('');
   const [personalPassportExpirationDate, setPersonalPassportExpirationDate] = useState('');
 
+  const latestStudySessionRef = useRef({
+    sessions,
+    startTime,
+    subject: studySubject,
+    studyType,
+    examDate: studyExamDate,
+    coursework: studyCoursework,
+    pomodoroPlan: studyPomodoroPlan,
+    streak: studyStreak,
+    totalStudyHours: studyTotalHours,
+    notes: studyNotes,
+    reminderDate,
+    reminderTime,
+    reminderNote,
+  });
+
+  latestStudySessionRef.current = {
+    sessions,
+    startTime,
+    subject: studySubject,
+    studyType,
+    examDate: studyExamDate,
+    coursework: studyCoursework,
+    pomodoroPlan: studyPomodoroPlan,
+    streak: studyStreak,
+    totalStudyHours: studyTotalHours,
+    notes: studyNotes,
+    reminderDate,
+    reminderTime,
+    reminderNote,
+  };
+  const autoSaveCompletedStudyCandleRef = useRef<() => void>(() => undefined);
+  autoSaveCompletedStudyCandleRef.current = () => {
+    void autoSaveCompletedStudyCandle();
+  };
+
   useEffect(() => {
     navigation.setOptions({
       tabBarStyle: isLoggedIn
@@ -238,9 +278,33 @@ export default function HomeScreen() {
       return;
     }
 
-    const intervalId = setInterval(() => {
-      setStudyCandleSeconds((seconds) => seconds + 1);
-    }, 1000);
+    const updateCandle = () => {
+      const startedAt = studyCandleStartedAtRef.current;
+
+      if (!startedAt) {
+        return;
+      }
+
+      const elapsedSinceStart = Math.floor((Date.now() - startedAt) / 1000);
+      const elapsedSeconds = Math.min(
+        STUDY_CANDLE_DURATION_SECONDS,
+        studyCandleBaseSecondsRef.current + elapsedSinceStart
+      );
+
+      setStudyCandleSeconds(elapsedSeconds);
+
+      if (
+        elapsedSeconds >= STUDY_CANDLE_DURATION_SECONDS &&
+        !studyCandleAutoSaveStartedRef.current
+      ) {
+        studyCandleAutoSaveStartedRef.current = true;
+        setIsStudyCandleRunning(false);
+        autoSaveCompletedStudyCandleRef.current();
+      }
+    };
+
+    updateCandle();
+    const intervalId = setInterval(updateCandle, 1000);
 
     return () => clearInterval(intervalId);
   }, [isStudyCandleRunning]);
@@ -453,24 +517,132 @@ const logout = async () => {
     return Boolean(activity && ['Gym', 'Horse Riding', 'Studying', 'Vehicle Maintenance'].includes(activity));
   };
 
-  const formatStudyCandleTime = () => {
-    const hours = Math.floor(studyCandleSeconds / 3600);
-    const minutes = Math.floor((studyCandleSeconds % 3600) / 60);
-    const seconds = studyCandleSeconds % 60;
+  const formatStudyCandleDuration = (durationSeconds: number) => {
+    const hours = Math.floor(durationSeconds / 3600);
+    const minutes = Math.floor((durationSeconds % 3600) / 60);
+    const seconds = durationSeconds % 60;
 
     return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
   };
 
+  const formatStudyCandleElapsedTime = () => {
+    return formatStudyCandleDuration(studyCandleSeconds);
+  };
+
+  const formatStudyCandleRemainingTime = () => {
+    return formatStudyCandleDuration(
+      Math.max(0, STUDY_CANDLE_DURATION_SECONDS - studyCandleSeconds)
+    );
+  };
+
+  const startAnotherStudyCandle = () => {
+    const nextStartTime = new Date();
+
+    studyCandleBaseSecondsRef.current = 0;
+    studyCandleStartedAtRef.current = Date.now();
+    studyCandleAutoSaveStartedRef.current = false;
+    setStudyCandleSeconds(0);
+    setStartTime(nextStartTime);
+    setEndTime(null);
+    setIsStudyCandleRunning(true);
+  };
+
+  async function autoSaveCompletedStudyCandle() {
+    const snapshot = latestStudySessionRef.current;
+    const completedAt = new Date();
+    const sessionStart = snapshot.startTime || new Date(
+      completedAt.getTime() - STUDY_CANDLE_DURATION_SECONDS * 1000
+    );
+    const reminder = snapshot.reminderDate.trim() || snapshot.reminderTime.trim() || snapshot.reminderNote.trim()
+      ? {
+          date: snapshot.reminderDate.trim(),
+          time: snapshot.reminderTime.trim(),
+          note: snapshot.reminderNote.trim(),
+        }
+      : undefined;
+    const completedSession: Session = {
+      id: Date.now(),
+      activity: 'Studying',
+      start: sessionStart.toLocaleTimeString(),
+      end: completedAt.toLocaleTimeString(),
+      duration: formatStudyCandleDuration(STUDY_CANDLE_DURATION_SECONDS),
+      durationSeconds: STUDY_CANDLE_DURATION_SECONDS,
+      date: completedAt.toLocaleDateString(),
+      details: {
+        studying: {
+          subject: snapshot.subject.trim(),
+          studyType: snapshot.studyType.trim(),
+          examDate: snapshot.examDate.trim(),
+          coursework: snapshot.coursework.trim(),
+          pomodoroPlan: snapshot.pomodoroPlan.trim(),
+          streak: snapshot.streak.trim(),
+          totalStudyHours: snapshot.totalStudyHours.trim(),
+          candleSeconds: STUDY_CANDLE_DURATION_SECONDS,
+          candleTime: formatStudyCandleDuration(STUDY_CANDLE_DURATION_SECONDS),
+          notes: snapshot.notes.trim(),
+        },
+        ...(reminder ? { reminder } : {}),
+      },
+    };
+    const updatedSessions = [completedSession, ...snapshot.sessions];
+
+    studyCandleBaseSecondsRef.current = STUDY_CANDLE_DURATION_SECONDS;
+    studyCandleStartedAtRef.current = null;
+    setStudyCandleSeconds(STUDY_CANDLE_DURATION_SECONDS);
+    setEndTime(completedAt);
+    setSessions(updatedSessions);
+    await saveSessionsToStorage(updatedSessions);
+
+    let cloudMessage = '';
+
+    try {
+      await saveCloudSession(completedSession);
+    } catch {
+      cloudMessage = '\n\nSaved on this device, but cloud sync failed.';
+    }
+
+    Alert.alert(
+      'Three-hour candle complete',
+      `Your study session was automatically saved to History. Continue studying?${cloudMessage}`,
+      [
+        { text: 'Not now', style: 'cancel' },
+        { text: 'Start another candle', onPress: startAnotherStudyCandle },
+      ]
+    );
+  }
+
   const startStudyCandle = () => {
+    if (studyCandleSeconds >= STUDY_CANDLE_DURATION_SECONDS) {
+      startAnotherStudyCandle();
+      return;
+    }
+
     if (!startTime) {
       setStartTime(new Date());
       setEndTime(null);
     }
 
+    studyCandleBaseSecondsRef.current = studyCandleSeconds;
+    studyCandleStartedAtRef.current = Date.now();
+    studyCandleAutoSaveStartedRef.current = false;
     setIsStudyCandleRunning(true);
   };
 
   const pauseStudyCandle = () => {
+    if (studyCandleStartedAtRef.current) {
+      const elapsedSinceStart = Math.floor(
+        (Date.now() - studyCandleStartedAtRef.current) / 1000
+      );
+      const pausedSeconds = Math.min(
+        STUDY_CANDLE_DURATION_SECONDS,
+        studyCandleBaseSecondsRef.current + elapsedSinceStart
+      );
+
+      studyCandleBaseSecondsRef.current = pausedSeconds;
+      setStudyCandleSeconds(pausedSeconds);
+    }
+
+    studyCandleStartedAtRef.current = null;
     setIsStudyCandleRunning(false);
   };
 
@@ -554,6 +726,9 @@ const logout = async () => {
     setStudyNotes('');
     setStudyCandleSeconds(0);
     setIsStudyCandleRunning(false);
+    studyCandleStartedAtRef.current = null;
+    studyCandleBaseSecondsRef.current = 0;
+    studyCandleAutoSaveStartedRef.current = false;
 
     setWorkProjectName('');
     setWorkNotes('');
@@ -1087,7 +1262,7 @@ if (!isNonTimedActivity(selectedActivity) && (!startTime || !endTime)) {
           streak: studyStreak.trim(),
           totalStudyHours: studyTotalHours.trim(),
           candleSeconds: studyCandleSeconds,
-          candleTime: formatStudyCandleTime(),
+          candleTime: formatStudyCandleElapsedTime(),
           notes: studyNotes.trim(),
         },
       };
@@ -2205,13 +2380,41 @@ const getGroupedActivities = () => {
 
     <View style={styles.candleBox}>
       <View style={styles.candleVisual}>
-        <View style={[styles.candleFlame, isStudyCandleRunning && styles.candleFlameActive]} />
-        <View style={styles.candleBody} />
+        {studyCandleSeconds < STUDY_CANDLE_DURATION_SECONDS && (
+          <View style={[styles.candleFlame, isStudyCandleRunning && styles.candleFlameActive]}>
+            <View style={styles.candleFlameCore} />
+          </View>
+        )}
+        <View
+          style={[
+            styles.candleBody,
+            {
+              height: Math.max(
+                3,
+                82 * (1 - studyCandleSeconds / STUDY_CANDLE_DURATION_SECONDS)
+              ),
+            },
+          ]}
+        >
+          {studyCandleSeconds < STUDY_CANDLE_DURATION_SECONDS && (
+            <>
+              <View style={styles.candleWick} />
+              <View style={styles.candleWaxLip} />
+              <View style={styles.candleWaxDrip} />
+            </>
+          )}
+        </View>
       </View>
-      <Text style={styles.candleTime}>{formatStudyCandleTime()}</Text>
-      <Text style={styles.candleHint}>
-        Candle focus timer. Start, pause, or stop your study session.
-      </Text>
+      <Text style={styles.candleTime}>{formatStudyCandleRemainingTime()}</Text>
+      <Text style={styles.candleHint}>Three-hour study focus</Text>
+      <View style={styles.candleProgressTrack}>
+        <View
+          style={[
+            styles.candleProgressFill,
+            { width: `${Math.min(100, (studyCandleSeconds / STUDY_CANDLE_DURATION_SECONDS) * 100)}%` },
+          ]}
+        />
+      </View>
     </View>
 
     <View style={styles.candleButtonRow}>
@@ -3049,24 +3252,70 @@ activityGroupTitle: {
   candleVisual: {
     alignItems: 'center',
     justifyContent: 'flex-end',
-    height: 78,
+    height: 126,
+    width: 90,
     marginBottom: 10,
   },
   candleFlame: {
-    width: 18,
-    height: 28,
-    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 20,
+    height: 31,
+    borderTopLeftRadius: 14,
+    borderTopRightRadius: 14,
+    borderBottomRightRadius: 14,
+    borderBottomLeftRadius: 4,
     backgroundColor: '#7a5a2d',
-    marginBottom: -2,
+    marginBottom: 5,
+    transform: [{ rotate: '-8deg' }],
   },
   candleFlameActive: {
-    backgroundColor: '#f6c177',
+    backgroundColor: '#f5a623',
+    shadowColor: '#f6c177',
+    shadowOpacity: 0.8,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 0 },
+  },
+  candleFlameCore: {
+    width: 7,
+    height: 14,
+    borderRadius: 6,
+    backgroundColor: '#fff7d6',
   },
   candleBody: {
-    width: 34,
-    height: 48,
-    borderRadius: 8,
-    backgroundColor: '#f4f4f5',
+    alignItems: 'center',
+    width: 48,
+    minHeight: 3,
+    borderTopLeftRadius: 7,
+    borderTopRightRadius: 7,
+    borderBottomLeftRadius: 4,
+    borderBottomRightRadius: 4,
+    backgroundColor: '#f3ead7',
+    overflow: 'visible',
+  },
+  candleWick: {
+    position: 'absolute',
+    top: -8,
+    width: 3,
+    height: 9,
+    borderRadius: 2,
+    backgroundColor: '#26201b',
+  },
+  candleWaxLip: {
+    width: 48,
+    height: 8,
+    borderRadius: 7,
+    backgroundColor: '#fffaf0',
+  },
+  candleWaxDrip: {
+    position: 'absolute',
+    top: 4,
+    right: 7,
+    width: 7,
+    height: 18,
+    borderBottomLeftRadius: 5,
+    borderBottomRightRadius: 5,
+    backgroundColor: '#fffaf0',
   },
   candleTime: {
     color: '#ffffff',
@@ -3079,6 +3328,18 @@ activityGroupTitle: {
     fontSize: 14,
     textAlign: 'center',
     lineHeight: 20,
+  },
+  candleProgressTrack: {
+    width: '100%',
+    height: 6,
+    marginTop: 12,
+    borderRadius: 3,
+    backgroundColor: '#343437',
+    overflow: 'hidden',
+  },
+  candleProgressFill: {
+    height: '100%',
+    backgroundColor: '#f6c177',
   },
   candleButtonRow: {
     flexDirection: 'row',
