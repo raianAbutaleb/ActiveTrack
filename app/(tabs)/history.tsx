@@ -240,6 +240,10 @@ export default function HistoryScreen() {
     return activity === 'Vehicle Maintenance' || activity === 'Personal Info';
   };
 
+  const isSessionNonTimed = (session: Session) => {
+    return isNonTimedActivity(session.activity) || session.start === 'Not timed' || session.start === '';
+  };
+
   const renderSessionDetails = (session: Session) => {
     if (session.activity === 'Football' && session.details) {
       return (
@@ -480,21 +484,30 @@ export default function HistoryScreen() {
       session.details?.horseRiding
     ) {
       const horse = session.details.horseRiding;
+      const showAllHorseFields = !horse.logType;
+      const showRideFields = showAllHorseFields || horse.logType === 'Horse Riding';
+      const showDailyCareFields = showAllHorseFields || horse.logType === 'Daily Care';
+      const showSupplyFields = showAllHorseFields || horse.logType === 'Supplies and Feed';
+      const showTestFields = showAllHorseFields || horse.logType === 'Riding Test';
 
       return (
         <View style={styles.detailsBox}>
           <Text style={styles.detailsTitle}>
-            Horse Riding
+            {horse.logType || 'Previous Horse Log'}
           </Text>
 
-          <Text style={styles.detailsText}>
-            Rider: {horse.riderName || 'Not filled'}
-          </Text>
+          {(showRideFields || showTestFields) && (
+            <Text style={styles.detailsText}>
+              Rider: {horse.riderName || 'Not filled'}
+            </Text>
+          )}
 
           <Text style={styles.detailsText}>
             Horse: {horse.horseName || 'Not filled'}
           </Text>
 
+          {showRideFields && (
+            <>
           <Text style={styles.detailsText}>
             Training: {horse.trainingType || 'Not filled'}
           </Text>
@@ -542,7 +555,11 @@ export default function HistoryScreen() {
           <Text style={styles.detailsText}>
             Turns: Left {horse.leftTurns || '0'} / Right {horse.rightTurns || '0'}
           </Text>
+            </>
+          )}
 
+          {showSupplyFields && (
+            <>
           <Text style={styles.detailsText}>
             Farrier Visit: {horse.farrierVisit || 'Not filled'}
           </Text>
@@ -550,7 +567,11 @@ export default function HistoryScreen() {
           <Text style={styles.detailsText}>
             Next Farrier Visit: {horse.nextFarrierVisit || 'Not filled'}
           </Text>
+            </>
+          )}
 
+          {showDailyCareFields && (
+            <>
           <Text style={styles.detailsSectionTitle}>
             Daily Care
           </Text>
@@ -569,6 +590,31 @@ export default function HistoryScreen() {
 
           <Text style={styles.detailsText}>
             Hoof Oil: {horse.hoofOilUsed ? 'Yes' : 'No'}
+          </Text>
+            </>
+          )}
+
+          {showSupplyFields && (
+            <>
+          <Text style={styles.detailsSectionTitle}>Cleaning Supplies</Text>
+
+          <Text style={styles.detailsText}>
+            Shampoo Used: {horse.shampooUsed ? 'Yes' : 'No'}
+          </Text>
+          <Text style={styles.detailsText}>
+            Shampoo Bought: {horse.shampooBuyingDate || 'Not filled'}
+          </Text>
+          <Text style={styles.detailsText}>
+            Pads / Cleaning Supplies Used: {horse.padsCleaningSuppliesUsed ? 'Yes' : 'No'}
+          </Text>
+          <Text style={styles.detailsText}>
+            Pads / Cleaning Supplies Bought: {horse.padsCleaningSuppliesBuyingDate || 'Not filled'}
+          </Text>
+          <Text style={styles.detailsText}>
+            Food Oil Bought: {horse.foodOilBuyingDate || 'Not filled'}
+          </Text>
+          <Text style={styles.detailsText}>
+            Hoof Oil Bought: {horse.hoofOilBuyingDate || 'Not filled'}
           </Text>
 
           <Text style={styles.detailsSectionTitle}>Feed</Text>
@@ -600,7 +646,11 @@ export default function HistoryScreen() {
               </Text>
             </>
           )}
+            </>
+          )}
 
+          {showTestFields && (
+            <>
           <Text style={styles.detailsSectionTitle}>
             Dressage
           </Text>
@@ -648,6 +698,8 @@ export default function HistoryScreen() {
               <Text style={styles.detailsText}>
                 Notes: {horse.jumpingNotes || 'None'}
               </Text>
+            </>
+          )}
             </>
           )}
 
@@ -892,9 +944,7 @@ export default function HistoryScreen() {
               </Text>
             </View>
 
-            {!isNonTimedActivity(
-              session.activity
-            ) && (
+            {!isSessionNonTimed(session) && (
               <>
                 <Text style={styles.durationText}>
                   {session.duration}

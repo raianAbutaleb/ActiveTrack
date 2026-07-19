@@ -41,6 +41,7 @@ import {
   GymExercise,
   GymSet,
   HorseFeedEntry,
+  HorseLogType,
   MatchRound,
   Session,
 } from '../../types';
@@ -132,7 +133,6 @@ export default function HomeScreen() {
   const [showRepeatPassword, setShowRepeatPassword] = useState(false);
   const [activities, setActivities] = useState<string[]>(defaultActivities);
   const [selectedActivity, setSelectedActivity] = useState<string | null>(null);
-  const [selectedActivityCategory, setSelectedActivityCategory] = useState<string | null>(null);
   const [isActivityDropdownOpen, setIsActivityDropdownOpen] = useState(false);
 
   const [showOtherModal, setShowOtherModal] = useState(false);
@@ -212,6 +212,7 @@ export default function HomeScreen() {
   const [workNotes, setWorkNotes] = useState('');
 
   const [horseRiderName, setHorseRiderName] = useState('');
+  const [horseLogType, setHorseLogType] = useState<HorseLogType>('Horse Riding');
   const [horseName, setHorseName] = useState('');
   const [horseTrainingType, setHorseTrainingType] = useState('');
   const [horseTrainingIntensity, setHorseTrainingIntensity] = useState('');
@@ -687,6 +688,10 @@ const logout = async () => {
     return isVehicleMaintenanceActivity(activity) || isPersonalInfoActivity(activity);
   };
 
+  const isSelectedActivityNonTimed = (activity: string | null) => {
+    return isNonTimedActivity(activity) || (isHorseRidingActivity(activity) && horseLogType !== 'Horse Riding');
+  };
+
   const getSensitiveEnding = (value: string) => {
     const cleanValue = value.trim();
     return cleanValue ? cleanValue.slice(-4) : '';
@@ -992,6 +997,7 @@ const logout = async () => {
     setCustomFieldValues({});
 
     setHorseRiderName('');
+    setHorseLogType('Horse Riding');
     setHorseName('');
     setHorseTrainingType('');
     setHorseTrainingIntensity('');
@@ -1293,7 +1299,7 @@ const logout = async () => {
   return;
 }
 
-if (!isNonTimedActivity(selectedActivity) && (!startTime || !endTime)) {
+if (!isSelectedActivityNonTimed(selectedActivity) && (!startTime || !endTime)) {
   alert('Please start and end the activity first');
   return;
 }
@@ -1406,16 +1412,16 @@ if (!isNonTimedActivity(selectedActivity) && (!startTime || !endTime)) {
     const newSession: Session = {
   id: Date.now(),
   activity: selectedActivity,
-  start: isNonTimedActivity(selectedActivity)
+  start: isSelectedActivityNonTimed(selectedActivity)
     ? 'Not timed'
     : startTime!.toLocaleTimeString(),
-  end: isNonTimedActivity(selectedActivity)
+  end: isSelectedActivityNonTimed(selectedActivity)
     ? 'Not timed'
     : endTime!.toLocaleTimeString(),
-  duration: isNonTimedActivity(selectedActivity)
+  duration: isSelectedActivityNonTimed(selectedActivity)
     ? 'Not timed'
     : getDuration(),
-  durationSeconds: isNonTimedActivity(selectedActivity)
+  durationSeconds: isSelectedActivityNonTimed(selectedActivity)
     ? 0
     : getDurationSeconds(),
   date: new Date().toLocaleDateString(),
@@ -1526,6 +1532,7 @@ if (!isNonTimedActivity(selectedActivity) && (!startTime || !endTime)) {
     if (isHorseRidingActivity(selectedActivity)) {
       newSession.details = {
         horseRiding: {
+          logType: horseLogType,
           riderName: horseRiderName.trim(),
           horseName: horseName.trim(),
           trainingType: horseTrainingType.trim(),
@@ -2507,7 +2514,7 @@ const getGroupedActivities = () => {
                 ? 'سجل تفاصيل نشاطك'
                 : 'Track your activity session'}
           </Text>
-          {!isNonTimedActivity(selectedActivity) && !isFocusActivity(selectedActivity) && (
+          {!isSelectedActivityNonTimed(selectedActivity) && !isFocusActivity(selectedActivity) && (
           <TouchableOpacity style={[styles.startButton, styles.timerActionButton]} onPress={startActivity}>
           <Text style={styles.timerActionText}>{isArabic ? 'بدء النشاط' : 'Start Activity'}</Text>
         </TouchableOpacity>
@@ -2909,6 +2916,8 @@ const getGroupedActivities = () => {
           
           <HorseRidingTracker
   selectedActivity={selectedActivity}
+  horseLogType={horseLogType}
+  setHorseLogType={setHorseLogType}
   horseRiderName={horseRiderName}
   setHorseRiderName={setHorseRiderName}
   horseName={horseName}
@@ -3141,13 +3150,13 @@ const getGroupedActivities = () => {
             </View>
           )}
 
-          {!isNonTimedActivity(selectedActivity) && !isFocusActivity(selectedActivity) && (
+          {!isSelectedActivityNonTimed(selectedActivity) && !isFocusActivity(selectedActivity) && (
   <TouchableOpacity style={[styles.endButton, styles.timerActionButton]} onPress={endActivity}>
     <Text style={styles.timerActionText}>End Activity</Text>
   </TouchableOpacity>
 )}
 
-          {!isNonTimedActivity(selectedActivity) && !isFocusActivity(selectedActivity) && (
+          {!isSelectedActivityNonTimed(selectedActivity) && !isFocusActivity(selectedActivity) && (
   <View style={styles.infoBox}>
     <Text style={styles.infoText}>
       Start: {startTime ? startTime.toLocaleTimeString() : 'Not started'}
@@ -3239,100 +3248,69 @@ const getGroupedActivities = () => {
             <Text style={[styles.activityGroupTitle, isArabic && styles.rtlText]}>
               {isArabic ? 'أنواع الأنشطة' : 'Activity Types'}
             </Text>
-            {getGroupedActivities().map((group) => (
+            <View style={styles.activityDropdown}>
               <TouchableOpacity
-                key={group.groupName}
-                style={[
-                  styles.categoryButton,
-                  selectedActivityCategory === group.groupName && styles.categoryButtonActive,
-                  isArabic && styles.categoryButtonRtl,
-                ]}
-                onPress={() => {
-                  setSelectedActivityCategory(group.groupName);
-                  setIsActivityDropdownOpen(false);
-                }}
+                style={styles.activityDropdownTrigger}
+                onPress={() => setIsActivityDropdownOpen((isOpen) => !isOpen)}
+                accessibilityRole="button"
+                accessibilityState={{ expanded: isActivityDropdownOpen }}
               >
-                <View>
-                  <Text style={[styles.activityText, isArabic && styles.rtlText]}>
-                    {groupDisplayName(group.groupName)}
-                  </Text>
-                  <Text style={[styles.categoryCount, isArabic && styles.rtlText]}>
-                    {group.groupActivities.length}{' '}
-                    {isArabic
-                      ? group.groupActivities.length === 1 ? 'نشاط' : 'أنشطة'
-                      : group.groupActivities.length === 1 ? 'activity' : 'activities'}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-
-            {selectedActivityCategory && (
-              <>
-                <Text style={[styles.activityGroupTitle, isArabic && styles.rtlText]}>
-                  {groupDisplayName(selectedActivityCategory)}
+                <Text style={[styles.activityDropdownTriggerText, isArabic && styles.rtlText]}>
+                  {isArabic ? 'اختر نوع النشاط' : 'Choose an activity type'}
                 </Text>
+                <Text style={styles.activityDropdownChevron}>
+                  {isActivityDropdownOpen ? '▲' : '▼'}
+                </Text>
+              </TouchableOpacity>
 
-                {selectedActivityCategory === 'Custom Activities' && (
-                  <TouchableOpacity style={styles.addButton} onPress={openOtherModal}>
-                    <Text style={styles.smallActionText}>
-                      {isArabic ? '+ إضافة نشاط مخصص' : '+ Add Custom Activity'}
-                    </Text>
-                  </TouchableOpacity>
-                )}
-
-                {activities.filter((activity) => getActivityGroup(activity) === selectedActivityCategory).length === 0 ? (
-                  <Text style={[styles.emptyHistory, isArabic && styles.rtlText]}>
-                    {isArabic ? 'لا توجد أنشطة في هذه الفئة بعد.' : 'No activities in this category yet.'}
-                  </Text>
-                ) : (
-                  <View style={styles.activityDropdown}>
-                    <TouchableOpacity
-                      style={styles.activityDropdownTrigger}
-                      onPress={() => setIsActivityDropdownOpen((isOpen) => !isOpen)}
-                      accessibilityRole="button"
-                      accessibilityState={{ expanded: isActivityDropdownOpen }}
-                    >
-                      <Text style={[styles.activityDropdownTriggerText, isArabic && styles.rtlText]}>
-                        {isArabic ? 'اختر نشاطاً' : 'Choose an activity'}
+              {isActivityDropdownOpen && (
+                <View style={styles.activityDropdownMenu}>
+                  {getGroupedActivities().map((group) => (
+                    <View key={group.groupName}>
+                      <Text style={[styles.activityDropdownGroupTitle, isArabic && styles.rtlText]}>
+                        {groupDisplayName(group.groupName)}
                       </Text>
-                      <Text style={styles.activityDropdownChevron}>
-                        {isActivityDropdownOpen ? '▲' : '▼'}
-                      </Text>
-                    </TouchableOpacity>
-
-                    {isActivityDropdownOpen && (
-                      <View style={styles.activityDropdownMenu}>
-                        {activities
-                          .filter((activity) => getActivityGroup(activity) === selectedActivityCategory)
-                          .map((activity) => (
-                            <View key={activity} style={styles.activityDropdownOptionRow}>
-                              <TouchableOpacity
-                                style={styles.activityDropdownOption}
-                                onPress={() => {
-                                  setIsActivityDropdownOpen(false);
-                                  openActivity(activity);
-                                }}
-                              >
-                                <Text style={[styles.activityDropdownOptionText, isArabic && styles.rtlText]}>
-                                  {activityDisplayName(activity)}
-                                </Text>
-                              </TouchableOpacity>
-                              <TouchableOpacity
-                                style={styles.activityDropdownDelete}
-                                onPress={() => confirmDeleteActivity(activity)}
-                                accessibilityRole="button"
-                                accessibilityLabel={`${isArabic ? 'حذف' : 'Delete'} ${activityDisplayName(activity)}`}
-                              >
-                                <Text style={styles.activityDropdownDeleteText}>×</Text>
-                              </TouchableOpacity>
-                            </View>
-                          ))}
-                      </View>
-                    )}
-                  </View>
-                )}
-              </>
-            )}
+                      {group.groupName === 'Custom Activities' && (
+                        <TouchableOpacity
+                          style={styles.activityDropdownAddOption}
+                          onPress={() => {
+                            setIsActivityDropdownOpen(false);
+                            openOtherModal();
+                          }}
+                        >
+                          <Text style={[styles.activityDropdownOptionText, isArabic && styles.rtlText]}>
+                            {isArabic ? '+ إضافة نشاط مخصص' : '+ Add Custom Activity'}
+                          </Text>
+                        </TouchableOpacity>
+                      )}
+                      {group.groupActivities.map((activity) => (
+                        <View key={activity} style={styles.activityDropdownOptionRow}>
+                          <TouchableOpacity
+                            style={styles.activityDropdownOption}
+                            onPress={() => {
+                              setIsActivityDropdownOpen(false);
+                              openActivity(activity);
+                            }}
+                          >
+                            <Text style={[styles.activityDropdownOptionText, isArabic && styles.rtlText]}>
+                              {activityDisplayName(activity)}
+                            </Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={styles.activityDropdownDelete}
+                            onPress={() => confirmDeleteActivity(activity)}
+                            accessibilityRole="button"
+                            accessibilityLabel={`${isArabic ? 'حذف' : 'Delete'} ${activityDisplayName(activity)}`}
+                          >
+                            <Text style={styles.activityDropdownDeleteText}>×</Text>
+                          </TouchableOpacity>
+                        </View>
+                      ))}
+                    </View>
+                  ))}
+                </View>
+              )}
+            </View>
 
             <TouchableOpacity style={styles.resetButton} onPress={resetActivityList}>
               <Text style={styles.smallActionText}>
@@ -3624,6 +3602,22 @@ activityGroupTitle: {
     borderTopWidth: 0,
     borderColor: '#D0D5DD',
     backgroundColor: '#FFFFFF',
+  },
+  activityDropdownGroupTitle: {
+    color: '#050505',
+    backgroundColor: '#F2F4F7',
+    fontSize: 16,
+    fontWeight: '800',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  activityDropdownAddOption: {
+    minHeight: 52,
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E7E9EE',
   },
   activityDropdownOptionRow: {
     minHeight: 52,

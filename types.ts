@@ -37,7 +37,14 @@ export type HorseFeedEntry = {
   buyingDate: string;
 };
 
+export type HorseLogType =
+  | 'Horse Riding'
+  | 'Daily Care'
+  | 'Supplies and Feed'
+  | 'Riding Test';
+
 export type HorseRidingDetails = {
+  logType?: HorseLogType;
   riderName?: string;
   horseName?: string;
   trainingType?: string;

@@ -763,6 +763,20 @@ body.rtl .category-card {
   gap: 16px;
 }
 
+.horse-log-selector {
+  display: grid;
+  gap: 8px;
+  width: min(100%, 620px);
+  color: #050505;
+  font-weight: 900;
+}
+
+.horse-log-selector select {
+  width: 100%;
+  min-height: 54px;
+  background: var(--panel-solid);
+}
+
 .field-section {
   display: grid;
   gap: 12px;

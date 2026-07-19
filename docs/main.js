@@ -327,6 +327,7 @@ const state = {
   balootScores: [],
   balootDealerDirection: '↑',
   horseFeedCount: 1,
+  horseLogType: 'riding',
 };
 
 const authCard = document.querySelector('.auth-card');
@@ -911,6 +912,14 @@ function isNonTimedActivity(activity) {
   return activity === 'Vehicle Maintenance' || activity === 'Personal Info';
 }
 
+function isSelectedActivityNonTimed(activity) {
+  return isNonTimedActivity(activity) || (activity === 'Horse Riding' && state.horseLogType !== 'riding');
+}
+
+function isSessionNonTimed(session) {
+  return isNonTimedActivity(session.activity) || (!session.start && !session.end);
+}
+
 function getSensitiveEnding(value) {
   const cleanValue = String(value || '').trim();
   return cleanValue ? cleanValue.slice(-4) : '';
@@ -1113,53 +1122,33 @@ function renderHome() {
 
   customActivityForm.classList.toggle('collapsed', state.selectedCategory !== 'custom');
 
-  const categories = [
-    ...activitySections.map((section) => ({
-      key: section.key,
-      count: section.activities.length,
-    })),
-    { key: 'custom', count: state.customActivities.length },
+  const activityGroups = [
+    ...activitySections,
+    { key: 'custom', activities: state.customActivities },
   ];
-  const selectedSection = activitySections.find((section) => section.key === state.selectedCategory);
-  const selectedActivities = state.selectedCategory === 'custom'
-    ? state.customActivities
-    : selectedSection?.activities || [];
 
   activityGrid.innerHTML = `
     <section class="activity-section">
-      <h2>${state.language === 'ar' ? 'أنواع الأنشطة' : 'Activity types'}</h2>
-      <div class="activity-section-grid category-grid">
-        ${categories
+      <label class="activity-dropdown-label">
+        <span>${state.language === 'ar' ? 'أنواع الأنشطة' : 'Activity types'}</span>
+        <select data-activity-select>
+          <option value="">${state.language === 'ar' ? 'اختر نوع النشاط' : 'Choose an activity type'}</option>
+          ${activityGroups
           .map(
-            (category) => `
-              <button class="activity-card category-card${state.selectedCategory === category.key ? ' active' : ''}" type="button" data-category="${category.key}">
-                <strong>${translations[state.language].sections[category.key]}</strong>
-                <span>${category.count} ${state.language === 'ar' ? category.count === 1 ? 'نشاط' : 'أنشطة' : category.count === 1 ? 'activity' : 'activities'}</span>
-              </button>
+            (group) => `
+              <optgroup label="${escapeHtml(translations[state.language].sections[group.key])}">
+                ${group.key === 'custom'
+                  ? `<option value="__add_custom__">${state.language === 'ar' ? '+ إضافة نشاط مخصص' : '+ Add Custom Activity'}</option>`
+                  : ''}
+                ${group.activities
+                  .map(
+                    (activity) => `<option value="${escapeHtml(activity)}">${escapeHtml(activityLabel(activity))}</option>`
+                  )
+                  .join('')}
+              </optgroup>
             `
           )
           .join('')}
-      </div>
-    </section>
-    ${state.selectedCategory ? renderActivitySection(state.selectedCategory, selectedActivities) : ''}
-  `;
-}
-
-function renderActivitySection(sectionKey, activities) {
-  return `
-    <section class="activity-section">
-      <h2>${translations[state.language].sections[sectionKey]}</h2>
-      <label class="activity-dropdown-label">
-        <span>${state.language === 'ar' ? 'اختر نشاطاً' : 'Choose an activity'}</span>
-        <select data-activity-select ${activities.length ? '' : 'disabled'}>
-          <option value="">${activities.length
-            ? state.language === 'ar' ? 'اختر من القائمة' : 'Select from the list'
-            : state.language === 'ar' ? 'لا توجد أنشطة بعد' : 'No activities yet'}</option>
-          ${activities
-            .map(
-              (activity) => `<option value="${escapeHtml(activity)}">${escapeHtml(activityLabel(activity))}</option>`
-            )
-            .join('')}
         </select>
       </label>
     </section>
@@ -1170,6 +1159,7 @@ function openTracker(activity) {
   resetStudyCandle();
   if (activity === 'Horse Riding') {
     state.horseFeedCount = 1;
+    state.horseLogType = 'riding';
   }
   state.selectedActivity = activity;
   state.startTime = null;
@@ -1180,11 +1170,12 @@ function openTracker(activity) {
   sessionMessage.textContent = '';
   trackerTitle.textContent = activityLabel(activity);
   trackerHelper.textContent = trackerHelperText(activity);
-  trackerView.classList.toggle('vehicle-mode', isNonTimedActivity(activity));
+  trackerView.classList.toggle('vehicle-mode', isSelectedActivityNonTimed(activity));
   trackerView.classList.toggle('focus-mode', activity === 'Studying' || activity === 'Work');
-  timerCard.hidden = isNonTimedActivity(activity) || activity === 'Studying' || activity === 'Work';
+  timerCard.hidden = isSelectedActivityNonTimed(activity) || activity === 'Studying' || activity === 'Work';
   activityFields.innerHTML = getFieldsForActivity(activity);
   bindConditionalFields();
+  bindHorseLogType();
   bindHorseFeedEntries();
   if (activity === 'Studying' || activity === 'Work') {
     resetStudyCandle();
@@ -1284,6 +1275,7 @@ function refreshOpenTrackerLanguage() {
   activityFields.innerHTML = getFieldsForActivity(activity);
   restoreActivityFieldValues(savedFields);
   bindConditionalFields();
+  bindHorseLogType();
   bindHorseFeedEntries();
 
   if (activity === 'Studying' || activity === 'Work') {
@@ -1543,60 +1535,111 @@ function getFieldsForActivity(activity) {
   }
 
   if (activity === 'Horse Riding') {
+    const commonHorseField = inputField(horseText('horseName'), 'horseName', horseText('horseNamePlaceholder'));
+    const logTypeSelector = `
+      <label class="horse-log-selector">
+        ${horseText('logType')}
+        <select id="horse-log-type" name="horseLogType">
+          <option value="riding" ${state.horseLogType === 'riding' ? 'selected' : ''}>${horseText('logHorseRiding')}</option>
+          <option value="dailyCare" ${state.horseLogType === 'dailyCare' ? 'selected' : ''}>${horseText('logDailyCare')}</option>
+          <option value="supplies" ${state.horseLogType === 'supplies' ? 'selected' : ''}>${horseText('logSupplies')}</option>
+          <option value="ridingTest" ${state.horseLogType === 'ridingTest' ? 'selected' : ''}>${horseText('logRidingTest')}</option>
+        </select>
+      </label>
+    `;
+    const notesAndReminder = `
+      ${fieldSection(horseText('notesSection'), [
+        textAreaField(horseText('horseNotes'), 'horseNotes', horseText('horseNotes'), true),
+      ])}
+      ${reminderFields()}
+    `;
+
+    if (state.horseLogType === 'riding') {
+      return `
+        <div class="horse-form">
+          ${logTypeSelector}
+          ${fieldSection(horseText('trainingSection'), [
+            inputField(horseText('riderName'), 'riderName', horseText('riderNamePlaceholder')),
+            commonHorseField,
+            inputField(horseText('trainingType'), 'trainingType', horseText('trainingTypePlaceholder')),
+            selectField(horseText('trainingIntensity'), 'trainingIntensity', [
+              horseText('easy'), horseText('medium'), horseText('hard'),
+            ]),
+            inputField(horseText('trainingTime'), 'trainingTime', '45 min'),
+            checkboxField(horseText('restDay'), 'restDay'),
+            inputField(horseText('walkingMinutes'), 'walkingMinutes', '20', 'number'),
+          ])}
+          ${fieldSection(horseText('performanceSection'), [
+            inputField(horseText('walkMinutes'), 'walkMinutes', '10', 'number'),
+            inputField(horseText('trotMinutes'), 'trotMinutes', '15', 'number'),
+            inputField(horseText('canterMinutes'), 'canterMinutes', '8', 'number'),
+            inputField(horseText('rideDistance'), 'rideDistance', '4.2 km'),
+            inputField(horseText('averageSpeed'), 'averageSpeed', '8.5 km/h'),
+            inputField(horseText('leftTurns'), 'leftTurns', '12', 'number'),
+            inputField(horseText('rightTurns'), 'rightTurns', '12', 'number'),
+          ])}
+          ${fieldSection(horseText('calendarSafetySection'), [
+            inputField(horseText('rideDate'), 'rideDate', '17/07/2026'),
+            textAreaField(horseText('calendarNote'), 'calendarNote', horseText('calendarNotePlaceholder'), true),
+            inputField(horseText('safetyLocation'), 'safetyLocation', horseText('safetyLocationPlaceholder')),
+            inputField(horseText('safetyContact'), 'safetyContact', horseText('safetyContactPlaceholder')),
+          ])}
+          ${notesAndReminder}
+        </div>
+      `;
+    }
+
+    if (state.horseLogType === 'dailyCare') {
+      return `
+        <div class="horse-form">
+          ${logTypeSelector}
+          ${fieldSection(horseText('dailyCareSection'), [
+            commonHorseField,
+            checkboxField(horseText('hayGiven'), 'hayGiven'),
+            checkboxField(horseText('waterChecked'), 'waterChecked'),
+            checkboxField(horseText('foodOilGiven'), 'foodOilGiven'),
+            checkboxField(horseText('hoofOilUsed'), 'hoofOilUsed'),
+          ])}
+          ${notesAndReminder}
+        </div>
+      `;
+    }
+
+    if (state.horseLogType === 'supplies') {
+      return `
+        <div class="horse-form">
+          ${logTypeSelector}
+          ${fieldSection(horseText('farrierSection'), [
+            commonHorseField,
+            inputField(horseText('farrierVisit'), 'farrierVisit', '17/07/2026'),
+            inputField(horseText('nextFarrierVisit'), 'nextFarrierVisit', '28/08/2026'),
+            inputField(horseText('foodOilBuyingDate'), 'foodOilBuyingDate', '06/07/2026'),
+            inputField(horseText('hoofOilBuyingDate'), 'hoofOilBuyingDate', '06/07/2026'),
+          ])}
+          ${fieldSection(horseText('cleaningSection'), [
+            checkboxField(horseText('shampooUsed'), 'shampooUsed'),
+            inputField(horseText('shampooBuyingDate'), 'shampooBuyingDate', '06/07/2026'),
+            checkboxField(horseText('padsCleaningSuppliesUsed'), 'padsCleaningSuppliesUsed'),
+            inputField(horseText('padsCleaningSuppliesBuyingDate'), 'padsCleaningSuppliesBuyingDate', horseText('padsDatePlaceholder')),
+          ])}
+          <div class="field-section">
+            <h2>${horseText('monthlyFeedSection')}</h2>
+            <div id="horse-feed-list">
+              ${Array.from({ length: state.horseFeedCount }, (_, index) => horseFeedEntryFields(index)).join('')}
+            </div>
+            <button class="button secondary add-feed-button" id="horse-add-feed" type="button">+ ${horseText('addFeed')}</button>
+          </div>
+          ${notesAndReminder}
+        </div>
+      `;
+    }
+
     return `
       <div class="horse-form">
-        ${fieldSection(horseText('trainingSection'), [
-          inputField(horseText('riderName'), 'riderName', horseText('riderNamePlaceholder')),
-          inputField(horseText('horseName'), 'horseName', horseText('horseNamePlaceholder')),
-          inputField(horseText('trainingType'), 'trainingType', horseText('trainingTypePlaceholder')),
-          selectField(horseText('trainingIntensity'), 'trainingIntensity', [
-            horseText('easy'),
-            horseText('medium'),
-            horseText('hard'),
-          ]),
-          inputField(horseText('trainingTime'), 'trainingTime', '45 min'),
-          checkboxField(horseText('restDay'), 'restDay'),
-          inputField(horseText('walkingMinutes'), 'walkingMinutes', '20', 'number'),
-        ])}
-        ${fieldSection(horseText('performanceSection'), [
-          inputField(horseText('walkMinutes'), 'walkMinutes', '10', 'number'),
-          inputField(horseText('trotMinutes'), 'trotMinutes', '15', 'number'),
-          inputField(horseText('canterMinutes'), 'canterMinutes', '8', 'number'),
-          inputField(horseText('rideDistance'), 'rideDistance', '4.2 km'),
-          inputField(horseText('averageSpeed'), 'averageSpeed', '8.5 km/h'),
-          inputField(horseText('leftTurns'), 'leftTurns', '12', 'number'),
-          inputField(horseText('rightTurns'), 'rightTurns', '12', 'number'),
-        ])}
-        ${fieldSection(horseText('calendarSafetySection'), [
-          inputField(horseText('rideDate'), 'rideDate', '17/07/2026'),
-          textAreaField(horseText('calendarNote'), 'calendarNote', horseText('calendarNotePlaceholder'), true),
-          inputField(horseText('farrierVisit'), 'farrierVisit', '17/07/2026'),
-          inputField(horseText('nextFarrierVisit'), 'nextFarrierVisit', '28/08/2026'),
-          inputField(horseText('safetyLocation'), 'safetyLocation', horseText('safetyLocationPlaceholder')),
-          inputField(horseText('safetyContact'), 'safetyContact', horseText('safetyContactPlaceholder')),
-        ])}
-        ${fieldSection(horseText('dailyCareSection'), [
-          checkboxField(horseText('hayGiven'), 'hayGiven'),
-          checkboxField(horseText('waterChecked'), 'waterChecked'),
-          checkboxField(horseText('foodOilGiven'), 'foodOilGiven'),
-          inputField(horseText('foodOilBuyingDate'), 'foodOilBuyingDate', '06/07/2026'),
-          checkboxField(horseText('hoofOilUsed'), 'hoofOilUsed'),
-          inputField(horseText('hoofOilBuyingDate'), 'hoofOilBuyingDate', '06/07/2026'),
-        ])}
-        ${fieldSection(horseText('cleaningSection'), [
-          checkboxField(horseText('shampooUsed'), 'shampooUsed'),
-          inputField(horseText('shampooBuyingDate'), 'shampooBuyingDate', '06/07/2026'),
-          checkboxField(horseText('padsCleaningSuppliesUsed'), 'padsCleaningSuppliesUsed'),
-          inputField(horseText('padsCleaningSuppliesBuyingDate'), 'padsCleaningSuppliesBuyingDate', horseText('padsDatePlaceholder')),
-        ])}
-        <div class="field-section">
-          <h2>${horseText('feedSection')}</h2>
-          <div id="horse-feed-list">
-            ${Array.from({ length: state.horseFeedCount }, (_, index) => horseFeedEntryFields(index)).join('')}
-          </div>
-          <button class="button secondary add-feed-button" id="horse-add-feed" type="button">+ ${horseText('addFeed')}</button>
-        </div>
+        ${logTypeSelector}
         ${fieldSection(horseText('dressageSection'), [
+          inputField(horseText('riderName'), 'riderName', horseText('riderNamePlaceholder')),
+          commonHorseField,
           checkboxField(horseText('dressageTestDay'), 'dressageTestDay', 'dressage-fields'),
           conditionalFields('dressage-fields', [
             inputField(horseText('dressageTestName'), 'dressageTestName', horseText('dressageTestName')),
@@ -1612,10 +1655,7 @@ function getFieldsForActivity(activity) {
             textAreaField(horseText('jumpingNotes'), 'jumpingNotes', horseText('jumpingNotes'), true),
           ]),
         ])}
-        ${fieldSection(horseText('notesSection'), [
-          textAreaField(horseText('horseNotes'), 'horseNotes', horseText('horseNotes'), true),
-        ])}
-        ${reminderFields()}
+        ${notesAndReminder}
       </div>
     `;
   }
@@ -1914,6 +1954,31 @@ function bindConditionalFields() {
   });
 }
 
+function bindHorseLogType() {
+  const logTypeSelect = document.querySelector('#horse-log-type');
+
+  if (!logTypeSelect) {
+    return;
+  }
+
+  logTypeSelect.addEventListener('change', () => {
+    const savedFields = captureActivityFieldValues();
+    state.horseLogType = logTypeSelect.value;
+    state.startTime = null;
+    state.endTime = null;
+    stopTimer();
+    timerDisplay.textContent = '00:00:00';
+    timerNote.textContent = text('timerNote');
+    timerCard.hidden = isSelectedActivityNonTimed('Horse Riding');
+    trackerView.classList.toggle('vehicle-mode', isSelectedActivityNonTimed('Horse Riding'));
+    activityFields.innerHTML = getFieldsForActivity('Horse Riding');
+    restoreActivityFieldValues(savedFields);
+    bindConditionalFields();
+    bindHorseLogType();
+    bindHorseFeedEntries();
+  });
+}
+
 function bindHorseFeedEntries() {
   const addFeedButton = document.querySelector('#horse-add-feed');
 
@@ -1927,6 +1992,7 @@ function bindHorseFeedEntries() {
     activityFields.innerHTML = getFieldsForActivity('Horse Riding');
     restoreActivityFieldValues(savedFields);
     bindConditionalFields();
+    bindHorseLogType();
     bindHorseFeedEntries();
   });
 }
@@ -2575,6 +2641,13 @@ function horseFeedEntryFields(index) {
 function horseText(key) {
   const labels = {
     en: {
+      logType: 'Horse activity',
+      logHorseRiding: 'Horse Riding',
+      logDailyCare: 'Daily Care',
+      logSupplies: 'Cleaning Supplies, Monthly Feed and Farrier',
+      logRidingTest: 'Riding Test',
+      farrierSection: 'Farrier and Care Supplies',
+      monthlyFeedSection: 'Monthly Feed',
       trainingSection: 'Training',
       riderName: 'Rider name',
       riderNamePlaceholder: 'Rider name',
@@ -2639,6 +2712,13 @@ function horseText(key) {
       horseNotes: 'Horse riding notes',
     },
     ar: {
+      logType: 'نشاط الخيل',
+      logHorseRiding: 'ركوب الخيل',
+      logDailyCare: 'العناية اليومية',
+      logSupplies: 'مستلزمات التنظيف والعلف الشهري والبيطار',
+      logRidingTest: 'اختبار الركوب',
+      farrierSection: 'البيطار ومستلزمات العناية',
+      monthlyFeedSection: 'العلف الشهري',
       trainingSection: 'التدريب',
       riderName: 'اسم الراكب',
       riderNamePlaceholder: 'اسم الراكب',
@@ -2745,7 +2825,7 @@ async function saveSession(event) {
   event.preventDefault();
 
   const activity = state.selectedActivity;
-  const isNonTimed = isNonTimedActivity(activity);
+  const isNonTimed = isSelectedActivityNonTimed(activity);
 
   if (!activity) {
     return;
@@ -2929,6 +3009,13 @@ function getSessionDetails() {
   });
 
   if (state.selectedActivity === 'Horse Riding') {
+    details.horseLogType = {
+      riding: 'Horse Riding',
+      dailyCare: 'Daily Care',
+      supplies: 'Cleaning Supplies, Monthly Feed and Farrier',
+      ridingTest: 'Riding Test',
+    }[state.horseLogType];
+
     details.feedEntries = Array.from(
       sessionForm.querySelectorAll('[data-horse-feed-entry]')
     )
@@ -3005,7 +3092,7 @@ function renderHistory() {
             </div>
           </header>
           ${
-            isNonTimedActivity(session.activity)
+            isSessionNonTimed(session)
               ? `<p>${session.activity === 'Personal Info' ? text('personalRecord') : text('maintenanceRecord')}</p>`
               : `<p>${formatTime(session.start)} to ${formatTime(session.end)} - ${session.duration}</p>`
           }
@@ -3571,7 +3658,6 @@ backButton.addEventListener('click', () => {
 document.addEventListener('click', (event) => {
   const viewButton = event.target.closest('[data-view]');
   const activityButton = event.target.closest('[data-activity]');
-  const categoryButton = event.target.closest('[data-category]');
   const editButton = event.target.closest('[data-edit-session]');
   const deleteButton = event.target.closest('[data-delete-session]');
 
@@ -3582,11 +3668,6 @@ document.addEventListener('click', (event) => {
 
   if (activityButton) {
     openTracker(activityButton.dataset.activity);
-  }
-
-  if (categoryButton) {
-    state.selectedCategory = categoryButton.dataset.category;
-    renderHome();
   }
 
   if (editButton) {
@@ -3613,6 +3694,12 @@ document.addEventListener('click', (event) => {
 
 activityGrid.addEventListener('change', (event) => {
   const activitySelect = event.target.closest('[data-activity-select]');
+
+  if (activitySelect?.value === '__add_custom__') {
+    state.selectedCategory = 'custom';
+    renderHome();
+    return;
+  }
 
   if (activitySelect?.value) {
     openTracker(activitySelect.value);

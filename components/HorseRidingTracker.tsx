@@ -6,10 +6,13 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { HorseFeedEntry } from '../types';
+import { HorseFeedEntry, HorseLogType } from '../types';
 
 type Props = {
   selectedActivity: string | null;
+
+  horseLogType: HorseLogType;
+  setHorseLogType: Dispatch<SetStateAction<HorseLogType>>;
 
   horseRiderName: string;
   setHorseRiderName: Dispatch<SetStateAction<string>>;
@@ -181,15 +184,40 @@ export default function HorseRidingTracker(props: Props) {
 
   return (
     <View style={styles.detailsBox}>
-      <Text style={styles.detailsTitle}>Horse Riding</Text>
+      <Text style={styles.detailsTitle}>Horse Logs</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Rider name"
-        placeholderTextColor="#050505"
-        value={props.horseRiderName}
-        onChangeText={props.setHorseRiderName}
-      />
+      <Text style={styles.detailsSubtitle}>Choose horse activity</Text>
+      <View style={styles.logTypeGrid}>
+        {(['Horse Riding', 'Daily Care', 'Supplies and Feed', 'Riding Test'] as HorseLogType[]).map((logType) => (
+          <TouchableOpacity
+            key={logType}
+            style={[
+              styles.logTypeButton,
+              props.horseLogType === logType && styles.selectedToggleButton,
+            ]}
+            onPress={() => props.setHorseLogType(logType)}
+          >
+            <Text
+              style={[
+                styles.toggleText,
+                props.horseLogType === logType && styles.selectedToggleText,
+              ]}
+            >
+              {logType}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {(props.horseLogType === 'Horse Riding' || props.horseLogType === 'Riding Test') && (
+        <TextInput
+          style={styles.input}
+          placeholder="Rider name"
+          placeholderTextColor="#050505"
+          value={props.horseRiderName}
+          onChangeText={props.setHorseRiderName}
+        />
+      )}
 
       <TextInput
         style={styles.input}
@@ -198,6 +226,9 @@ export default function HorseRidingTracker(props: Props) {
         value={props.horseName}
         onChangeText={props.setHorseName}
       />
+
+      {props.horseLogType === 'Horse Riding' && (
+        <>
 
       <TextInput
         style={styles.input}
@@ -339,22 +370,6 @@ export default function HorseRidingTracker(props: Props) {
 
       <TextInput
         style={styles.input}
-        placeholder="Farrier visit date"
-        placeholderTextColor="#050505"
-        value={props.horseFarrierVisit}
-        onChangeText={props.setHorseFarrierVisit}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Next farrier visit"
-        placeholderTextColor="#050505"
-        value={props.horseNextFarrierVisit}
-        onChangeText={props.setHorseNextFarrierVisit}
-      />
-
-      <TextInput
-        style={styles.input}
         placeholder="Safety location, example: Riyadh stable"
         placeholderTextColor="#050505"
         value={props.horseSafetyLocation}
@@ -368,8 +383,12 @@ export default function HorseRidingTracker(props: Props) {
         value={props.horseSafetyContact}
         onChangeText={props.setHorseSafetyContact}
       />
+        </>
+      )}
 
-      <Text style={styles.detailsSubtitle}>Daily Care</Text>
+      {props.horseLogType === 'Daily Care' && (
+        <>
+          <Text style={styles.detailsSubtitle}>Daily Care</Text>
 
       {renderYesNoButton('Hay Given', props.horseHayGiven, () =>
         props.setHorseHayGiven(!props.horseHayGiven)
@@ -383,25 +402,49 @@ export default function HorseRidingTracker(props: Props) {
         props.setHorseFoodOilGiven(!props.horseFoodOilGiven)
       )}
 
-      <TextInput
-        style={styles.input}
-        placeholder="Food oil buying date, example: 06/07/2026"
-        placeholderTextColor="#050505"
-        value={props.horseFoodOilBuyingDate}
-        onChangeText={props.setHorseFoodOilBuyingDate}
-      />
-
       {renderYesNoButton('Hoof Oil Used', props.horseHoofOilUsed, () =>
         props.setHorseHoofOilUsed(!props.horseHoofOilUsed)
       )}
+        </>
+      )}
 
-      <TextInput
-        style={styles.input}
-        placeholder="Hoof oil buying date, example: 06/07/2026"
-        placeholderTextColor="#050505"
-        value={props.horseHoofOilBuyingDate}
-        onChangeText={props.setHorseHoofOilBuyingDate}
-      />
+      {props.horseLogType === 'Supplies and Feed' && (
+        <>
+          <Text style={styles.detailsSubtitle}>Farrier</Text>
+
+          <TextInput
+            style={styles.input}
+            placeholder="Farrier visit date"
+            placeholderTextColor="#050505"
+            value={props.horseFarrierVisit}
+            onChangeText={props.setHorseFarrierVisit}
+          />
+
+          <TextInput
+            style={styles.input}
+            placeholder="Next farrier visit"
+            placeholderTextColor="#050505"
+            value={props.horseNextFarrierVisit}
+            onChangeText={props.setHorseNextFarrierVisit}
+          />
+
+          <Text style={styles.detailsSubtitle}>Care Supplies</Text>
+
+          <TextInput
+            style={styles.input}
+            placeholder="Food oil buying date, example: 06/07/2026"
+            placeholderTextColor="#050505"
+            value={props.horseFoodOilBuyingDate}
+            onChangeText={props.setHorseFoodOilBuyingDate}
+          />
+
+          <TextInput
+            style={styles.input}
+            placeholder="Hoof oil buying date, example: 06/07/2026"
+            placeholderTextColor="#050505"
+            value={props.horseHoofOilBuyingDate}
+            onChangeText={props.setHorseHoofOilBuyingDate}
+          />
 
       <Text style={styles.detailsSubtitle}>Cleaning Supplies</Text>
 
@@ -429,7 +472,7 @@ export default function HorseRidingTracker(props: Props) {
         onChangeText={props.setHorsePadsCleaningSuppliesBuyingDate}
       />
 
-      <Text style={styles.detailsSubtitle}>Feed</Text>
+      <Text style={styles.detailsSubtitle}>Monthly Feed</Text>
 
       {props.horseFeedEntries.map((feed, index) => (
         <View key={`feed-${index}`} style={styles.feedEntryBox}>
@@ -471,8 +514,12 @@ export default function HorseRidingTracker(props: Props) {
       >
         <Text style={styles.addFeedButtonText}>+ Add another feed</Text>
       </TouchableOpacity>
+        </>
+      )}
 
-      <Text style={styles.detailsSubtitle}>Dressage Test</Text>
+      {props.horseLogType === 'Riding Test' && (
+        <>
+          <Text style={styles.detailsSubtitle}>Dressage Test</Text>
 
       {renderYesNoButton('Dressage Test Day', props.horseDressageTestDay, () =>
         props.setHorseDressageTestDay(!props.horseDressageTestDay)
@@ -541,6 +588,8 @@ export default function HorseRidingTracker(props: Props) {
           />
         </>
       )}
+        </>
+      )}
 
       <Text style={styles.detailsSubtitle}>Notes</Text>
 
@@ -575,6 +624,21 @@ const styles = StyleSheet.create({
     fontSize: 18,
     marginBottom: 12,
     marginTop: 6,
+  },
+  logTypeGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginBottom: 14,
+  },
+  logTypeButton: {
+    width: '48%',
+    minHeight: 52,
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#D0D5DD',
+    borderRadius: 10,
+    padding: 12,
   },
   performanceBox: {
     borderWidth: 1,
