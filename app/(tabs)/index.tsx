@@ -14,7 +14,6 @@ import {
 } from 'react-native';
 import {
   GestureHandlerRootView,
-  Swipeable,
 } from 'react-native-gesture-handler';
 import BalootTracker from '../../components/BalootTracker';
 import FootballTracker from '../../components/FootballTracker';
@@ -41,6 +40,7 @@ import {
   CustomFieldValue,
   GymExercise,
   GymSet,
+  HorseFeedEntry,
   MatchRound,
   Session,
 } from '../../types';
@@ -133,6 +133,7 @@ export default function HomeScreen() {
   const [activities, setActivities] = useState<string[]>(defaultActivities);
   const [selectedActivity, setSelectedActivity] = useState<string | null>(null);
   const [selectedActivityCategory, setSelectedActivityCategory] = useState<string | null>(null);
+  const [isActivityDropdownOpen, setIsActivityDropdownOpen] = useState(false);
 
   const [showOtherModal, setShowOtherModal] = useState(false);
   const [otherActivityName, setOtherActivityName] = useState('');
@@ -226,6 +227,8 @@ export default function HomeScreen() {
   const [horseRightTurns, setHorseRightTurns] = useState('');
   const [horseRideDate, setHorseRideDate] = useState('');
   const [horseCalendarNote, setHorseCalendarNote] = useState('');
+  const [horseFarrierVisit, setHorseFarrierVisit] = useState('');
+  const [horseNextFarrierVisit, setHorseNextFarrierVisit] = useState('');
   const [horseSafetyLocation, setHorseSafetyLocation] = useState('');
   const [horseSafetyContact, setHorseSafetyContact] = useState('');
 
@@ -236,11 +239,9 @@ export default function HomeScreen() {
   const [horsePadsCleaningSuppliesUsed, setHorsePadsCleaningSuppliesUsed] = useState(false);
   const [horseHoofOilUsed, setHorseHoofOilUsed] = useState(false);
 
-  const [horseReleveAmount, setHorseReleveAmount] = useState('');
-  const [horseReleveBuyingDate, setHorseReleveBuyingDate] = useState('');
-
-  const [horseEquiJewelAmount, setHorseEquiJewelAmount] = useState('');
-  const [horseEquiJewelBuyingDate, setHorseEquiJewelBuyingDate] = useState('');
+  const [horseFeedEntries, setHorseFeedEntries] = useState<HorseFeedEntry[]>([
+    { amount: '', buyingDate: '' },
+  ]);
 
   const [horseFoodOilBuyingDate, setHorseFoodOilBuyingDate] = useState('');
   const [horseShampooBuyingDate, setHorseShampooBuyingDate] = useState('');
@@ -1006,6 +1007,8 @@ const logout = async () => {
     setHorseRightTurns('');
     setHorseRideDate('');
     setHorseCalendarNote('');
+    setHorseFarrierVisit('');
+    setHorseNextFarrierVisit('');
     setHorseSafetyLocation('');
     setHorseSafetyContact('');
 
@@ -1016,11 +1019,7 @@ const logout = async () => {
     setHorsePadsCleaningSuppliesUsed(false);
     setHorseHoofOilUsed(false);
 
-    setHorseReleveAmount('');
-    setHorseReleveBuyingDate('');
-
-    setHorseEquiJewelAmount('');
-    setHorseEquiJewelBuyingDate('');
+    setHorseFeedEntries([{ amount: '', buyingDate: '' }]);
 
     setHorseFoodOilBuyingDate('');
     setHorseShampooBuyingDate('');
@@ -1543,6 +1542,8 @@ if (!isNonTimedActivity(selectedActivity) && (!startTime || !endTime)) {
           rightTurns: horseRightTurns.trim(),
           rideDate: horseRideDate.trim(),
           calendarNote: horseCalendarNote.trim(),
+          farrierVisit: horseFarrierVisit.trim(),
+          nextFarrierVisit: horseNextFarrierVisit.trim(),
           safetyLocation: horseSafetyLocation.trim(),
           safetyContact: horseSafetyContact.trim(),
 
@@ -1553,11 +1554,12 @@ if (!isNonTimedActivity(selectedActivity) && (!startTime || !endTime)) {
           padsCleaningSuppliesUsed: horsePadsCleaningSuppliesUsed,
           hoofOilUsed: horseHoofOilUsed,
 
-          releveAmount: horseReleveAmount.trim(),
-          releveBuyingDate: horseReleveBuyingDate.trim(),
-
-          equiJewelAmount: horseEquiJewelAmount.trim(),
-          equiJewelBuyingDate: horseEquiJewelBuyingDate.trim(),
+          feedEntries: horseFeedEntries
+            .map((feed) => ({
+              amount: feed.amount.trim(),
+              buyingDate: feed.buyingDate.trim(),
+            }))
+            .filter((feed) => feed.amount || feed.buyingDate),
 
           foodOilBuyingDate: horseFoodOilBuyingDate.trim(),
           shampooBuyingDate: horseShampooBuyingDate.trim(),
@@ -1742,16 +1744,6 @@ if (!isNonTimedActivity(selectedActivity) && (!startTime || !endTime)) {
     return `${mostPracticed} (${highestCount})`;
   };
 
-  const renderActivityDeleteAction = (activityName: string) => {
-    return (
-      <TouchableOpacity
-        style={styles.swipeDeleteAction}
-        onPress={() => confirmDeleteActivity(activityName)}
-      >
-        <Text style={styles.swipeDeleteText}>Delete</Text>
-      </TouchableOpacity>
-    );
-  };
   const getActivityGroup = (activity: string) => {
   if (['Football', 'Padel', 'Tennis', 'Golf', 'Baloot'].includes(activity)) {
     return 'Sports and Games';
@@ -2109,6 +2101,12 @@ const getGroupedActivities = () => {
             Calendar Note: {horse.calendarNote || 'None'}
           </Text>
           <Text style={styles.savedDetailsText}>
+            Farrier Visit: {horse.farrierVisit || 'Not filled'}
+          </Text>
+          <Text style={styles.savedDetailsText}>
+            Next Farrier Visit: {horse.nextFarrierVisit || 'Not filled'}
+          </Text>
+          <Text style={styles.savedDetailsText}>
             Safety Location: {horse.safetyLocation || 'Not filled'}
           </Text>
           <Text style={styles.savedDetailsText}>
@@ -2139,19 +2137,34 @@ const getGroupedActivities = () => {
             Pads Supplies Bought: {horse.padsCleaningSuppliesBuyingDate || 'Not filled'}
           </Text>
 
-          <Text style={styles.savedDetailsHeader}>Monthly Feed:</Text>
-          <Text style={styles.savedDetailsText}>
-            Re-Leve: {horse.releveAmount || 'Not filled'}
-          </Text>
-          <Text style={styles.savedDetailsText}>
-            Re-Leve Bought: {horse.releveBuyingDate || 'Not filled'}
-          </Text>
-          <Text style={styles.savedDetailsText}>
-            Equi Jewel: {horse.equiJewelAmount || 'Not filled'}
-          </Text>
-          <Text style={styles.savedDetailsText}>
-            Equi Jewel Bought: {horse.equiJewelBuyingDate || 'Not filled'}
-          </Text>
+          <Text style={styles.savedDetailsHeader}>Feed:</Text>
+          {horse.feedEntries?.length ? (
+            horse.feedEntries.map((feed, index) => (
+              <View key={`saved-feed-${index}`}>
+                <Text style={styles.savedDetailsText}>
+                  Feed {index + 1} Amount: {feed.amount || 'Not filled'}
+                </Text>
+                <Text style={styles.savedDetailsText}>
+                  Feed {index + 1} Bought: {feed.buyingDate || 'Not filled'}
+                </Text>
+              </View>
+            ))
+          ) : (
+            <>
+              <Text style={styles.savedDetailsText}>
+                Re-Leve: {horse.releveAmount || 'Not filled'}
+              </Text>
+              <Text style={styles.savedDetailsText}>
+                Re-Leve Bought: {horse.releveBuyingDate || 'Not filled'}
+              </Text>
+              <Text style={styles.savedDetailsText}>
+                Equi Jewel: {horse.equiJewelAmount || 'Not filled'}
+              </Text>
+              <Text style={styles.savedDetailsText}>
+                Equi Jewel Bought: {horse.equiJewelBuyingDate || 'Not filled'}
+              </Text>
+            </>
+          )}
 
           <Text style={styles.savedDetailsHeader}>Dressage:</Text>
           <Text style={styles.savedDetailsText}>
@@ -2928,6 +2941,10 @@ const getGroupedActivities = () => {
   setHorseRideDate={setHorseRideDate}
   horseCalendarNote={horseCalendarNote}
   setHorseCalendarNote={setHorseCalendarNote}
+  horseFarrierVisit={horseFarrierVisit}
+  setHorseFarrierVisit={setHorseFarrierVisit}
+  horseNextFarrierVisit={horseNextFarrierVisit}
+  setHorseNextFarrierVisit={setHorseNextFarrierVisit}
   horseSafetyLocation={horseSafetyLocation}
   setHorseSafetyLocation={setHorseSafetyLocation}
   horseSafetyContact={horseSafetyContact}
@@ -2944,14 +2961,8 @@ const getGroupedActivities = () => {
   setHorsePadsCleaningSuppliesUsed={setHorsePadsCleaningSuppliesUsed}
   horseHoofOilUsed={horseHoofOilUsed}
   setHorseHoofOilUsed={setHorseHoofOilUsed}
-  horseReleveAmount={horseReleveAmount}
-  setHorseReleveAmount={setHorseReleveAmount}
-  horseReleveBuyingDate={horseReleveBuyingDate}
-  setHorseReleveBuyingDate={setHorseReleveBuyingDate}
-  horseEquiJewelAmount={horseEquiJewelAmount}
-  setHorseEquiJewelAmount={setHorseEquiJewelAmount}
-  horseEquiJewelBuyingDate={horseEquiJewelBuyingDate}
-  setHorseEquiJewelBuyingDate={setHorseEquiJewelBuyingDate}
+  horseFeedEntries={horseFeedEntries}
+  setHorseFeedEntries={setHorseFeedEntries}
   horseFoodOilBuyingDate={horseFoodOilBuyingDate}
   setHorseFoodOilBuyingDate={setHorseFoodOilBuyingDate}
   horseShampooBuyingDate={horseShampooBuyingDate}
@@ -3236,7 +3247,10 @@ const getGroupedActivities = () => {
                   selectedActivityCategory === group.groupName && styles.categoryButtonActive,
                   isArabic && styles.categoryButtonRtl,
                 ]}
-                onPress={() => setSelectedActivityCategory(group.groupName)}
+                onPress={() => {
+                  setSelectedActivityCategory(group.groupName);
+                  setIsActivityDropdownOpen(false);
+                }}
               >
                 <View>
                   <Text style={[styles.activityText, isArabic && styles.rtlText]}>
@@ -3266,34 +3280,56 @@ const getGroupedActivities = () => {
                   </TouchableOpacity>
                 )}
 
-                <Text style={[styles.hintText, isArabic && styles.rtlText]}>
-                  {isArabic ? 'اسحب النشاط إلى اليسار لحذفه' : 'Swipe left on an activity to delete it'}
-                </Text>
-
                 {activities.filter((activity) => getActivityGroup(activity) === selectedActivityCategory).length === 0 ? (
                   <Text style={[styles.emptyHistory, isArabic && styles.rtlText]}>
                     {isArabic ? 'لا توجد أنشطة في هذه الفئة بعد.' : 'No activities in this category yet.'}
                   </Text>
                 ) : (
-                  activities
-                    .filter((activity) => getActivityGroup(activity) === selectedActivityCategory)
-                    .map((activity) => (
-                    <Swipeable
-                      key={activity}
-                      renderRightActions={() =>
-                        renderActivityDeleteAction(activity)
-                      }
+                  <View style={styles.activityDropdown}>
+                    <TouchableOpacity
+                      style={styles.activityDropdownTrigger}
+                      onPress={() => setIsActivityDropdownOpen((isOpen) => !isOpen)}
+                      accessibilityRole="button"
+                      accessibilityState={{ expanded: isActivityDropdownOpen }}
                     >
-                      <TouchableOpacity
-                        style={styles.activityButton}
-                        onPress={() => openActivity(activity)}
-                      >
-                        <Text style={[styles.activityText, isArabic && styles.rtlText]}>
-                          {activityDisplayName(activity)}
-                        </Text>
-                      </TouchableOpacity>
-                    </Swipeable>
-                    ))
+                      <Text style={[styles.activityDropdownTriggerText, isArabic && styles.rtlText]}>
+                        {isArabic ? 'اختر نشاطاً' : 'Choose an activity'}
+                      </Text>
+                      <Text style={styles.activityDropdownChevron}>
+                        {isActivityDropdownOpen ? '▲' : '▼'}
+                      </Text>
+                    </TouchableOpacity>
+
+                    {isActivityDropdownOpen && (
+                      <View style={styles.activityDropdownMenu}>
+                        {activities
+                          .filter((activity) => getActivityGroup(activity) === selectedActivityCategory)
+                          .map((activity) => (
+                            <View key={activity} style={styles.activityDropdownOptionRow}>
+                              <TouchableOpacity
+                                style={styles.activityDropdownOption}
+                                onPress={() => {
+                                  setIsActivityDropdownOpen(false);
+                                  openActivity(activity);
+                                }}
+                              >
+                                <Text style={[styles.activityDropdownOptionText, isArabic && styles.rtlText]}>
+                                  {activityDisplayName(activity)}
+                                </Text>
+                              </TouchableOpacity>
+                              <TouchableOpacity
+                                style={styles.activityDropdownDelete}
+                                onPress={() => confirmDeleteActivity(activity)}
+                                accessibilityRole="button"
+                                accessibilityLabel={`${isArabic ? 'حذف' : 'Delete'} ${activityDisplayName(activity)}`}
+                              >
+                                <Text style={styles.activityDropdownDeleteText}>×</Text>
+                              </TouchableOpacity>
+                            </View>
+                          ))}
+                      </View>
+                    )}
+                  </View>
                 )}
               </>
             )}
@@ -3557,6 +3593,65 @@ activityGroupTitle: {
     color: '#050505',
     fontSize: 16,
     marginTop: 5,
+  },
+  activityDropdown: {
+    marginBottom: 8,
+  },
+  activityDropdownTrigger: {
+    minHeight: 54,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: '#D0D5DD',
+    borderRadius: 10,
+    backgroundColor: '#FFFFFF',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  activityDropdownTriggerText: {
+    flex: 1,
+    color: '#050505',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  activityDropdownChevron: {
+    color: '#050505',
+    fontSize: 14,
+    marginLeft: 12,
+  },
+  activityDropdownMenu: {
+    borderWidth: 1,
+    borderTopWidth: 0,
+    borderColor: '#D0D5DD',
+    backgroundColor: '#FFFFFF',
+  },
+  activityDropdownOptionRow: {
+    minHeight: 52,
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E7E9EE',
+  },
+  activityDropdownOption: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  activityDropdownOptionText: {
+    color: '#050505',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  activityDropdownDelete: {
+    width: 52,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  activityDropdownDeleteText: {
+    color: '#050505',
+    fontSize: 26,
+    fontWeight: '500',
   },
   activityButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.24)',

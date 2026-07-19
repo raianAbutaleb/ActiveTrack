@@ -32,6 +32,11 @@ export type BalootScore = {
   them: string;
 };
 
+export type HorseFeedEntry = {
+  amount: string;
+  buyingDate: string;
+};
+
 export type HorseRidingDetails = {
   riderName?: string;
   horseName?: string;
@@ -49,6 +54,8 @@ export type HorseRidingDetails = {
   rightTurns?: string;
   rideDate?: string;
   calendarNote?: string;
+  farrierVisit?: string;
+  nextFarrierVisit?: string;
   safetyLocation?: string;
   safetyContact?: string;
 
@@ -64,6 +71,7 @@ export type HorseRidingDetails = {
 
   equiJewelAmount?: string;
   equiJewelBuyingDate?: string;
+  feedEntries?: HorseFeedEntry[];
 
   foodOilBuyingDate?: string;
   shampooBuyingDate?: string;

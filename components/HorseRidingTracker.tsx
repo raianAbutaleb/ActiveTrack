@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { HorseFeedEntry } from '../types';
 
 type Props = {
   selectedActivity: string | null;
@@ -58,6 +59,12 @@ type Props = {
   horseCalendarNote: string;
   setHorseCalendarNote: Dispatch<SetStateAction<string>>;
 
+  horseFarrierVisit: string;
+  setHorseFarrierVisit: Dispatch<SetStateAction<string>>;
+
+  horseNextFarrierVisit: string;
+  setHorseNextFarrierVisit: Dispatch<SetStateAction<string>>;
+
   horseSafetyLocation: string;
   setHorseSafetyLocation: Dispatch<SetStateAction<string>>;
 
@@ -82,17 +89,8 @@ type Props = {
   horseHoofOilUsed: boolean;
   setHorseHoofOilUsed: Dispatch<SetStateAction<boolean>>;
 
-  horseReleveAmount: string;
-  setHorseReleveAmount: Dispatch<SetStateAction<string>>;
-
-  horseReleveBuyingDate: string;
-  setHorseReleveBuyingDate: Dispatch<SetStateAction<string>>;
-
-  horseEquiJewelAmount: string;
-  setHorseEquiJewelAmount: Dispatch<SetStateAction<string>>;
-
-  horseEquiJewelBuyingDate: string;
-  setHorseEquiJewelBuyingDate: Dispatch<SetStateAction<string>>;
+  horseFeedEntries: HorseFeedEntry[];
+  setHorseFeedEntries: Dispatch<SetStateAction<HorseFeedEntry[]>>;
 
   horseFoodOilBuyingDate: string;
   setHorseFoodOilBuyingDate: Dispatch<SetStateAction<string>>;
@@ -153,6 +151,31 @@ export default function HorseRidingTracker(props: Props) {
           {label}: {value ? 'Yes' : 'No'}
         </Text>
       </TouchableOpacity>
+    );
+  };
+
+  const updateFeedEntry = (
+    index: number,
+    key: keyof HorseFeedEntry,
+    value: string
+  ) => {
+    props.setHorseFeedEntries((entries) =>
+      entries.map((entry, entryIndex) =>
+        entryIndex === index ? { ...entry, [key]: value } : entry
+      )
+    );
+  };
+
+  const addFeedEntry = () => {
+    props.setHorseFeedEntries((entries) => [
+      ...entries,
+      { amount: '', buyingDate: '' },
+    ]);
+  };
+
+  const removeFeedEntry = (index: number) => {
+    props.setHorseFeedEntries((entries) =>
+      entries.filter((_, entryIndex) => entryIndex !== index)
     );
   };
 
@@ -229,71 +252,71 @@ export default function HorseRidingTracker(props: Props) {
         keyboardType="number-pad"
       />
 
-      <Text style={styles.detailsSubtitle}>Gait Tracking</Text>
+      <View style={styles.performanceBox}>
+        <Text style={styles.performanceTitle}>Gait Tracking and Ride Metrics</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Walk minutes"
-        placeholderTextColor="#050505"
-        value={props.horseWalkMinutes}
-        onChangeText={props.setHorseWalkMinutes}
-        keyboardType="number-pad"
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Trot minutes"
-        placeholderTextColor="#050505"
-        value={props.horseTrotMinutes}
-        onChangeText={props.setHorseTrotMinutes}
-        keyboardType="number-pad"
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Canter minutes"
-        placeholderTextColor="#050505"
-        value={props.horseCanterMinutes}
-        onChangeText={props.setHorseCanterMinutes}
-        keyboardType="number-pad"
-      />
-
-      <Text style={styles.detailsSubtitle}>Ride Metrics</Text>
-
-      <TextInput
-        style={styles.input}
-        placeholder="Ride distance, example: 4.2 km"
-        placeholderTextColor="#050505"
-        value={props.horseRideDistance}
-        onChangeText={props.setHorseRideDistance}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Average speed, example: 8.5 km/h"
-        placeholderTextColor="#050505"
-        value={props.horseAverageSpeed}
-        onChangeText={props.setHorseAverageSpeed}
-      />
-
-      <View style={styles.scoreRow}>
         <TextInput
-          style={styles.scoreInput}
-          placeholder="Left turns"
+          style={styles.input}
+          placeholder="Walk minutes"
           placeholderTextColor="#050505"
-          value={props.horseLeftTurns}
-          onChangeText={props.setHorseLeftTurns}
+          value={props.horseWalkMinutes}
+          onChangeText={props.setHorseWalkMinutes}
           keyboardType="number-pad"
         />
 
         <TextInput
-          style={styles.scoreInput}
-          placeholder="Right turns"
+          style={styles.input}
+          placeholder="Trot minutes"
           placeholderTextColor="#050505"
-          value={props.horseRightTurns}
-          onChangeText={props.setHorseRightTurns}
+          value={props.horseTrotMinutes}
+          onChangeText={props.setHorseTrotMinutes}
           keyboardType="number-pad"
         />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Canter minutes"
+          placeholderTextColor="#050505"
+          value={props.horseCanterMinutes}
+          onChangeText={props.setHorseCanterMinutes}
+          keyboardType="number-pad"
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Ride distance, example: 4.2 km"
+          placeholderTextColor="#050505"
+          value={props.horseRideDistance}
+          onChangeText={props.setHorseRideDistance}
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Average speed, example: 8.5 km/h"
+          placeholderTextColor="#050505"
+          value={props.horseAverageSpeed}
+          onChangeText={props.setHorseAverageSpeed}
+        />
+
+        <View style={styles.scoreRow}>
+          <TextInput
+            style={styles.scoreInput}
+            placeholder="Left turns"
+            placeholderTextColor="#050505"
+            value={props.horseLeftTurns}
+            onChangeText={props.setHorseLeftTurns}
+            keyboardType="number-pad"
+          />
+
+          <TextInput
+            style={styles.scoreInput}
+            placeholder="Right turns"
+            placeholderTextColor="#050505"
+            value={props.horseRightTurns}
+            onChangeText={props.setHorseRightTurns}
+            keyboardType="number-pad"
+          />
+        </View>
       </View>
 
       <Text style={styles.detailsSubtitle}>Calendar and Safety</Text>
@@ -312,6 +335,22 @@ export default function HorseRidingTracker(props: Props) {
         placeholderTextColor="#050505"
         value={props.horseCalendarNote}
         onChangeText={props.setHorseCalendarNote}
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="Farrier visit date"
+        placeholderTextColor="#050505"
+        value={props.horseFarrierVisit}
+        onChangeText={props.setHorseFarrierVisit}
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="Next farrier visit"
+        placeholderTextColor="#050505"
+        value={props.horseNextFarrierVisit}
+        onChangeText={props.setHorseNextFarrierVisit}
       />
 
       <TextInput
@@ -390,39 +429,48 @@ export default function HorseRidingTracker(props: Props) {
         onChangeText={props.setHorsePadsCleaningSuppliesBuyingDate}
       />
 
-      <Text style={styles.detailsSubtitle}>Monthly Feed</Text>
+      <Text style={styles.detailsSubtitle}>Feed</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Re-Leve amount, example: 2 kg"
-        placeholderTextColor="#050505"
-        value={props.horseReleveAmount}
-        onChangeText={props.setHorseReleveAmount}
-      />
+      {props.horseFeedEntries.map((feed, index) => (
+        <View key={`feed-${index}`} style={styles.feedEntryBox}>
+          <View style={styles.feedEntryHeader}>
+            <Text style={styles.feedEntryTitle}>Feed {index + 1}</Text>
+            {props.horseFeedEntries.length > 1 && (
+              <TouchableOpacity
+                style={styles.removeFeedButton}
+                onPress={() => removeFeedEntry(index)}
+                accessibilityRole="button"
+                accessibilityLabel={`Remove feed ${index + 1}`}
+              >
+                <Text style={styles.removeFeedButtonText}>−</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+          <TextInput
+            style={styles.input}
+            placeholder="Feed amount, example: 2 kg"
+            placeholderTextColor="#050505"
+            value={feed.amount}
+            onChangeText={(value) => updateFeedEntry(index, 'amount', value)}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Buying date, example: 06/07/2026"
+            placeholderTextColor="#050505"
+            value={feed.buyingDate}
+            onChangeText={(value) => updateFeedEntry(index, 'buyingDate', value)}
+          />
+        </View>
+      ))}
 
-      <TextInput
-        style={styles.input}
-        placeholder="Re-Leve buying date, example: 06/07/2026"
-        placeholderTextColor="#050505"
-        value={props.horseReleveBuyingDate}
-        onChangeText={props.setHorseReleveBuyingDate}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Equi Jewel amount, example: 0.5 kg"
-        placeholderTextColor="#050505"
-        value={props.horseEquiJewelAmount}
-        onChangeText={props.setHorseEquiJewelAmount}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Equi Jewel buying date, example: 06/07/2026"
-        placeholderTextColor="#050505"
-        value={props.horseEquiJewelBuyingDate}
-        onChangeText={props.setHorseEquiJewelBuyingDate}
-      />
+      <TouchableOpacity
+        style={styles.addFeedButton}
+        onPress={addFeedEntry}
+        accessibilityRole="button"
+        accessibilityLabel="Add another feed"
+      >
+        <Text style={styles.addFeedButtonText}>+ Add another feed</Text>
+      </TouchableOpacity>
 
       <Text style={styles.detailsSubtitle}>Dressage Test</Text>
 
@@ -528,6 +576,19 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     marginTop: 6,
   },
+  performanceBox: {
+    borderWidth: 1,
+    borderColor: '#D0D5DD',
+    borderRadius: 10,
+    padding: 14,
+    marginBottom: 14,
+  },
+  performanceTitle: {
+    color: '#050505',
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 12,
+  },
   input: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
@@ -552,6 +613,48 @@ const styles = StyleSheet.create({
     fontSize: 18,
     marginBottom: 12,
     color: '#050505',
+  },
+  feedEntryBox: {
+    borderTopWidth: 1,
+    borderTopColor: '#D0D5DD',
+    paddingTop: 12,
+    marginBottom: 4,
+  },
+  feedEntryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  feedEntryTitle: {
+    color: '#050505',
+    fontSize: 17,
+    fontWeight: '700',
+  },
+  removeFeedButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  removeFeedButtonText: {
+    color: '#050505',
+    fontSize: 28,
+    fontWeight: '700',
+  },
+  addFeedButton: {
+    minHeight: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#D0D5DD',
+    borderRadius: 10,
+    marginBottom: 14,
+  },
+  addFeedButtonText: {
+    color: '#050505',
+    fontSize: 17,
+    fontWeight: '700',
   },
   toggleButton: {
     backgroundColor: '#E7E9EE',

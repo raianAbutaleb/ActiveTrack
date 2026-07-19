@@ -326,6 +326,7 @@ const state = {
   studyCandleAutoSaved: false,
   balootScores: [],
   balootDealerDirection: '↑',
+  horseFeedCount: 1,
 };
 
 const authCard = document.querySelector('.auth-card');
@@ -1148,24 +1149,28 @@ function renderActivitySection(sectionKey, activities) {
   return `
     <section class="activity-section">
       <h2>${translations[state.language].sections[sectionKey]}</h2>
-      <div class="activity-section-grid">
-        ${activities
-          .map(
-            (activity) => `
-              <button class="activity-card" type="button" data-activity="${activity}">
-                <strong>${activityLabel(activity)}</strong>
-                <span>${activityHelper(activity)}</span>
-              </button>
-            `
-          )
-          .join('')}
-      </div>
+      <label class="activity-dropdown-label">
+        <span>${state.language === 'ar' ? 'اختر نشاطاً' : 'Choose an activity'}</span>
+        <select data-activity-select ${activities.length ? '' : 'disabled'}>
+          <option value="">${activities.length
+            ? state.language === 'ar' ? 'اختر من القائمة' : 'Select from the list'
+            : state.language === 'ar' ? 'لا توجد أنشطة بعد' : 'No activities yet'}</option>
+          ${activities
+            .map(
+              (activity) => `<option value="${escapeHtml(activity)}">${escapeHtml(activityLabel(activity))}</option>`
+            )
+            .join('')}
+        </select>
+      </label>
     </section>
   `;
 }
 
 function openTracker(activity) {
   resetStudyCandle();
+  if (activity === 'Horse Riding') {
+    state.horseFeedCount = 1;
+  }
   state.selectedActivity = activity;
   state.startTime = null;
   state.endTime = null;
@@ -1180,6 +1185,7 @@ function openTracker(activity) {
   timerCard.hidden = isNonTimedActivity(activity) || activity === 'Studying' || activity === 'Work';
   activityFields.innerHTML = getFieldsForActivity(activity);
   bindConditionalFields();
+  bindHorseFeedEntries();
   if (activity === 'Studying' || activity === 'Work') {
     resetStudyCandle();
     bindStudyCandle();
@@ -1278,6 +1284,7 @@ function refreshOpenTrackerLanguage() {
   activityFields.innerHTML = getFieldsForActivity(activity);
   restoreActivityFieldValues(savedFields);
   bindConditionalFields();
+  bindHorseFeedEntries();
 
   if (activity === 'Studying' || activity === 'Work') {
     bindStudyCandle();
@@ -1551,12 +1558,10 @@ function getFieldsForActivity(activity) {
           checkboxField(horseText('restDay'), 'restDay'),
           inputField(horseText('walkingMinutes'), 'walkingMinutes', '20', 'number'),
         ])}
-        ${fieldSection(horseText('gaitTrackingSection'), [
+        ${fieldSection(horseText('performanceSection'), [
           inputField(horseText('walkMinutes'), 'walkMinutes', '10', 'number'),
           inputField(horseText('trotMinutes'), 'trotMinutes', '15', 'number'),
           inputField(horseText('canterMinutes'), 'canterMinutes', '8', 'number'),
-        ])}
-        ${fieldSection(horseText('rideMetricsSection'), [
           inputField(horseText('rideDistance'), 'rideDistance', '4.2 km'),
           inputField(horseText('averageSpeed'), 'averageSpeed', '8.5 km/h'),
           inputField(horseText('leftTurns'), 'leftTurns', '12', 'number'),
@@ -1565,6 +1570,8 @@ function getFieldsForActivity(activity) {
         ${fieldSection(horseText('calendarSafetySection'), [
           inputField(horseText('rideDate'), 'rideDate', '17/07/2026'),
           textAreaField(horseText('calendarNote'), 'calendarNote', horseText('calendarNotePlaceholder'), true),
+          inputField(horseText('farrierVisit'), 'farrierVisit', '17/07/2026'),
+          inputField(horseText('nextFarrierVisit'), 'nextFarrierVisit', '28/08/2026'),
           inputField(horseText('safetyLocation'), 'safetyLocation', horseText('safetyLocationPlaceholder')),
           inputField(horseText('safetyContact'), 'safetyContact', horseText('safetyContactPlaceholder')),
         ])}
@@ -1582,12 +1589,13 @@ function getFieldsForActivity(activity) {
           checkboxField(horseText('padsCleaningSuppliesUsed'), 'padsCleaningSuppliesUsed'),
           inputField(horseText('padsCleaningSuppliesBuyingDate'), 'padsCleaningSuppliesBuyingDate', horseText('padsDatePlaceholder')),
         ])}
-        ${fieldSection(horseText('monthlyFeedSection'), [
-          inputField(horseText('releveAmount'), 'releveAmount', '2 kg'),
-          inputField(horseText('releveBuyingDate'), 'releveBuyingDate', '06/07/2026'),
-          inputField(horseText('equiJewelAmount'), 'equiJewelAmount', '0.5 kg'),
-          inputField(horseText('equiJewelBuyingDate'), 'equiJewelBuyingDate', '06/07/2026'),
-        ])}
+        <div class="field-section">
+          <h2>${horseText('feedSection')}</h2>
+          <div id="horse-feed-list">
+            ${Array.from({ length: state.horseFeedCount }, (_, index) => horseFeedEntryFields(index)).join('')}
+          </div>
+          <button class="button secondary add-feed-button" id="horse-add-feed" type="button">+ ${horseText('addFeed')}</button>
+        </div>
         ${fieldSection(horseText('dressageSection'), [
           checkboxField(horseText('dressageTestDay'), 'dressageTestDay', 'dressage-fields'),
           conditionalFields('dressage-fields', [
@@ -1903,6 +1911,23 @@ function bindConditionalFields() {
 
     control.addEventListener('change', updateVisibility);
     updateVisibility();
+  });
+}
+
+function bindHorseFeedEntries() {
+  const addFeedButton = document.querySelector('#horse-add-feed');
+
+  if (!addFeedButton) {
+    return;
+  }
+
+  addFeedButton.addEventListener('click', () => {
+    const savedFields = captureActivityFieldValues();
+    state.horseFeedCount += 1;
+    activityFields.innerHTML = getFieldsForActivity('Horse Riding');
+    restoreActivityFieldValues(savedFields);
+    bindConditionalFields();
+    bindHorseFeedEntries();
   });
 }
 
@@ -2537,6 +2562,16 @@ function textAreaField(label, name, placeholder, full = false) {
   `;
 }
 
+function horseFeedEntryFields(index) {
+  return `
+    <div class="horse-feed-entry" data-horse-feed-entry>
+      <strong>${horseText('feedSection')} ${index + 1}</strong>
+      ${inputField(horseText('feedAmount'), `feedAmount${index}`, '2 kg')}
+      ${inputField(horseText('feedBuyingDate'), `feedBuyingDate${index}`, '06/07/2026')}
+    </div>
+  `;
+}
+
 function horseText(key) {
   const labels = {
     en: {
@@ -2554,7 +2589,7 @@ function horseText(key) {
       hard: 'Hard',
       restDay: 'Rest Day',
       walkingMinutes: 'Daily walking minutes',
-      gaitTrackingSection: 'Gait Tracking',
+      performanceSection: 'Gait Tracking and Ride Metrics',
       walkMinutes: 'Walk minutes',
       trotMinutes: 'Trot minutes',
       canterMinutes: 'Canter minutes',
@@ -2567,6 +2602,8 @@ function horseText(key) {
       rideDate: 'Ride date',
       calendarNote: 'Calendar note',
       calendarNotePlaceholder: 'Farrier visit next week',
+      farrierVisit: 'Farrier visit date',
+      nextFarrierVisit: 'Next farrier visit',
       safetyLocation: 'Safety location',
       safetyLocationPlaceholder: 'Riyadh stable',
       safetyContact: 'Safety contact',
@@ -2584,11 +2621,10 @@ function horseText(key) {
       padsCleaningSuppliesUsed: 'Pads Cleaning Supplies Used',
       padsCleaningSuppliesBuyingDate: 'Pads cleaning supplies buying date',
       padsDatePlaceholder: 'Pads cleaning supplies buying date',
-      monthlyFeedSection: 'Monthly Feed',
-      releveAmount: 'Re-Leve amount',
-      releveBuyingDate: 'Re-Leve buying date',
-      equiJewelAmount: 'Equi Jewel amount',
-      equiJewelBuyingDate: 'Equi Jewel buying date',
+      feedSection: 'Feed',
+      feedAmount: 'Feed amount',
+      feedBuyingDate: 'Buying date',
+      addFeed: 'Add another feed',
       dressageSection: 'Dressage Test',
       dressageTestDay: 'Dressage Test Day',
       dressageTestName: 'Dressage test name',
@@ -2617,7 +2653,7 @@ function horseText(key) {
       hard: 'صعب',
       restDay: 'يوم راحة',
       walkingMinutes: 'دقائق المشي اليومية',
-      gaitTrackingSection: 'تتبع المشيات',
+      performanceSection: 'تتبع المشيات ومقاييس الركوب',
       walkMinutes: 'دقائق المشي',
       trotMinutes: 'دقائق التروت',
       canterMinutes: 'دقائق الكانتر',
@@ -2630,6 +2666,8 @@ function horseText(key) {
       rideDate: 'تاريخ الركوب',
       calendarNote: 'ملاحظة التقويم',
       calendarNotePlaceholder: 'زيارة البيطار الأسبوع القادم',
+      farrierVisit: 'تاريخ زيارة البيطار',
+      nextFarrierVisit: 'زيارة البيطار القادمة',
       safetyLocation: 'موقع السلامة',
       safetyLocationPlaceholder: 'إسطبل الرياض',
       safetyContact: 'جهة اتصال السلامة',
@@ -2647,11 +2685,10 @@ function horseText(key) {
       padsCleaningSuppliesUsed: 'تم استخدام الباد ومستلزمات التنظيف',
       padsCleaningSuppliesBuyingDate: 'تاريخ شراء الباد ومستلزمات التنظيف',
       padsDatePlaceholder: 'تاريخ شراء الباد ومستلزمات التنظيف',
-      monthlyFeedSection: 'الأكل الشهري',
-      releveAmount: 'كمية Re-Leve',
-      releveBuyingDate: 'تاريخ شراء Re-Leve',
-      equiJewelAmount: 'كمية Equi Jewel',
-      equiJewelBuyingDate: 'تاريخ شراء Equi Jewel',
+      feedSection: 'الأعلاف',
+      feedAmount: 'كمية العلف',
+      feedBuyingDate: 'تاريخ الشراء',
+      addFeed: 'إضافة علف آخر',
       dressageSection: 'اختبار الدريساج',
       dressageTestDay: 'يوم اختبار دريساج',
       dressageTestName: 'اسم اختبار الدريساج',
@@ -2890,6 +2927,23 @@ function getSessionDetails() {
 
     details[field.name] = field.value;
   });
+
+  if (state.selectedActivity === 'Horse Riding') {
+    details.feedEntries = Array.from(
+      sessionForm.querySelectorAll('[data-horse-feed-entry]')
+    )
+      .map((entry, index) => ({
+        amount: entry.querySelector(`[name="feedAmount${index}"]`)?.value.trim() || '',
+        buyingDate: entry.querySelector(`[name="feedBuyingDate${index}"]`)?.value.trim() || '',
+      }))
+      .filter((feed) => feed.amount || feed.buyingDate);
+
+    Object.keys(details).forEach((key) => {
+      if (/^feed(?:Amount|BuyingDate)\d+$/.test(key)) {
+        delete details[key];
+      }
+    });
+  }
 
   if (supportsReminders(state.selectedActivity)) {
     details.reminder = getReminderDetails();
@@ -3554,6 +3608,14 @@ document.addEventListener('click', (event) => {
 
     renderHome();
     renderHistory();
+  }
+});
+
+activityGrid.addEventListener('change', (event) => {
+  const activitySelect = event.target.closest('[data-activity-select]');
+
+  if (activitySelect?.value) {
+    openTracker(activitySelect.value);
   }
 });
 

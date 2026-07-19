@@ -531,6 +531,26 @@ export default function HistoryScreen() {
             Canter: {horse.canterMinutes || '0'} min
           </Text>
 
+          <Text style={styles.detailsText}>
+            Distance: {horse.rideDistance || 'Not filled'}
+          </Text>
+
+          <Text style={styles.detailsText}>
+            Average Speed: {horse.averageSpeed || 'Not filled'}
+          </Text>
+
+          <Text style={styles.detailsText}>
+            Turns: Left {horse.leftTurns || '0'} / Right {horse.rightTurns || '0'}
+          </Text>
+
+          <Text style={styles.detailsText}>
+            Farrier Visit: {horse.farrierVisit || 'Not filled'}
+          </Text>
+
+          <Text style={styles.detailsText}>
+            Next Farrier Visit: {horse.nextFarrierVisit || 'Not filled'}
+          </Text>
+
           <Text style={styles.detailsSectionTitle}>
             Daily Care
           </Text>
@@ -551,29 +571,35 @@ export default function HistoryScreen() {
             Hoof Oil: {horse.hoofOilUsed ? 'Yes' : 'No'}
           </Text>
 
-          <Text style={styles.detailsSectionTitle}>
-            Feed and Supplies
-          </Text>
+          <Text style={styles.detailsSectionTitle}>Feed</Text>
 
-          <Text style={styles.detailsText}>
-            Re-Leve Amount:{' '}
-            {horse.releveAmount || 'Not filled'}
-          </Text>
-
-          <Text style={styles.detailsText}>
-            Re-Leve Bought:{' '}
-            {horse.releveBuyingDate || 'Not filled'}
-          </Text>
-
-          <Text style={styles.detailsText}>
-            Equi Jewel Amount:{' '}
-            {horse.equiJewelAmount || 'Not filled'}
-          </Text>
-
-          <Text style={styles.detailsText}>
-            Equi Jewel Bought:{' '}
-            {horse.equiJewelBuyingDate || 'Not filled'}
-          </Text>
+          {horse.feedEntries?.length ? (
+            horse.feedEntries.map((feed, index) => (
+              <View key={`history-feed-${index}`}>
+                <Text style={styles.detailsText}>
+                  Feed {index + 1} Amount: {feed.amount || 'Not filled'}
+                </Text>
+                <Text style={styles.detailsText}>
+                  Feed {index + 1} Bought: {feed.buyingDate || 'Not filled'}
+                </Text>
+              </View>
+            ))
+          ) : (
+            <>
+              <Text style={styles.detailsText}>
+                Re-Leve Amount: {horse.releveAmount || 'Not filled'}
+              </Text>
+              <Text style={styles.detailsText}>
+                Re-Leve Bought: {horse.releveBuyingDate || 'Not filled'}
+              </Text>
+              <Text style={styles.detailsText}>
+                Equi Jewel Amount: {horse.equiJewelAmount || 'Not filled'}
+              </Text>
+              <Text style={styles.detailsText}>
+                Equi Jewel Bought: {horse.equiJewelBuyingDate || 'Not filled'}
+              </Text>
+            </>
+          )}
 
           <Text style={styles.detailsSectionTitle}>
             Dressage
