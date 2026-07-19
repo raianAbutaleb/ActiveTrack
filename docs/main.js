@@ -1193,19 +1193,19 @@ function renderHome() {
 function renderActivitySection(activities) {
   return `
     <section class="activity-section category-activity-dropdown">
-      <label class="activity-dropdown-label">
-        <span>${state.language === 'ar' ? 'اختر نشاطاً' : 'Choose an activity'}</span>
-        <select data-activity-select ${activities.length ? '' : 'disabled'}>
-          <option value="">${activities.length
-            ? state.language === 'ar' ? 'اختر من القائمة' : 'Select from the list'
-            : state.language === 'ar' ? 'لا توجد أنشطة بعد' : 'No activities yet'}</option>
-          ${activities
-            .map(
-              (activity) => `<option value="${escapeHtml(activity)}">${escapeHtml(activityLabel(activity))}</option>`
-            )
-            .join('')}
-        </select>
-      </label>
+      <div class="activity-option-list">
+        ${activities.length
+          ? activities
+              .map(
+                (activity) => `
+                  <button class="activity-option-button" type="button" data-activity="${escapeHtml(activity)}">
+                    ${escapeHtml(activityLabel(activity))}
+                  </button>
+                `
+              )
+              .join('')
+          : `<p class="activity-option-empty">${state.language === 'ar' ? 'لا توجد أنشطة بعد' : 'No activities yet'}</p>`}
+      </div>
     </section>
   `;
 }
@@ -3705,14 +3705,6 @@ document.addEventListener('click', (event) => {
 
     renderHome();
     renderHistory();
-  }
-});
-
-activityGrid.addEventListener('change', (event) => {
-  const activitySelect = event.target.closest('[data-activity-select]');
-
-  if (activitySelect?.value) {
-    openTracker(activitySelect.value);
   }
 });
 

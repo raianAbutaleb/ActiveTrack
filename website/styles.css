@@ -628,20 +628,6 @@ body.rtl .panel-head > div {
   font-size: calc(0.9rem + 2px);
 }
 
-.activity-dropdown-label {
-  display: grid;
-  gap: 7px;
-  width: min(100%, 520px);
-  color: #050505;
-  font-weight: 800;
-}
-
-.activity-dropdown-label select {
-  width: 100%;
-  min-height: 52px;
-  background: var(--panel-solid);
-}
-
 .activity-section-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -688,8 +674,39 @@ body.rtl .activity-card {
   align-content: start;
 }
 
-.category-activity-dropdown .activity-dropdown-label {
+.activity-option-list {
+  display: grid;
+  gap: 6px;
+}
+
+.activity-option-button {
   width: 100%;
+  min-height: 48px;
+  padding: 10px 14px;
+  border: 1px solid rgba(5, 5, 5, 0.2);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.42);
+  color: #050505;
+  font: inherit;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+}
+
+.activity-option-button:hover,
+.activity-option-button:focus-visible {
+  border-color: #050505;
+  background: rgba(255, 255, 255, 0.68);
+}
+
+body.rtl .activity-option-button {
+  text-align: right;
+}
+
+.activity-option-empty {
+  margin: 0;
+  padding: 10px 4px;
+  color: #050505;
 }
 
 .category-card.active {
