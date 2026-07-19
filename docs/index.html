@@ -9,7 +9,7 @@
       content="Tafasili keeps your activity sessions and important life records organized in one private place."
     />
     <link rel="icon" type="image/png" href="./assets/tafasili-favicon.png" />
-    <link rel="stylesheet" href="./styles.css?v=20260719-category-dropdowns" />
+    <link rel="stylesheet" href="./styles.css?v=20260719-custom-categories" />
   </head>
   <body>
     <canvas id="activity-canvas" aria-hidden="true"></canvas>
@@ -126,6 +126,10 @@
               <span id="custom-fields-label">Reusable fields (separate with commas)</span>
               <input name="customFields" type="text" placeholder="Location, Score, Notes" />
             </label>
+            <label>
+              <span id="custom-category-label">Activity type</span>
+              <select name="customCategory" required></select>
+            </label>
             <button class="button secondary" type="submit" id="custom-activity-button">Add</button>
           </form>
 
@@ -189,6 +193,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.7/dist/umd/supabase.min.js"></script>
     <script src="./supabase-config.js?v=20260718-supabase"></script>
-    <script src="./main.js?v=20260719-category-dropdowns"></script>
+    <script src="./main.js?v=20260719-custom-categories"></script>
   </body>
 </html>

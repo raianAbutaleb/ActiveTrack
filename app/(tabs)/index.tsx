@@ -70,6 +70,14 @@ const lapActivities = ['Run', 'Walking', 'Cycling', 'Swimming'];
 const movementActivities = ['Run', 'Walking', 'Cycling'];
 const matchActivities = ['Padel', 'Tennis'];
 const horseActivities = ['Horse Riding', 'Daily Care', 'Supplies and Feed', 'Riding Test'];
+const activityGroupChoices = [
+  'Sports and Games',
+  'Fitness and Movement',
+  'Horse Activities',
+  'Study and Work',
+  'Life Tracking',
+  'Vehicle and Maintenance',
+];
 const STUDY_CANDLE_DURATION_SECONDS = 3 * 60 * 60;
 const arabicActivityNames: Record<string, string> = {
   Football: 'كرة القدم',
@@ -145,7 +153,9 @@ export default function HomeScreen() {
   const [showOtherModal, setShowOtherModal] = useState(false);
   const [otherActivityName, setOtherActivityName] = useState('');
   const [otherActivityFields, setOtherActivityFields] = useState('');
+  const [otherActivityCategory, setOtherActivityCategory] = useState('');
   const [customActivityTemplates, setCustomActivityTemplates] = useState<Record<string, string[]>>({});
+  const [customActivityGroups, setCustomActivityGroups] = useState<Record<string, string>>({});
   const [customFieldValues, setCustomFieldValues] = useState<Record<string, string>>({});
 
   const [startTime, setStartTime] = useState<Date | null>(null);
@@ -567,6 +577,7 @@ const logout = async () => {
       const savedSessions = scopedSessions ?? legacySessions;
       const savedActivities = await AsyncStorage.getItem('activities');
       const savedCustomTemplates = await AsyncStorage.getItem('customActivityTemplates');
+      const savedCustomGroups = await AsyncStorage.getItem('customActivityGroups');
 
       if (savedSessions) {
         const parsedSessions = JSON.parse(savedSessions);
@@ -587,6 +598,13 @@ const logout = async () => {
         const parsedTemplates = JSON.parse(savedCustomTemplates);
         if (parsedTemplates && typeof parsedTemplates === 'object') {
           setCustomActivityTemplates(parsedTemplates);
+        }
+      }
+
+      if (savedCustomGroups) {
+        const parsedGroups = JSON.parse(savedCustomGroups);
+        if (parsedGroups && typeof parsedGroups === 'object') {
+          setCustomActivityGroups(parsedGroups);
         }
       }
 
@@ -639,6 +657,14 @@ const logout = async () => {
       await AsyncStorage.setItem('customActivityTemplates', JSON.stringify(templates));
     } catch {
       alert('Error saving custom activity fields');
+    }
+  };
+
+  const saveCustomGroupsToStorage = async (groups: Record<string, string>) => {
+    try {
+      await AsyncStorage.setItem('customActivityGroups', JSON.stringify(groups));
+    } catch {
+      alert('Error saving custom activity category');
     }
   };
 
@@ -1066,6 +1092,7 @@ const logout = async () => {
   const openOtherModal = () => {
     setOtherActivityName('');
     setOtherActivityFields('');
+    setOtherActivityCategory('');
     setShowOtherModal(true);
   };
 
@@ -1074,6 +1101,11 @@ const logout = async () => {
 
     if (cleanName === '') {
       alert('Please enter an activity name');
+      return;
+    }
+
+    if (otherActivityCategory === '') {
+      alert('Please choose an activity type');
       return;
     }
 
@@ -1096,11 +1128,17 @@ const logout = async () => {
       ...customActivityTemplates,
       [cleanName]: fields.length > 0 ? fields : ['Session title', 'Notes'],
     };
+    const newGroups = {
+      ...customActivityGroups,
+      [cleanName]: otherActivityCategory,
+    };
 
     setActivities(newActivities);
     saveActivitiesToStorage(newActivities);
     setCustomActivityTemplates(newTemplates);
     saveCustomTemplatesToStorage(newTemplates);
+    setCustomActivityGroups(newGroups);
+    saveCustomGroupsToStorage(newGroups);
 
     setShowOtherModal(false);
     setSelectedActivity(cleanName);
@@ -1112,12 +1150,16 @@ const logout = async () => {
   const deleteActivity = (activityName: string) => {
     const newActivities = activities.filter((activity) => activity !== activityName);
     const newTemplates = { ...customActivityTemplates };
+    const newGroups = { ...customActivityGroups };
     delete newTemplates[activityName];
+    delete newGroups[activityName];
 
     setActivities(newActivities);
     saveActivitiesToStorage(newActivities);
     setCustomActivityTemplates(newTemplates);
     saveCustomTemplatesToStorage(newTemplates);
+    setCustomActivityGroups(newGroups);
+    saveCustomGroupsToStorage(newGroups);
   };
 
   const confirmDeleteActivity = (activityName: string) => {
@@ -1149,6 +1191,8 @@ const logout = async () => {
             saveActivitiesToStorage(defaultActivities);
             setCustomActivityTemplates({});
             saveCustomTemplatesToStorage({});
+            setCustomActivityGroups({});
+            saveCustomGroupsToStorage({});
           },
         },
       ]
@@ -1757,6 +1801,10 @@ if (!isSelectedActivityNonTimed(selectedActivity) && (!startTime || !endTime)) {
   };
 
   const getActivityGroup = (activity: string) => {
+  if (!defaultActivities.includes(activity) && customActivityGroups[activity]) {
+    return customActivityGroups[activity];
+  }
+
   if (['Football', 'Padel', 'Tennis', 'Golf', 'Baloot'].includes(activity)) {
     return 'Sports and Games';
   }
@@ -3251,100 +3299,88 @@ const getGroupedActivities = () => {
             <Text style={[styles.activityGroupTitle, isArabic && styles.rtlText]}>
               {isArabic ? 'أنواع الأنشطة' : 'Activity Types'}
             </Text>
-            {getGroupedActivities().map((group) => (
-              <TouchableOpacity
-                key={group.groupName}
-                style={[
-                  styles.categoryButton,
-                  selectedActivityCategory === group.groupName && styles.categoryButtonActive,
-                  isArabic && styles.categoryButtonRtl,
-                ]}
-                onPress={() => {
-                  setSelectedActivityCategory(group.groupName);
-                  setIsActivityDropdownOpen(false);
-                }}
-              >
-                <View>
-                  <Text style={[styles.activityText, isArabic && styles.rtlText]}>
-                    {groupDisplayName(group.groupName)}
-                  </Text>
-                  <Text style={[styles.categoryCount, isArabic && styles.rtlText]}>
-                    {group.groupActivities.length}{' '}
-                    {isArabic
-                      ? group.groupActivities.length === 1 ? 'نشاط' : 'أنشطة'
-                      : group.groupActivities.length === 1 ? 'activity' : 'activities'}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            ))}
+            {getGroupedActivities().map((group) => {
+              const groupIsSelected = selectedActivityCategory === group.groupName;
 
-            {selectedActivityCategory && (
-              <>
-                <Text style={[styles.activityGroupTitle, isArabic && styles.rtlText]}>
-                  {groupDisplayName(selectedActivityCategory)}
-                </Text>
-
-                {selectedActivityCategory === 'Custom Activities' && (
-                  <TouchableOpacity style={styles.addButton} onPress={openOtherModal}>
-                    <Text style={styles.smallActionText}>
-                      {isArabic ? '+ إضافة نشاط مخصص' : '+ Add Custom Activity'}
+              return (
+                <View key={group.groupName} style={styles.categoryGroup}>
+                  <TouchableOpacity
+                    style={[
+                      styles.categoryButton,
+                      groupIsSelected && styles.categoryButtonActive,
+                      isArabic && styles.categoryButtonRtl,
+                    ]}
+                    onPress={() => {
+                      if (groupIsSelected) {
+                        setIsActivityDropdownOpen((isOpen) => !isOpen);
+                      } else {
+                        setSelectedActivityCategory(group.groupName);
+                        setIsActivityDropdownOpen(true);
+                      }
+                    }}
+                    accessibilityRole="button"
+                    accessibilityState={{ expanded: groupIsSelected && isActivityDropdownOpen }}
+                  >
+                    <View>
+                      <Text style={[styles.activityText, isArabic && styles.rtlText]}>
+                        {groupDisplayName(group.groupName)}
+                      </Text>
+                      <Text style={[styles.categoryCount, isArabic && styles.rtlText]}>
+                        {group.groupActivities.length}{' '}
+                        {isArabic
+                          ? group.groupActivities.length === 1 ? 'نشاط' : 'أنشطة'
+                          : group.groupActivities.length === 1 ? 'activity' : 'activities'}
+                      </Text>
+                    </View>
+                    <Text style={styles.activityDropdownChevron}>
+                      {groupIsSelected && isActivityDropdownOpen ? '▲' : '▼'}
                     </Text>
                   </TouchableOpacity>
-                )}
 
-                {activities.filter((activity) => getActivityGroup(activity) === selectedActivityCategory).length === 0 ? (
-                  <Text style={[styles.emptyHistory, isArabic && styles.rtlText]}>
-                    {isArabic ? 'لا توجد أنشطة في هذه الفئة بعد.' : 'No activities in this category yet.'}
-                  </Text>
-                ) : (
-                  <View style={styles.activityDropdown}>
-                    <TouchableOpacity
-                      style={styles.activityDropdownTrigger}
-                      onPress={() => setIsActivityDropdownOpen((isOpen) => !isOpen)}
-                      accessibilityRole="button"
-                      accessibilityState={{ expanded: isActivityDropdownOpen }}
-                    >
-                      <Text style={[styles.activityDropdownTriggerText, isArabic && styles.rtlText]}>
-                        {isArabic ? 'اختر نشاطاً' : 'Choose an activity'}
-                      </Text>
-                      <Text style={styles.activityDropdownChevron}>
-                        {isActivityDropdownOpen ? '▲' : '▼'}
-                      </Text>
-                    </TouchableOpacity>
+                  {groupIsSelected && isActivityDropdownOpen && (
+                    <View style={styles.activityDropdownMenu}>
+                      {group.groupName === 'Custom Activities' && (
+                        <TouchableOpacity style={styles.activityDropdownOption} onPress={openOtherModal}>
+                          <Text style={[styles.activityDropdownOptionText, isArabic && styles.rtlText]}>
+                            {isArabic ? '+ إضافة نشاط مخصص' : '+ Add Custom Activity'}
+                          </Text>
+                        </TouchableOpacity>
+                      )}
 
-                    {isActivityDropdownOpen && (
-                      <View style={styles.activityDropdownMenu}>
-                        {activities
-                          .filter((activity) => getActivityGroup(activity) === selectedActivityCategory)
-                          .map((activity) => (
-                        <View key={activity} style={styles.activityDropdownOptionRow}>
-                          <TouchableOpacity
-                            style={styles.activityDropdownOption}
-                            onPress={() => {
-                              setIsActivityDropdownOpen(false);
-                              openActivity(activity);
-                            }}
-                          >
-                            <Text style={[styles.activityDropdownOptionText, isArabic && styles.rtlText]}>
-                              {activityDisplayName(activity)}
-                            </Text>
-                          </TouchableOpacity>
-                          <TouchableOpacity
-                            style={styles.activityDropdownDelete}
-                            onPress={() => confirmDeleteActivity(activity)}
-                            accessibilityRole="button"
-                            accessibilityLabel={`${isArabic ? 'حذف' : 'Delete'} ${activityDisplayName(activity)}`}
-                          >
-                            <Text style={styles.activityDropdownDeleteText}>×</Text>
-                          </TouchableOpacity>
-                        </View>
-                          ))}
-                      </View>
-                    )}
-                  </View>
-                )}
-              </>
-            )}
+                      {group.groupActivities.length === 0 ? (
+                        <Text style={[styles.emptyHistory, isArabic && styles.rtlText]}>
+                          {isArabic ? 'لا توجد أنشطة في هذه الفئة بعد.' : 'No activities in this category yet.'}
+                        </Text>
+                      ) : (
+                        group.groupActivities.map((activity) => (
+                          <View key={activity} style={styles.activityDropdownOptionRow}>
+                            <TouchableOpacity
+                              style={styles.activityDropdownOption}
+                              onPress={() => {
+                                setIsActivityDropdownOpen(false);
+                                openActivity(activity);
+                              }}
+                            >
+                              <Text style={[styles.activityDropdownOptionText, isArabic && styles.rtlText]}>
+                                {activityDisplayName(activity)}
+                              </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              style={styles.activityDropdownDelete}
+                              onPress={() => confirmDeleteActivity(activity)}
+                              accessibilityRole="button"
+                              accessibilityLabel={`${isArabic ? 'حذف' : 'Delete'} ${activityDisplayName(activity)}`}
+                            >
+                              <Text style={styles.activityDropdownDeleteText}>×</Text>
+                            </TouchableOpacity>
+                          </View>
+                        ))
+                      )}
+                    </View>
+                  )}
+                </View>
+              );
+            })}
 
             <TouchableOpacity style={styles.resetButton} onPress={resetActivityList}>
               <Text style={styles.smallActionText}>
@@ -3381,6 +3417,24 @@ const getGroupedActivities = () => {
                 onChangeText={setOtherActivityFields}
                 multiline
               />
+
+              <Text style={styles.modalSubtitle}>Choose an Activity Type</Text>
+              <View style={styles.categoryChoiceGrid}>
+                {activityGroupChoices.map((groupName) => (
+                  <TouchableOpacity
+                    key={groupName}
+                    style={[
+                      styles.categoryChoiceButton,
+                      otherActivityCategory === groupName && styles.categoryButtonActive,
+                    ]}
+                    onPress={() => setOtherActivityCategory(groupName)}
+                  >
+                    <Text style={[styles.categoryChoiceText, isArabic && styles.rtlText]}>
+                      {groupDisplayName(groupName)}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
 
               <TouchableOpacity
                 style={styles.startButton}
@@ -3581,6 +3635,9 @@ activityGroupTitle: {
   activityList: {
     gap: 12,
     paddingBottom: 30,
+  },
+  categoryGroup: {
+    gap: 8,
   },
   categoryButton: {
     minHeight: 82,
@@ -3914,6 +3971,27 @@ activityGroupTitle: {
     color: '#050505',
     fontSize: 18,
     marginBottom: 18,
+  },
+  categoryChoiceGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 16,
+  },
+  categoryChoiceButton: {
+    width: '48%',
+    minHeight: 44,
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#D0D5DD',
+    borderRadius: 10,
+    padding: 10,
+  },
+  categoryChoiceText: {
+    color: '#050505',
+    fontSize: 15,
+    fontWeight: '700',
+    textAlign: 'center',
   },
   input: {
     backgroundColor: '#FFFFFF',

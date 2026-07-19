@@ -600,7 +600,7 @@ body.rtl .panel-head > div {
 }
 
 .custom-activity {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr) auto;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1fr) auto;
   align-items: end;
   padding: 16px;
   margin-bottom: 18px;
@@ -679,6 +679,17 @@ body.rtl .activity-card {
 
 .category-card {
   min-height: 78px;
+}
+
+.category-group-card {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+  align-content: start;
+}
+
+.category-activity-dropdown .activity-dropdown-label {
+  width: 100%;
 }
 
 .category-card.active {

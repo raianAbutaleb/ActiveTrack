@@ -4,6 +4,7 @@ const storageKeys = {
   sessions: 'activetrack-web-sessions',
   customActivities: 'activetrack-web-custom-activities',
   customTemplates: 'activetrack-web-custom-templates',
+  customGroups: 'activetrack-web-custom-groups',
   activeSession: 'activetrack-web-session-active',
   language: 'activetrack-web-language',
 };
@@ -327,6 +328,7 @@ const state = {
   sessions: readJson(storageKeys.sessions, []),
   customActivities: readJson(storageKeys.customActivities, []),
   customTemplates: readJson(storageKeys.customTemplates, {}),
+  customGroups: readJson(storageKeys.customGroups, {}),
   currentGymSets: [],
   gymExercises: [],
   gymRestSeconds: 0,
@@ -680,6 +682,7 @@ function applyLanguage() {
   setText('#custom-count-label', text('customActivities'));
   setText('#custom-activity-label', text('addCustomActivity'));
   setText('#custom-fields-label', text('customFields'));
+  setText('#custom-category-label', state.language === 'ar' ? 'نوع النشاط' : 'Activity type');
   setText('#custom-activity-button', text('add'));
   setText('#tracker-eyebrow', text('activity'));
   setText('#tracker-history-button', text('history'));
@@ -722,10 +725,12 @@ function restorePersistentData() {
   const savedSessions = readJson(accountStorageKey(storageKeys.sessions), []);
   const savedActivities = readJson(storageKeys.customActivities, []);
   const savedTemplates = readJson(storageKeys.customTemplates, {});
+  const savedGroups = readJson(storageKeys.customGroups, {});
 
   state.sessions = Array.isArray(savedSessions) ? savedSessions : [];
   state.customActivities = Array.isArray(savedActivities) ? savedActivities : [];
   state.customTemplates = savedTemplates && typeof savedTemplates === 'object' ? savedTemplates : {};
+  state.customGroups = savedGroups && typeof savedGroups === 'object' ? savedGroups : {};
 }
 
 function sessionToCloudRow(session, userId) {
@@ -1136,16 +1141,32 @@ function renderHome() {
   customActivityForm.classList.toggle('collapsed', state.selectedCategory !== 'custom');
 
   const categories = [
-    ...activitySections.map((section) => ({
-      key: section.key,
-      count: section.activities.length,
-    })),
-    { key: 'custom', count: state.customActivities.length },
-  ];
-  const selectedSection = activitySections.find((section) => section.key === state.selectedCategory);
-  const selectedActivities = state.selectedCategory === 'custom'
-    ? state.customActivities
-    : selectedSection?.activities || [];
+    ...activitySections.map((section) => {
+      const assignedCustomActivities = state.customActivities.filter(
+        (activity) => state.customGroups[activity] === section.key
+      );
+      const activities = [...section.activities, ...assignedCustomActivities];
+
+      return { key: section.key, count: activities.length, activities };
+    }),
+    {
+      key: 'custom',
+      activities: state.customActivities.filter((activity) => !state.customGroups[activity]),
+    },
+  ].map((category) => ({
+    ...category,
+    count: category.activities.length,
+  }));
+  const customCategorySelect = customActivityForm.querySelector('[name="customCategory"]');
+
+  customCategorySelect.innerHTML = `
+    <option value="">${state.language === 'ar' ? 'اختر نوع النشاط' : 'Choose an activity type'}</option>
+    ${activitySections
+      .map(
+        (section) => `<option value="${section.key}">${translations[state.language].sections[section.key]}</option>`
+      )
+      .join('')}
+  `;
 
   activityGrid.innerHTML = `
     <section class="activity-section">
@@ -1154,23 +1175,24 @@ function renderHome() {
         ${categories
           .map(
             (category) => `
-              <button class="activity-card category-card${state.selectedCategory === category.key ? ' active' : ''}" type="button" data-category="${category.key}">
-                <strong>${translations[state.language].sections[category.key]}</strong>
-                <span>${category.count} ${state.language === 'ar' ? category.count === 1 ? 'نشاط' : 'أنشطة' : category.count === 1 ? 'activity' : 'activities'}</span>
-              </button>
+              <div class="category-group-card">
+                <button class="activity-card category-card${state.selectedCategory === category.key ? ' active' : ''}" type="button" data-category="${category.key}">
+                  <strong>${translations[state.language].sections[category.key]}</strong>
+                  <span>${category.count} ${state.language === 'ar' ? category.count === 1 ? 'نشاط' : 'أنشطة' : category.count === 1 ? 'activity' : 'activities'}</span>
+                </button>
+                ${state.selectedCategory === category.key ? renderActivitySection(category.activities) : ''}
+              </div>
             `
           )
           .join('')}
       </div>
     </section>
-    ${state.selectedCategory ? renderActivitySection(state.selectedCategory, selectedActivities) : ''}
   `;
 }
 
-function renderActivitySection(sectionKey, activities) {
+function renderActivitySection(activities) {
   return `
-    <section class="activity-section">
-      <h2>${translations[state.language].sections[sectionKey]}</h2>
+    <section class="activity-section category-activity-dropdown">
       <label class="activity-dropdown-label">
         <span>${state.language === 'ar' ? 'اختر نشاطاً' : 'Choose an activity'}</span>
         <select data-activity-select ${activities.length ? '' : 'disabled'}>
@@ -3419,6 +3441,7 @@ function exportHistory() {
       : null,
     customActivities: state.customActivities,
     customTemplates: state.customTemplates,
+    customGroups: state.customGroups,
     sessions: state.sessions,
   };
   const blob = new Blob([JSON.stringify(exportData, null, 2)], {
@@ -3622,6 +3645,7 @@ logoutButton.addEventListener('click', async () => {
   writeJson(accountStorageKey(storageKeys.sessions), state.sessions);
   writeJson(storageKeys.customActivities, state.customActivities);
   writeJson(storageKeys.customTemplates, state.customTemplates);
+  writeJson(storageKeys.customGroups, state.customGroups);
   await cloudClient?.auth.signOut();
   state.userId = null;
   state.userEmail = null;
@@ -3656,7 +3680,9 @@ document.addEventListener('click', (event) => {
   }
 
   if (categoryButton) {
-    state.selectedCategory = categoryButton.dataset.category;
+    state.selectedCategory = state.selectedCategory === categoryButton.dataset.category
+      ? null
+      : categoryButton.dataset.category;
     renderHome();
   }
 
@@ -3694,13 +3720,14 @@ customActivityForm.addEventListener('submit', (event) => {
   event.preventDefault();
   const formData = new FormData(customActivityForm);
   const customActivity = String(formData.get('customActivity') || '').trim();
+  const customCategory = String(formData.get('customCategory') || '').trim();
   const customFields = String(formData.get('customFields') || '')
     .split(',')
     .map((field) => field.trim())
     .filter((field, index, fields) => field && fields.indexOf(field) === index)
     .slice(0, 8);
 
-  if (!customActivity || getActivities().includes(customActivity)) {
+  if (!customActivity || !customCategory || getActivities().includes(customActivity)) {
     return;
   }
 
@@ -3709,8 +3736,14 @@ customActivityForm.addEventListener('submit', (event) => {
     ...state.customTemplates,
     [customActivity]: customFields.length > 0 ? customFields : ['Session title', 'Notes'],
   };
+  state.customGroups = {
+    ...state.customGroups,
+    [customActivity]: customCategory,
+  };
   writeJson(storageKeys.customActivities, state.customActivities);
   writeJson(storageKeys.customTemplates, state.customTemplates);
+  writeJson(storageKeys.customGroups, state.customGroups);
+  state.selectedCategory = customCategory;
   customActivityForm.reset();
   renderHome();
 });
