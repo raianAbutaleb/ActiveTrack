@@ -95,3 +95,54 @@ on public.custom_activities
 for delete
 to authenticated
 using ((select auth.uid()) = user_id);
+
+create table if not exists public.user_preferences (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  preferences jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.user_preferences enable row level security;
+
+revoke all on table public.user_preferences from anon;
+grant select, insert, update, delete on table public.user_preferences to authenticated;
+
+drop policy if exists "Users can read their own preferences" on public.user_preferences;
+create policy "Users can read their own preferences"
+on public.user_preferences for select to authenticated
+using ((select auth.uid()) = user_id);
+
+drop policy if exists "Users can insert their own preferences" on public.user_preferences;
+create policy "Users can insert their own preferences"
+on public.user_preferences for insert to authenticated
+with check ((select auth.uid()) = user_id);
+
+drop policy if exists "Users can update their own preferences" on public.user_preferences;
+create policy "Users can update their own preferences"
+on public.user_preferences for update to authenticated
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
+
+drop policy if exists "Users can delete their own preferences" on public.user_preferences;
+create policy "Users can delete their own preferences"
+on public.user_preferences for delete to authenticated
+using ((select auth.uid()) = user_id);
+
+create table if not exists public.user_devices (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  device_id text not null,
+  label text not null,
+  platform text not null,
+  last_seen timestamptz not null default now(),
+  primary key (user_id, device_id)
+);
+
+alter table public.user_devices enable row level security;
+revoke all on table public.user_devices from anon;
+grant select, insert, update, delete on table public.user_devices to authenticated;
+
+drop policy if exists "Users manage their own devices" on public.user_devices;
+create policy "Users manage their own devices"
+on public.user_devices for all to authenticated
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);

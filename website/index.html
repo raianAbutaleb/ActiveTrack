@@ -9,7 +9,7 @@
       content="Tafasili keeps your activity sessions and important life records organized in one private place."
     />
     <link rel="icon" type="image/png" href="./assets/tafasili-favicon.png" />
-    <link rel="stylesheet" href="./styles.css?v=20260720-compact-navigation" />
+    <link rel="stylesheet" href="./styles.css?v=20260720-usability-suite" />
   </head>
   <body>
     <canvas id="activity-canvas" aria-hidden="true"></canvas>
@@ -97,8 +97,15 @@
               <h1 id="home-title">What do you want to track?</h1>
               <p id="welcome-text">Choose an activity and save it to History.</p>
             </div>
-            <button class="button secondary" type="button" data-view="history" id="home-history-button">History</button>
+            <div class="button-row">
+              <button class="icon-button" type="button" id="settings-button" aria-label="Settings">&#9881;</button>
+              <button class="button secondary" type="button" data-view="history" id="home-history-button">History</button>
+            </div>
           </div>
+
+          <section class="today-dashboard" id="today-dashboard" aria-label="Today"></section>
+          <section class="quick-access hidden" id="favorite-activities" aria-label="Favorites"></section>
+          <section class="quick-access hidden" id="recent-activities" aria-label="Recent activities"></section>
 
           <div class="quick-stats" aria-label="Quick stats">
             <article>
@@ -173,6 +180,8 @@
             </div>
             <div class="button-row">
               <button class="button secondary" type="button" id="export-history-button">Export</button>
+              <button class="button secondary" type="button" id="export-csv-button">CSV</button>
+              <button class="button secondary" type="button" id="print-history-button">PDF / Print</button>
               <button class="button secondary" type="button" id="clear-history-button">Clear all</button>
             </div>
           </div>
@@ -181,8 +190,27 @@
 
           <div class="history-tools">
             <label>
+              <span>Search</span>
+              <input id="history-search" type="search" placeholder="Activity, horse, project, vehicle or note" />
+            </label>
+            <label>
               <span id="history-filter-label">Filter activity</span>
               <select id="history-filter"></select>
+            </label>
+            <label>
+              <span>Date range</span>
+              <select id="history-date-range">
+                <option value="all">All dates</option>
+                <option value="week">Last 7 days</option>
+                <option value="month">Last 30 days</option>
+              </select>
+            </label>
+            <label>
+              <span>View</span>
+              <select id="history-view-mode">
+                <option value="list">List</option>
+                <option value="calendar">Calendar</option>
+              </select>
             </label>
           </div>
 
@@ -205,8 +233,29 @@
       </form>
     </div>
 
+    <div class="edit-session-modal hidden" id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+      <div class="edit-session-card settings-card">
+        <div class="edit-session-head">
+          <h2 id="settings-title">Settings & Privacy</h2>
+          <button class="icon-button" type="button" id="settings-close" aria-label="Close">&times;</button>
+        </div>
+        <div class="settings-fields" id="settings-fields"></div>
+      </div>
+    </div>
+
+    <div class="edit-session-modal hidden" id="onboarding-modal" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
+      <div class="onboarding-card">
+        <div class="onboarding-icon" id="onboarding-icon" aria-hidden="true"></div>
+        <h2 id="onboarding-title"></h2>
+        <p id="onboarding-copy"></p>
+        <div class="onboarding-dots" id="onboarding-dots"></div>
+        <button class="button primary" type="button" id="onboarding-next">Next</button>
+        <button class="link-button" type="button" id="onboarding-skip">Skip</button>
+      </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.7/dist/umd/supabase.min.js"></script>
     <script src="./supabase-config.js?v=20260718-supabase"></script>
-    <script src="./main.js?v=20260720-history-quick-edit"></script>
+    <script src="./main.js?v=20260720-usability-suite"></script>
   </body>
 </html>

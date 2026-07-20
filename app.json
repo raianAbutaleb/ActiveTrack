@@ -9,7 +9,10 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "Tafasili uses Face ID to protect your private activity and life records."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -36,7 +39,10 @@
             "backgroundColor": "#F6F7F9"
           }
         }
-      ]
+      ],
+      "expo-secure-store",
+      "expo-local-authentication",
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": true,

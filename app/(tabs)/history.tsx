@@ -20,6 +20,8 @@ import {
   loadCloudSessions,
   saveCloudSession,
 } from '../../lib/sessionDatabase';
+import { shareSessionsCsv, shareSessionsPdf } from '../../lib/deviceFeatures';
+import { loadLocalSettings } from '../../lib/userPreferences';
 
 type EditableSessionField = {
   path: string;
@@ -145,6 +147,10 @@ export default function HistoryScreen() {
   const router = useRouter();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [historyFilter, setHistoryFilter] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [dateRange, setDateRange] = useState<'all' | 'week' | 'month'>('all');
+  const [historyView, setHistoryView] = useState<'list' | 'calendar'>('list');
+  const [dateFormat, setDateFormat] = useState<'day-first' | 'month-first'>('day-first');
   const [editingSession, setEditingSession] = useState<Session | null>(null);
   const [editDate, setEditDate] = useState('');
   const [editNote, setEditNote] = useState('');
@@ -163,6 +169,8 @@ export default function HistoryScreen() {
       const storageKey = authSession?.user.id
         ? `sessions:${authSession.user.id}`
         : 'sessions';
+      const savedSettings = await loadLocalSettings(authSession?.user.id ?? null);
+      setDateFormat(savedSettings.dateFormat);
       const savedSessions = await AsyncStorage.getItem(storageKey);
       const localSessions: Session[] = savedSessions ? JSON.parse(savedSessions) : [];
       const cloudSessions = await loadCloudSessions();
@@ -206,6 +214,26 @@ export default function HistoryScreen() {
       await deleteCloudSession(sessionId);
     } catch {
       alert('Deleted on this device, but cloud delete failed.');
+    }
+  };
+
+  const duplicateSession = async (session: Session) => {
+    const now = new Date();
+    const duplicated: Session = {
+      ...session,
+      id: Date.now(),
+      date: now.toISOString(),
+      start: session.start ? now.toISOString() : '',
+      end: session.end ? now.toISOString() : '',
+      details: JSON.parse(JSON.stringify(session.details ?? {})),
+    };
+    const updatedSessions = [duplicated, ...sessions];
+    setSessions(updatedSessions);
+    await saveSessions(updatedSessions);
+    try {
+      await saveCloudSession(duplicated);
+    } catch {
+      alert('Duplicated on this device, but cloud sync failed.');
     }
   };
 
@@ -327,13 +355,35 @@ export default function HistoryScreen() {
   };
 
   const getFilteredSessions = () => {
-    if (historyFilter === 'All') {
-      return sessions;
-    }
+    const rangeDays = dateRange === 'week' ? 7 : dateRange === 'month' ? 30 : null;
+    const rangeStart = rangeDays ? Date.now() - rangeDays * 24 * 60 * 60 * 1000 : null;
+    const query = searchQuery.trim().toLowerCase();
 
-    return sessions.filter(
-      (session) => session.activity === historyFilter
-    );
+    return sessions.filter((session) => {
+      if (historyFilter !== 'All' && session.activity !== historyFilter) return false;
+      const sessionTime = new Date(session.date).getTime();
+      if (rangeStart && (!Number.isFinite(sessionTime) || sessionTime < rangeStart)) return false;
+      if (!query) return true;
+      return `${session.activity} ${session.date} ${JSON.stringify(session.details ?? {})}`
+        .toLowerCase()
+        .includes(query);
+    });
+  };
+
+  const getCalendarDays = () => {
+    const grouped = new Map<string, Session[]>();
+    getFilteredSessions().forEach((session) => {
+      const parsed = new Date(session.date);
+      const key = Number.isNaN(parsed.getTime()) ? session.date : parsed.toISOString().slice(0, 10);
+      grouped.set(key, [...(grouped.get(key) ?? []), session]);
+    });
+    return [...grouped.entries()].sort(([first], [second]) => second.localeCompare(first));
+  };
+
+  const formatSessionDate = (value: string) => {
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return value;
+    return parsed.toLocaleDateString(dateFormat === 'month-first' ? 'en-US' : 'en-GB');
   };
 
   const getRecentSessions = (days: number) => {
@@ -977,22 +1027,70 @@ export default function HistoryScreen() {
 
       <View style={styles.headerRow}>
         <Text style={styles.title}>History</Text>
-
-        {sessions.length > 0 && (
-          <TouchableOpacity
-            style={styles.clearButton}
-            onPress={clearAllHistory}
-          >
-            <Text style={styles.clearButtonText}>
-              Clear All
-            </Text>
-          </TouchableOpacity>
-        )}
+        <View style={styles.headerActions}>
+          {sessions.length > 0 && (
+            <TouchableOpacity
+              style={styles.exportButton}
+              onPress={() => shareSessionsCsv(getFilteredSessions())}
+              accessibilityLabel="Export CSV"
+            >
+              <Ionicons name="share-outline" size={20} color="#050505" />
+            </TouchableOpacity>
+          )}
+          {sessions.length > 0 && (
+            <TouchableOpacity
+              style={styles.exportButton}
+              onPress={() => shareSessionsPdf(getFilteredSessions())}
+              accessibilityLabel="Export PDF"
+            >
+              <Ionicons name="document-text-outline" size={20} color="#050505" />
+            </TouchableOpacity>
+          )}
+          {sessions.length > 0 && (
+            <TouchableOpacity style={styles.clearButton} onPress={clearAllHistory}>
+              <Text style={styles.clearButtonText}>Clear All</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       <Text style={styles.subtitle}>
         Your saved sessions and records
       </Text>
+
+      {sessions.length > 0 && (
+        <View style={styles.historyControls}>
+          <TextInput
+            style={styles.searchInput}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Search activity, horse, project, vehicle or note"
+            placeholderTextColor="#667085"
+          />
+          <View style={styles.controlRow}>
+            {(['all', 'week', 'month'] as const).map((range) => (
+              <TouchableOpacity
+                key={range}
+                style={[styles.controlButton, dateRange === range && styles.controlButtonActive]}
+                onPress={() => setDateRange(range)}
+              >
+                <Text style={styles.controlButtonText}>{range === 'all' ? 'All dates' : range === 'week' ? '7 days' : '30 days'}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <View style={styles.controlRow}>
+            {(['list', 'calendar'] as const).map((view) => (
+              <TouchableOpacity
+                key={view}
+                style={[styles.controlButton, historyView === view && styles.controlButtonActive]}
+                onPress={() => setHistoryView(view)}
+              >
+                <Text style={styles.controlButtonText}>{view === 'list' ? 'List' : 'Calendar'}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      )}
 
       {sessions.length > 0 && (
         <View style={styles.progressBox}>
@@ -1072,6 +1170,18 @@ export default function HistoryScreen() {
         <Text style={styles.emptyText}>
           No sessions for {historyFilter} yet
         </Text>
+      ) : historyView === 'calendar' ? (
+        getCalendarDays().map(([day, daySessions]) => (
+          <View key={day} style={styles.calendarDay}>
+            <View style={styles.calendarDateBox}>
+              <Text style={styles.calendarDate}>{day}</Text>
+              <Text style={styles.calendarCount}>{daySessions.length} records</Text>
+            </View>
+            <Text style={styles.calendarActivities}>
+              {[...new Set(daySessions.map((session) => session.activity))].join(' • ')}
+            </Text>
+          </View>
+        ))
       ) : (
         getFilteredSessions().map((session) => (
           <View key={session.id} style={styles.card}>
@@ -1083,7 +1193,7 @@ export default function HistoryScreen() {
               </View>
 
               <Text style={styles.dateText}>
-                {session.date}
+                {formatSessionDate(session.date)}
               </Text>
             </View>
 
@@ -1142,6 +1252,12 @@ export default function HistoryScreen() {
             )}
 
             <View style={styles.sessionActions}>
+              <TouchableOpacity
+                style={styles.editButton}
+                onPress={() => duplicateSession(session)}
+              >
+                <Text style={styles.editButtonText}>Duplicate</Text>
+              </TouchableOpacity>
               <TouchableOpacity
                 style={styles.editButton}
                 onPress={() => openEditSession(session)}
@@ -1233,6 +1349,83 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 16,
     marginBottom: 8,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  exportButton: {
+    width: 42,
+    minHeight: 42,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  historyControls: {
+    gap: 10,
+    marginBottom: 16,
+  },
+  searchInput: {
+    minHeight: 48,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderColor: '#E7E9EE',
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    color: '#050505',
+    fontSize: 16,
+  },
+  controlRow: {
+    flexDirection: 'row',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  controlButton: {
+    minHeight: 40,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E7E9EE',
+    borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.35)',
+  },
+  controlButtonActive: {
+    backgroundColor: '#E7E9EE',
+    borderColor: '#667085',
+  },
+  controlButtonText: {
+    color: '#050505',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  calendarDay: {
+    marginBottom: 10,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E7E9EE',
+    borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.34)',
+  },
+  calendarDateBox: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  calendarDate: {
+    color: '#050505',
+    fontSize: 17,
+    fontWeight: '900',
+  },
+  calendarCount: {
+    color: '#050505',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  calendarActivities: {
+    marginTop: 8,
+    color: '#050505',
+    fontSize: 15,
   },
 
   backButton: {

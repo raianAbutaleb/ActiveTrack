@@ -7,6 +7,8 @@ const storageKeys = {
   customGroups: 'activetrack-web-custom-groups',
   activeSession: 'activetrack-web-session-active',
   language: 'activetrack-web-language',
+  settings: 'tafasili-web-settings',
+  draft: 'tafasili-web-draft',
 };
 const passwordIterations = 210000;
 const cloudConfig = window.TAFASILI_SUPABASE;
@@ -74,6 +76,16 @@ const activitySections = [
 ];
 
 const horseActivities = ['Horse Riding', 'Daily Care', 'Supplies and Feed', 'Riding Test'];
+const defaultUsabilitySettings = {
+  favoriteActivities: [],
+  recentActivities: [],
+  dateFormat: 'day-first',
+  measurementSystem: 'metric',
+  defaultReminderDays: 30,
+  notificationsEnabled: true,
+  appLockEnabled: false,
+  onboardingComplete: false,
+};
 
 const translations = {
   en: {
@@ -345,6 +357,11 @@ const state = {
   horseFeedCount: 1,
   editingSessionId: null,
   editableSessionFields: [],
+  settings: { ...defaultUsabilitySettings },
+  draft: null,
+  syncStatus: 'saved',
+  onboardingStep: 0,
+  devices: [],
 };
 
 const authCard = document.querySelector('.auth-card');
@@ -383,6 +400,8 @@ const progressDashboard = document.querySelector('#progress-dashboard');
 const historyList = document.querySelector('#history-list');
 const clearHistoryButton = document.querySelector('#clear-history-button');
 const exportHistoryButton = document.querySelector('#export-history-button');
+const exportCsvButton = document.querySelector('#export-csv-button');
+const printHistoryButton = document.querySelector('#print-history-button');
 const totalSessions = document.querySelector('#total-sessions');
 const lastActivity = document.querySelector('#last-activity');
 const customCount = document.querySelector('#custom-count');
@@ -391,6 +410,23 @@ const editSessionForm = document.querySelector('#edit-session-form');
 const editSessionFields = document.querySelector('#edit-session-fields');
 const editSessionClose = document.querySelector('#edit-session-close');
 const editSessionCancel = document.querySelector('#edit-session-cancel');
+const settingsButton = document.querySelector('#settings-button');
+const settingsModal = document.querySelector('#settings-modal');
+const settingsClose = document.querySelector('#settings-close');
+const settingsFields = document.querySelector('#settings-fields');
+const onboardingModal = document.querySelector('#onboarding-modal');
+const onboardingTitle = document.querySelector('#onboarding-title');
+const onboardingCopy = document.querySelector('#onboarding-copy');
+const onboardingIcon = document.querySelector('#onboarding-icon');
+const onboardingDots = document.querySelector('#onboarding-dots');
+const onboardingNext = document.querySelector('#onboarding-next');
+const onboardingSkip = document.querySelector('#onboarding-skip');
+const todayDashboard = document.querySelector('#today-dashboard');
+const favoriteActivities = document.querySelector('#favorite-activities');
+const recentActivities = document.querySelector('#recent-activities');
+const historySearch = document.querySelector('#history-search');
+const historyDateRange = document.querySelector('#history-date-range');
+const historyViewMode = document.querySelector('#history-view-mode');
 const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 function text(key) {
@@ -736,11 +772,103 @@ function restorePersistentData() {
   const savedActivities = readJson(accountStorageKey(storageKeys.customActivities), []);
   const savedTemplates = readJson(accountStorageKey(storageKeys.customTemplates), {});
   const savedGroups = readJson(accountStorageKey(storageKeys.customGroups), {});
+  const savedSettings = readJson(accountStorageKey(storageKeys.settings), defaultUsabilitySettings);
+  const savedDraft = readJson(accountStorageKey(storageKeys.draft), null);
 
   state.sessions = Array.isArray(savedSessions) ? savedSessions : [];
   state.customActivities = Array.isArray(savedActivities) ? savedActivities : [];
   state.customTemplates = savedTemplates && typeof savedTemplates === 'object' ? savedTemplates : {};
   state.customGroups = savedGroups && typeof savedGroups === 'object' ? savedGroups : {};
+  state.settings = {
+    ...defaultUsabilitySettings,
+    ...(savedSettings && typeof savedSettings === 'object' ? savedSettings : {}),
+  };
+  state.draft = savedDraft && typeof savedDraft === 'object' ? savedDraft : null;
+}
+
+async function saveUsabilitySettings(nextSettings) {
+  state.settings = { ...defaultUsabilitySettings, ...nextSettings };
+  writeJson(accountStorageKey(storageKeys.settings), state.settings);
+  state.syncStatus = 'syncing';
+  renderHome();
+
+  if (!cloudClient || !state.userId) {
+    state.syncStatus = 'offline';
+    return;
+  }
+
+  const { error } = await cloudClient.from('user_preferences').upsert({
+    user_id: state.userId,
+    preferences: state.settings,
+    updated_at: new Date().toISOString(),
+  });
+  state.syncStatus = error ? 'offline' : 'saved';
+  renderHome();
+}
+
+async function restoreCloudUsabilitySettings(userId) {
+  if (!cloudClient) return;
+  const { data, error } = await cloudClient
+    .from('user_preferences')
+    .select('preferences')
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (error) throw error;
+  const cloudSettings = data?.preferences || {};
+  state.settings = {
+    ...defaultUsabilitySettings,
+    ...state.settings,
+    ...cloudSettings,
+    favoriteActivities: [...new Set([...(cloudSettings.favoriteActivities || []), ...state.settings.favoriteActivities])],
+    recentActivities: [...new Set([...state.settings.recentActivities, ...(cloudSettings.recentActivities || [])])].slice(0, 6),
+  };
+  writeJson(accountStorageKey(storageKeys.settings), state.settings);
+}
+
+function webDeviceId() {
+  const key = 'tafasili-web-device-id';
+  let id = localStorage.getItem(key);
+  if (!id) {
+    id = `web-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    localStorage.setItem(key, id);
+  }
+  return id;
+}
+
+async function registerAndLoadWebDevices() {
+  if (!cloudClient || !state.userId) return;
+  const deviceId = webDeviceId();
+  const { error: upsertError } = await cloudClient.from('user_devices').upsert({
+    user_id: state.userId,
+    device_id: deviceId,
+    label: 'Web browser',
+    platform: 'web',
+    last_seen: new Date().toISOString(),
+  });
+  if (upsertError) throw upsertError;
+  const { data, error } = await cloudClient.from('user_devices').select('*').order('last_seen', { ascending: false });
+  if (error) throw error;
+  state.devices = (data || []).map((device) => ({
+    deviceId: device.device_id,
+    label: device.label,
+    platform: device.platform,
+    lastSeen: device.last_seen,
+    current: device.device_id === deviceId,
+  }));
+}
+
+async function rememberActivity(activity) {
+  await saveUsabilitySettings({
+    ...state.settings,
+    recentActivities: [activity, ...state.settings.recentActivities.filter((item) => item !== activity)].slice(0, 6),
+  });
+}
+
+async function toggleFavoriteActivity(activity) {
+  const favoriteActivities = state.settings.favoriteActivities.includes(activity)
+    ? state.settings.favoriteActivities.filter((item) => item !== activity)
+    : [...state.settings.favoriteActivities, activity];
+  await saveUsabilitySettings({ ...state.settings, favoriteActivities });
 }
 
 function sessionToCloudRow(session, userId) {
@@ -954,6 +1082,9 @@ function showDueExpirationReminders() {
   const message = uniqueReminders
     .map((reminder) => `${reminder.label}: ${reminder.expirationDate}`)
     .join('\n');
+  if (state.settings.notificationsEnabled && 'Notification' in window && Notification.permission === 'granted') {
+    new Notification(title, { body: message, icon: './assets/tafasili-favicon.png' });
+  }
   window.alert(`${title}\n\n${message}`);
 }
 
@@ -975,10 +1106,23 @@ async function completeCloudSignIn(user) {
     authMessage.textContent = 'Signed in. Custom activities will sync after the database update is applied.';
   }
 
+  try {
+    await restoreCloudUsabilitySettings(user.id);
+    await registerAndLoadWebDevices();
+    state.syncStatus = 'saved';
+  } catch {
+    state.syncStatus = 'offline';
+  }
+
   showView('home');
   renderHome();
   showDueExpirationReminders();
   renderHistory();
+  if (!state.settings.onboardingComplete) {
+    state.onboardingStep = 0;
+    renderOnboarding();
+    onboardingModal.classList.remove('hidden');
+  }
 }
 
 function bytesToBase64(bytes) {
@@ -1043,7 +1187,7 @@ function formatTime(date) {
 }
 
 function formatDate(date) {
-  return new Date(date).toLocaleDateString([], {
+  return new Date(date).toLocaleDateString(state.settings.dateFormat === 'month-first' ? 'en-US' : 'en-GB', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -1132,7 +1276,7 @@ function expirationReminderField() {
     <label>
       ${label}
       <select name="expirationReminderLeadDays">
-        ${options.map(([value, text]) => `<option value="${value}" ${value === '30' ? 'selected' : ''}>${text}</option>`).join('')}
+        ${options.map(([value, text]) => `<option value="${value}" ${Number(value) === state.settings.defaultReminderDays ? 'selected' : ''}>${text}</option>`).join('')}
       </select>
     </label>
   `;
@@ -1353,6 +1497,8 @@ function renderHome() {
   lastActivity.textContent = state.sessions[0] ? activityLabel(state.sessions[0].activity) : text('none');
   customCount.textContent = String(state.customActivities.length);
 
+  renderTodayAndQuickAccess();
+
   customActivityForm.classList.toggle('collapsed', state.selectedCategory !== 'custom');
 
   const categories = [
@@ -1413,9 +1559,14 @@ function renderActivitySection(activities) {
           ? activities
               .map(
                 (activity) => `
-                  <button class="activity-option-button" type="button" data-activity="${escapeHtml(activity)}">
-                    ${escapeHtml(activityLabel(activity))}
-                  </button>
+                  <div class="activity-option-row">
+                    <button class="favorite-toggle" type="button" data-favorite-activity="${escapeHtml(activity)}" aria-label="Favorite ${escapeHtml(activityLabel(activity))}">
+                      ${state.settings.favoriteActivities.includes(activity) ? '★' : '☆'}
+                    </button>
+                    <button class="activity-option-button" type="button" data-activity="${escapeHtml(activity)}">
+                      ${escapeHtml(activityLabel(activity))}
+                    </button>
+                  </div>
                 `
               )
               .join('')
@@ -1425,7 +1576,129 @@ function renderActivitySection(activities) {
   `;
 }
 
-function openTracker(activity) {
+function renderTodayAndQuickAccess() {
+  const today = new Date().toISOString().slice(0, 10);
+  const due = state.sessions.flatMap((session) => {
+    const standard = session.details?.reminder?.date === today
+      ? [{ label: session.activity, date: session.details.reminder.date }]
+      : [];
+    const expirations = (session.details?.expirationReminders || [])
+      .filter((reminder) => reminder.remindOn <= today && reminder.expirationDate >= today)
+      .map((reminder) => ({ label: reminder.label, date: reminder.expirationDate }));
+    return [...standard, ...expirations];
+  });
+  const syncLabels = state.language === 'ar'
+    ? { saved: 'محفوظ', syncing: 'جارٍ المزامنة', offline: 'دون اتصال', failed: 'فشلت المزامنة' }
+    : { saved: 'Saved', syncing: 'Syncing', offline: 'Offline', failed: 'Sync failed' };
+
+  todayDashboard.innerHTML = `
+    <div class="today-head">
+      <div>
+        <h2>${state.language === 'ar' ? 'اليوم' : 'Today'}</h2>
+        <span class="sync-status"><i class="${state.syncStatus === 'saved' ? 'saved' : ''}"></i>${syncLabels[state.syncStatus] || syncLabels.saved}</span>
+      </div>
+      ${state.sessions.length ? `<button class="button secondary" type="button" data-repeat-last>${state.language === 'ar' ? 'تكرار الأخير' : 'Repeat last'}</button>` : ''}
+    </div>
+    <div class="today-items">
+      ${due.length
+        ? due.slice(0, 5).map((item) => `<div><strong>${escapeHtml(item.label)}</strong><span>${escapeHtml(item.date)}</span></div>`).join('')
+        : `<p>${state.language === 'ar' ? 'لا توجد تذكيرات مستحقة اليوم.' : 'No reminders are due today.'}</p>`}
+    </div>
+    ${state.draft ? `
+      <button class="draft-resume" type="button" data-continue-draft>
+        <strong>${state.language === 'ar' ? 'متابعة المسودة' : 'Continue draft'}</strong>
+        <span>${escapeHtml(activityLabel(state.draft.activity))}</span>
+      </button>` : ''}
+  `;
+
+  renderQuickActivityGroup(favoriteActivities, state.language === 'ar' ? 'المفضلة' : 'Favorites', state.settings.favoriteActivities, true);
+  renderQuickActivityGroup(recentActivities, state.language === 'ar' ? 'الأخيرة' : 'Recent', state.settings.recentActivities.slice(0, 4), false);
+}
+
+function renderQuickActivityGroup(container, title, activities, favorite) {
+  container.classList.toggle('hidden', activities.length === 0);
+  container.innerHTML = activities.length ? `
+    <h2>${title}</h2>
+    <div>${activities.map((activity) => `
+      <button class="quick-activity" type="button" data-activity="${escapeHtml(activity)}">
+        ${favorite ? '★ ' : ''}${escapeHtml(activityLabel(activity))}
+      </button>`).join('')}
+    </div>` : '';
+}
+
+function renderSettings() {
+  const labels = state.language === 'ar'
+    ? {
+        title: 'الإعدادات والخصوصية', date: 'تنسيق التاريخ', units: 'وحدات القياس', reminder: 'التذكير الافتراضي',
+        notifications: 'إشعارات المتصفح', lock: 'قفل الحساب بمفتاح المرور', devices: 'تسجيل الخروج من الأجهزة الأخرى', remove: 'حذف كل السجل', tutorial: 'عرض التعريف مرة أخرى',
+      }
+    : {
+        title: 'Settings & Privacy', date: 'Date format', units: 'Measurement units', reminder: 'Default expiration reminder',
+        notifications: 'Browser notifications', lock: 'Require passkey when available', devices: 'Sign out other devices', remove: 'Delete all history data', tutorial: 'Show onboarding again',
+      };
+  document.querySelector('#settings-title').textContent = labels.title;
+  settingsFields.innerHTML = `
+    <label>${labels.date}
+      <select data-setting="dateFormat">
+        <option value="day-first" ${state.settings.dateFormat === 'day-first' ? 'selected' : ''}>DD/MM/YYYY</option>
+        <option value="month-first" ${state.settings.dateFormat === 'month-first' ? 'selected' : ''}>MM/DD/YYYY</option>
+      </select>
+    </label>
+    <label>${labels.units}
+      <select data-setting="measurementSystem">
+        <option value="metric" ${state.settings.measurementSystem === 'metric' ? 'selected' : ''}>Metric</option>
+        <option value="imperial" ${state.settings.measurementSystem === 'imperial' ? 'selected' : ''}>Imperial</option>
+      </select>
+    </label>
+    <label>${labels.reminder}
+      <select data-setting="defaultReminderDays">
+        ${[7, 30, 90].map((days) => `<option value="${days}" ${state.settings.defaultReminderDays === days ? 'selected' : ''}>${days} days</option>`).join('')}
+      </select>
+    </label>
+    <label class="settings-toggle"><span>${labels.notifications}</span><input type="checkbox" data-setting="notificationsEnabled" ${state.settings.notificationsEnabled ? 'checked' : ''}></label>
+    <label class="settings-toggle"><span>${labels.lock}</span><input type="checkbox" data-setting="appLockEnabled" ${state.settings.appLockEnabled ? 'checked' : ''}></label>
+    <button class="button secondary" type="button" data-settings-action="devices">${labels.devices}</button>
+    <div class="device-list">
+      <strong>${state.language === 'ar' ? 'الأجهزة المسجلة' : 'Signed-in devices'}</strong>
+      ${state.devices.length
+        ? state.devices.map((device) => `<div><span>${escapeHtml(device.label)}${device.current ? ' (This device)' : ''}</span><small>${escapeHtml(new Date(device.lastSeen).toLocaleString())}</small></div>`).join('')
+        : `<small>${state.language === 'ar' ? 'ستظهر الأجهزة بعد تحديث قاعدة البيانات.' : 'Devices appear after the database update is applied.'}</small>`}
+    </div>
+    <button class="button secondary" type="button" data-settings-action="tutorial">${labels.tutorial}</button>
+    <button class="button danger" type="button" data-settings-action="delete">${labels.remove}</button>
+  `;
+}
+
+function renderOnboarding() {
+  const content = state.language === 'ar'
+    ? [
+        ['◷', 'كل ما يهمك اليوم', 'شاهد التذكيرات والمسودات من الرئيسية.'],
+        ['☆', 'وصول أسرع', 'ثبّت الأنشطة المفضلة وكرر آخر سجل بضغطة واحدة.'],
+        ['✓', 'محفوظ ومتزامن', 'تعرف دائماً متى تم حفظ سجلاتك في السحابة.'],
+      ]
+    : [
+        ['◷', 'Everything important today', 'See reminders and unfinished drafts on Home.'],
+        ['☆', 'Faster access', 'Pin favorites and repeat your latest record in one tap.'],
+        ['✓', 'Saved and synchronized', 'Always know whether your records reached the cloud.'],
+      ];
+  const [icon, title, copy] = content[state.onboardingStep];
+  onboardingIcon.textContent = icon;
+  onboardingTitle.textContent = title;
+  onboardingCopy.textContent = copy;
+  onboardingDots.innerHTML = content.map((_, index) => `<i class="${index === state.onboardingStep ? 'active' : ''}"></i>`).join('');
+  onboardingNext.textContent = state.onboardingStep === content.length - 1
+    ? state.language === 'ar' ? 'ابدأ' : 'Get started'
+    : state.language === 'ar' ? 'التالي' : 'Next';
+  onboardingSkip.textContent = state.language === 'ar' ? 'تخطٍ' : 'Skip';
+}
+
+async function finishOnboarding() {
+  await saveUsabilitySettings({ ...state.settings, onboardingComplete: true });
+  onboardingModal.classList.add('hidden');
+  state.onboardingStep = 0;
+}
+
+async function openTracker(activity, restoreDraft = false) {
   resetStudyCandle();
   if (activity === 'Supplies and Feed') {
     state.horseFeedCount = 1;
@@ -1458,6 +1731,12 @@ function openTracker(activity) {
     bindBalootCalculator();
   }
   sessionForm.reset();
+  if (restoreDraft && state.draft?.activity === activity) {
+    Object.entries(state.draft.values || {}).forEach(([name, value]) => {
+      const field = sessionForm.querySelector(`[name="${CSS.escape(name)}"]`);
+      if (field && 'value' in field) field.value = String(value ?? '');
+    });
+  }
   if (activity === 'Work') {
     sessionForm.querySelector('[name="workCandleHours"]').value = '3';
     sessionForm.querySelector('[name="workCandleMinutes"]').value = '0';
@@ -1472,6 +1751,7 @@ function openTracker(activity) {
   if (activity === 'Baloot') {
     renderBalootCalculator();
   }
+  await rememberActivity(activity);
   showView('tracker');
 }
 
@@ -1572,7 +1852,10 @@ function getMovementDistanceKm() {
 
   const totalDistance = laps * lapDistance;
 
-  return unit === 'm' ? totalDistance / 1000 : totalDistance;
+  if (unit === 'm') return totalDistance / 1000;
+  if (unit === 'yd') return totalDistance / 1093.613;
+  if (unit === 'mi') return totalDistance * 1.609344;
+  return totalDistance;
 }
 
 function getMovementTotalDistance() {
@@ -1697,10 +1980,11 @@ function getFieldsForActivity(activity) {
   }
 
   if (lapActivities.includes(activity)) {
+    const imperial = state.settings.measurementSystem === 'imperial';
     const fields = [
       inputField('Laps', 'laps', '4', 'number'),
-      inputField('Lap distance', 'lapDistance', activity === 'Cycling' ? '1' : '400', 'number'),
-      selectField('Unit', 'lapDistanceUnit', ['m', 'km']),
+      inputField('Lap distance', 'lapDistance', imperial ? (activity === 'Swimming' ? '25' : '1') : activity === 'Cycling' ? '1' : '400', 'number'),
+      selectField('Unit', 'lapDistanceUnit', imperial ? ['yd', 'mi'] : ['m', 'km']),
     ];
 
     if (movementActivities.includes(activity)) {
@@ -3101,14 +3385,19 @@ async function saveSession(event) {
 
   state.sessions = [session, ...state.sessions];
   writeJson(accountStorageKey(storageKeys.sessions), state.sessions);
+  state.draft = null;
+  localStorage.removeItem(accountStorageKey(storageKeys.draft));
   if (activity === 'Studying' || activity === 'Work') {
     pauseStudyCandle();
   }
 
   try {
+    state.syncStatus = 'syncing';
     await saveSessionToCloud(session);
+    state.syncStatus = 'saved';
     sessionMessage.textContent = 'Saved securely to your account.';
   } catch {
+    state.syncStatus = 'offline';
     sessionMessage.textContent = 'Saved on this device. Cloud sync will retry after you reconnect.';
   }
   renderHome();
@@ -3294,15 +3583,39 @@ function renderHistory() {
     .join('');
   historyFilter.value = activities.includes(selected) ? selected : 'All';
 
-  const filteredSessions =
-    historyFilter.value === 'All'
-      ? state.sessions
-      : state.sessions.filter((session) => session.activity === historyFilter.value);
+  const query = historySearch.value.trim().toLowerCase();
+  const rangeDays = historyDateRange.value === 'week' ? 7 : historyDateRange.value === 'month' ? 30 : null;
+  const rangeStart = rangeDays ? Date.now() - rangeDays * 24 * 60 * 60 * 1000 : null;
+  const filteredSessions = state.sessions.filter((session) => {
+    if (historyFilter.value !== 'All' && session.activity !== historyFilter.value) return false;
+    const sessionTime = new Date(session.date).getTime();
+    if (rangeStart && (!Number.isFinite(sessionTime) || sessionTime < rangeStart)) return false;
+    if (!query) return true;
+    return `${session.activity} ${session.date} ${JSON.stringify(session.details || {})}`.toLowerCase().includes(query);
+  });
 
   renderProgressDashboard();
 
   if (filteredSessions.length === 0) {
     historyList.innerHTML = `<div class="empty-state">${text('noSessions')}</div>`;
+    return;
+  }
+
+  if (historyViewMode.value === 'calendar') {
+    const grouped = new Map();
+    filteredSessions.forEach((session) => {
+      const parsed = new Date(session.date);
+      const day = Number.isNaN(parsed.getTime()) ? session.date : parsed.toISOString().slice(0, 10);
+      grouped.set(day, [...(grouped.get(day) || []), session]);
+    });
+    historyList.innerHTML = [...grouped.entries()]
+      .sort(([first], [second]) => second.localeCompare(first))
+      .map(([day, daySessions]) => `
+        <article class="calendar-day">
+          <header><strong>${escapeHtml(day)}</strong><span>${daySessions.length} ${state.language === 'ar' ? 'سجل' : 'records'}</span></header>
+          <p>${escapeHtml([...new Set(daySessions.map((session) => activityLabel(session.activity)))].join(' • '))}</p>
+        </article>`)
+      .join('');
     return;
   }
 
@@ -3318,6 +3631,7 @@ function renderHistory() {
               <span>${formatDate(session.date)}</span>
             </div>
             <div class="history-card-actions">
+              <button class="button secondary" type="button" data-duplicate-session="${session.id}">${state.language === 'ar' ? 'تكرار' : 'Duplicate'}</button>
               <button class="button secondary" type="button" data-edit-session="${session.id}">${state.language === 'ar' ? 'تعديل' : 'Edit'}</button>
               <button class="button danger" type="button" data-delete-session="${session.id}">${text('delete')}</button>
             </div>
@@ -3337,6 +3651,31 @@ function renderHistory() {
       `;
     })
     .join('');
+}
+
+async function duplicateHistorySession(sessionId) {
+  const source = state.sessions.find((session) => String(session.id) === String(sessionId));
+  if (!source) return;
+  const now = new Date().toISOString();
+  const duplicated = {
+    ...source,
+    id: Date.now(),
+    date: now,
+    start: source.start ? now : '',
+    end: source.end ? now : '',
+    details: JSON.parse(JSON.stringify(source.details || {})),
+  };
+  state.sessions = [duplicated, ...state.sessions];
+  writeJson(accountStorageKey(storageKeys.sessions), state.sessions);
+  state.syncStatus = 'syncing';
+  try {
+    await saveSessionToCloud(duplicated);
+    state.syncStatus = 'saved';
+  } catch {
+    state.syncStatus = 'offline';
+  }
+  renderHome();
+  renderHistory();
 }
 
 function renderHistoryNote(session) {
@@ -3775,6 +4114,24 @@ function exportHistory() {
   URL.revokeObjectURL(downloadUrl);
 }
 
+function exportHistoryCsv() {
+  const cell = (value) => `"${String(value ?? '').replace(/"/g, '""')}"`;
+  const rows = [
+    ['Activity', 'Date', 'Start', 'End', 'Duration', 'Details'],
+    ...state.sessions.map((session) => [
+      session.activity, session.date, session.start, session.end, session.duration,
+      JSON.stringify(session.details || {}),
+    ]),
+  ];
+  const blob = new Blob([rows.map((row) => row.map(cell).join(',')).join('\n')], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `tafasili-history-${new Date().toISOString().slice(0, 10)}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
 document.querySelectorAll('[data-auth-mode]').forEach((tab) => {
   tab.addEventListener('click', () => setAuthMode(tab.dataset.authMode));
 });
@@ -3984,7 +4341,12 @@ document.addEventListener('click', (event) => {
   const activityButton = event.target.closest('[data-activity]');
   const categoryButton = event.target.closest('[data-category]');
   const editButton = event.target.closest('[data-edit-session]');
+  const duplicateButton = event.target.closest('[data-duplicate-session]');
   const deleteButton = event.target.closest('[data-delete-session]');
+  const favoriteButton = event.target.closest('[data-favorite-activity]');
+  const repeatButton = event.target.closest('[data-repeat-last]');
+  const continueDraftButton = event.target.closest('[data-continue-draft]');
+  const settingsAction = event.target.closest('[data-settings-action]');
 
   if (viewButton) {
     event.preventDefault();
@@ -4004,6 +4366,46 @@ document.addEventListener('click', (event) => {
 
   if (editButton) {
     void editHistorySession(editButton.dataset.editSession);
+  }
+
+  if (duplicateButton) {
+    void duplicateHistorySession(duplicateButton.dataset.duplicateSession);
+  }
+
+  if (favoriteButton) {
+    void toggleFavoriteActivity(favoriteButton.dataset.favoriteActivity);
+  }
+
+  if (repeatButton && state.sessions[0]) {
+    void duplicateHistorySession(state.sessions[0].id);
+  }
+
+  if (continueDraftButton && state.draft) {
+    void openTracker(state.draft.activity, true);
+  }
+
+  if (settingsAction?.dataset.settingsAction === 'devices') {
+    void cloudClient?.auth.signOut({ scope: 'others' }).then(async ({ error }) => {
+      if (!error) {
+        await cloudClient.from('user_devices').delete().neq('device_id', webDeviceId());
+        await registerAndLoadWebDevices();
+        renderSettings();
+      }
+      window.alert(error ? 'Could not sign out other devices.' : 'Other devices were signed out.');
+    });
+  }
+
+  if (settingsAction?.dataset.settingsAction === 'tutorial') {
+    state.onboardingStep = 0;
+    renderOnboarding();
+    onboardingModal.classList.remove('hidden');
+  }
+
+  if (settingsAction?.dataset.settingsAction === 'delete') {
+    if (window.confirm(state.language === 'ar' ? 'حذف كل بيانات السجل؟' : 'Delete all history data?')) {
+      void clearHistory();
+      settingsModal.classList.add('hidden');
+    }
   }
 
   if (deleteButton) {
@@ -4070,6 +4472,47 @@ sessionForm.addEventListener('submit', saveSession);
 historyFilter.addEventListener('change', renderHistory);
 clearHistoryButton.addEventListener('click', clearHistory);
 exportHistoryButton.addEventListener('click', exportHistory);
+exportCsvButton.addEventListener('click', exportHistoryCsv);
+printHistoryButton.addEventListener('click', () => window.print());
+historySearch.addEventListener('input', renderHistory);
+historyDateRange.addEventListener('change', renderHistory);
+historyViewMode.addEventListener('change', renderHistory);
+settingsButton.addEventListener('click', () => {
+  renderSettings();
+  settingsModal.classList.remove('hidden');
+});
+settingsClose.addEventListener('click', () => settingsModal.classList.add('hidden'));
+settingsModal.addEventListener('click', (event) => {
+  if (event.target === settingsModal) settingsModal.classList.add('hidden');
+});
+settingsFields.addEventListener('change', async (event) => {
+  const field = event.target.closest('[data-setting]');
+  if (!field) return;
+  const key = field.dataset.setting;
+  let value = field.type === 'checkbox' ? field.checked : field.value;
+  if (key === 'defaultReminderDays') value = Number(value);
+  if (key === 'notificationsEnabled' && value && 'Notification' in window) {
+    value = (await Notification.requestPermission()) === 'granted';
+    field.checked = value;
+  }
+  await saveUsabilitySettings({ ...state.settings, [key]: value });
+});
+onboardingNext.addEventListener('click', () => {
+  if (state.onboardingStep < 2) {
+    state.onboardingStep += 1;
+    renderOnboarding();
+  } else {
+    void finishOnboarding();
+  }
+});
+onboardingSkip.addEventListener('click', () => void finishOnboarding());
+sessionForm.addEventListener('input', () => {
+  if (!state.selectedActivity) return;
+  const values = {};
+  new FormData(sessionForm).forEach((value, key) => { values[key] = String(value); });
+  state.draft = { activity: state.selectedActivity, updatedAt: new Date().toISOString(), values };
+  writeJson(accountStorageKey(storageKeys.draft), state.draft);
+});
 editSessionClose.addEventListener('click', closeEditSessionModal);
 editSessionCancel.addEventListener('click', closeEditSessionModal);
 editSessionModal.addEventListener('click', (event) => {

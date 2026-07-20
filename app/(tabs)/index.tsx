@@ -4,10 +4,12 @@ import { useNavigation } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
   Alert,
+  AppState,
   Image,
   Modal,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
   TouchableOpacity,
@@ -28,6 +30,7 @@ import {
   signInWithSupabase,
   signOutFromSupabase,
   signUpWithSupabase,
+  signOutOtherSupabaseSessions,
 } from '../../lib/authDatabase';
 import {
   clearCloudCustomActivities,
@@ -43,6 +46,22 @@ import {
 } from '../../lib/sessionDatabase';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import {
+  defaultTafasiliSettings,
+  loadCloudSettings,
+  loadLocalSettings,
+  mergeSettings,
+  saveCloudSettings,
+  saveLocalSettings,
+} from '../../lib/userPreferences';
+import {
+  authenticateForAppLock,
+  scheduleSessionNotifications,
+  setSecureAppLock,
+  shareSessionsCsv,
+} from '../../lib/deviceFeatures';
+import { registerAndLoadDevices, removeOtherDeviceRecords } from '../../lib/deviceDatabase';
+import {
+  ActivityDraft,
   BalootScore,
   CustomFieldValue,
   ExpirationReminderDetails,
@@ -51,6 +70,9 @@ import {
   HorseFeedEntry,
   MatchRound,
   Session,
+  SyncStatus,
+  TafasiliSettings,
+  UserDevice,
 } from '../../types';
 
 const defaultActivities = [
@@ -170,6 +192,14 @@ export default function HomeScreen() {
   const [isActivityDropdownOpen, setIsActivityDropdownOpen] = useState(false);
 
   const [showOtherModal, setShowOtherModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingStep, setOnboardingStep] = useState(0);
+  const [settings, setSettings] = useState<TafasiliSettings>(defaultTafasiliSettings);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>('saved');
+  const [currentDraft, setCurrentDraft] = useState<ActivityDraft | null>(null);
+  const [isAppUnlocked, setIsAppUnlocked] = useState(true);
+  const [accountDevices, setAccountDevices] = useState<UserDevice[]>([]);
   const [otherActivityName, setOtherActivityName] = useState('');
   const [otherActivityFields, setOtherActivityFields] = useState('');
   const [otherActivityCategory, setOtherActivityCategory] = useState('');
@@ -363,6 +393,24 @@ export default function HomeScreen() {
     void autoSaveCompletedStudyCandle();
   };
   const isArabic = language === 'ar';
+  const draftValuesRef = useRef<Record<string, string | number | boolean>>({});
+
+  draftValuesRef.current = {
+    footballTeamOneName, footballTeamTwoName, footballTeamOneScore, footballTeamTwoScore,
+    gymWorkoutDay, routeName, elevationGain, splitNotes, movementGoal, personalRecord,
+    matchTeamOneName, matchTeamTwoName, balootUsName, balootThemName,
+    studySubject, studyType, studyExamDate, studyCoursework, studyPomodoroPlan,
+    studyStreak, studyTotalHours, studyNotes, workProjectName, workCandleHours,
+    workCandleMinutes, workNotes, horseRiderName, horseName, horseTrainingType,
+    horseTrainingIntensity, horseTrainingTime, horseWalkMinutes, horseTrotMinutes,
+    horseCanterMinutes, horseRideDistance, horseAverageSpeed, horseRideDate,
+    horseFarrierVisit, horseNextFarrierVisit, horseNotes, vehicleName,
+    vehiclePlateNumber, vehicleServiceType, vehicleServiceDate, vehicleMileage,
+    vehicleCost, vehicleInsuranceExpirationDate, vehicleRegistrationEndDate,
+    vehicleNotes, reminderDate, reminderTime, reminderNote, personalIdNumber,
+    personalIdExpirationDate, personalDlExpirationDate, personalPassportNumber,
+    personalPassportExpirationDate, expirationReminderLeadDays,
+  };
 
   useEffect(() => {
     void AsyncStorage.getItem('language').then((savedLanguage) => {
@@ -423,6 +471,111 @@ export default function HomeScreen() {
         : { display: 'none' },
     });
   }, [isLoggedIn, navigation]);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    let active = true;
+    const loadUsabilitySettings = async () => {
+      const local = await loadLocalSettings(authUserId);
+      let cloud = null;
+      try {
+        cloud = await loadCloudSettings();
+      } catch {
+        setSyncStatus('offline');
+      }
+      const merged = mergeSettings(local, cloud);
+      if (!active) return;
+      setSettings(merged);
+      setExpirationReminderLeadDays(String(merged.defaultReminderDays));
+      setIsAppUnlocked(!merged.appLockEnabled);
+      setShowOnboarding(!merged.onboardingComplete);
+      await saveLocalSettings(authUserId, merged);
+      try {
+        if (authUserId) setAccountDevices(await registerAndLoadDevices());
+      } catch {
+        setAccountDevices([]);
+      }
+      const savedDraft = await AsyncStorage.getItem(`activity-draft:${authUserId ?? 'local'}`);
+      if (active) setCurrentDraft(savedDraft ? JSON.parse(savedDraft) : null);
+    };
+    void loadUsabilitySettings();
+    return () => { active = false; };
+  }, [authUserId, isLoggedIn]);
+
+  useEffect(() => {
+    if (!isLoggedIn || !settings.appLockEnabled) {
+      setIsAppUnlocked(true);
+      return;
+    }
+    const lockWhenBackgrounded = AppState.addEventListener('change', (nextState) => {
+      if (nextState !== 'active') setIsAppUnlocked(false);
+    });
+    return () => lockWhenBackgrounded.remove();
+  }, [isLoggedIn, settings.appLockEnabled]);
+
+  useEffect(() => {
+    if (!isLoggedIn || !selectedActivity) return;
+    const draftKey = `activity-draft:${authUserId ?? 'local'}`;
+    const saveDraft = async () => {
+      const draft: ActivityDraft = {
+        activity: selectedActivity,
+        updatedAt: new Date().toISOString(),
+        values: draftValuesRef.current,
+      };
+      await AsyncStorage.setItem(draftKey, JSON.stringify(draft));
+      setCurrentDraft(draft);
+    };
+    const interval = setInterval(() => { void saveDraft(); }, 1500);
+    return () => clearInterval(interval);
+  }, [authUserId, isLoggedIn, selectedActivity]);
+
+  const persistSettings = async (next: TafasiliSettings) => {
+    setSettings(next);
+    setSyncStatus('syncing');
+    await saveLocalSettings(authUserId, next);
+    try {
+      await saveCloudSettings(next);
+      setSyncStatus('saved');
+    } catch {
+      setSyncStatus('offline');
+    }
+  };
+
+  const finishOnboarding = async () => {
+    await persistSettings({ ...settings, onboardingComplete: true });
+    setShowOnboarding(false);
+    setOnboardingStep(0);
+  };
+
+  const toggleFavorite = async (activity: string) => {
+    const favoriteActivities = settings.favoriteActivities.includes(activity)
+      ? settings.favoriteActivities.filter((item) => item !== activity)
+      : [...settings.favoriteActivities, activity];
+    await persistSettings({ ...settings, favoriteActivities });
+  };
+
+  const updateRecentActivity = async (activity: string) => {
+    const recentActivities = [activity, ...settings.recentActivities.filter((item) => item !== activity)].slice(0, 6);
+    await persistSettings({ ...settings, recentActivities });
+  };
+
+  const unlockApp = async () => {
+    const result = await authenticateForAppLock();
+    if (result.success) setIsAppUnlocked(true);
+    else if (result.unavailable) Alert.alert('Device lock unavailable', 'Set up Face ID, Touch ID, or fingerprint in your device settings first.');
+  };
+
+  const toggleAppLock = async (enabled: boolean) => {
+    if (enabled) {
+      const result = await authenticateForAppLock();
+      if (!result.success) {
+        Alert.alert('App lock not enabled', result.unavailable ? 'No device authentication is enrolled.' : 'Authentication was cancelled.');
+        return;
+      }
+    }
+    await setSecureAppLock(enabled);
+    await persistSettings({ ...settings, appLockEnabled: enabled });
+  };
 
   const toggleLanguage = async () => {
     const nextLanguage = isArabic ? 'en' : 'ar';
@@ -1099,6 +1252,11 @@ const logout = async () => {
   };
 
   const getDefaultLapDistance = (activity: string) => {
+    if (settings.measurementSystem === 'imperial') {
+      return activity === 'Swimming'
+        ? { distance: '25', unit: 'yd' }
+        : { distance: '1', unit: 'mi' };
+    }
     if (activity === 'Cycling') {
       return {
         distance: '1',
@@ -1204,7 +1362,7 @@ const logout = async () => {
     setPersonalDlExpirationDate('');
     setPersonalPassportNumber('');
     setPersonalPassportExpirationDate('');
-    setExpirationReminderLeadDays('30');
+    setExpirationReminderLeadDays(String(settings.defaultReminderDays));
     setCustomFieldValues({});
 
     setHorseRiderName('');
@@ -1255,7 +1413,69 @@ const logout = async () => {
     setHorseNotes('');
   };
 
-  const openActivity = (activity: string) => {
+  const restoreDraftValues = (values: ActivityDraft['values']) => {
+    const textValue = (key: string) => String(values[key] ?? '');
+    setFootballTeamOneName(textValue('footballTeamOneName'));
+    setFootballTeamTwoName(textValue('footballTeamTwoName'));
+    setFootballTeamOneScore(textValue('footballTeamOneScore'));
+    setFootballTeamTwoScore(textValue('footballTeamTwoScore'));
+    setGymWorkoutDay(textValue('gymWorkoutDay'));
+    setRouteName(textValue('routeName'));
+    setElevationGain(textValue('elevationGain'));
+    setSplitNotes(textValue('splitNotes'));
+    setMovementGoal(textValue('movementGoal'));
+    setPersonalRecord(textValue('personalRecord'));
+    setMatchTeamOneName(textValue('matchTeamOneName'));
+    setMatchTeamTwoName(textValue('matchTeamTwoName'));
+    setBalootUsName(textValue('balootUsName'));
+    setBalootThemName(textValue('balootThemName'));
+    setStudySubject(textValue('studySubject'));
+    setStudyType(textValue('studyType'));
+    setStudyExamDate(textValue('studyExamDate'));
+    setStudyCoursework(textValue('studyCoursework'));
+    setStudyPomodoroPlan(textValue('studyPomodoroPlan'));
+    setStudyStreak(textValue('studyStreak'));
+    setStudyTotalHours(textValue('studyTotalHours'));
+    setStudyNotes(textValue('studyNotes'));
+    setWorkProjectName(textValue('workProjectName'));
+    setWorkCandleHours(textValue('workCandleHours') || '3');
+    setWorkCandleMinutes(textValue('workCandleMinutes') || '0');
+    setWorkNotes(textValue('workNotes'));
+    setHorseRiderName(textValue('horseRiderName'));
+    setHorseName(textValue('horseName'));
+    setHorseTrainingType(textValue('horseTrainingType'));
+    setHorseTrainingIntensity(textValue('horseTrainingIntensity'));
+    setHorseTrainingTime(textValue('horseTrainingTime'));
+    setHorseWalkMinutes(textValue('horseWalkMinutes'));
+    setHorseTrotMinutes(textValue('horseTrotMinutes'));
+    setHorseCanterMinutes(textValue('horseCanterMinutes'));
+    setHorseRideDistance(textValue('horseRideDistance'));
+    setHorseAverageSpeed(textValue('horseAverageSpeed'));
+    setHorseRideDate(textValue('horseRideDate'));
+    setHorseFarrierVisit(textValue('horseFarrierVisit'));
+    setHorseNextFarrierVisit(textValue('horseNextFarrierVisit'));
+    setHorseNotes(textValue('horseNotes'));
+    setVehicleName(textValue('vehicleName'));
+    setVehiclePlateNumber(textValue('vehiclePlateNumber'));
+    setVehicleServiceType(textValue('vehicleServiceType'));
+    setVehicleServiceDate(textValue('vehicleServiceDate'));
+    setVehicleMileage(textValue('vehicleMileage'));
+    setVehicleCost(textValue('vehicleCost'));
+    setVehicleInsuranceExpirationDate(textValue('vehicleInsuranceExpirationDate'));
+    setVehicleRegistrationEndDate(textValue('vehicleRegistrationEndDate'));
+    setVehicleNotes(textValue('vehicleNotes'));
+    setReminderDate(textValue('reminderDate'));
+    setReminderTime(textValue('reminderTime'));
+    setReminderNote(textValue('reminderNote'));
+    setPersonalIdNumber(textValue('personalIdNumber'));
+    setPersonalIdExpirationDate(textValue('personalIdExpirationDate'));
+    setPersonalDlExpirationDate(textValue('personalDlExpirationDate'));
+    setPersonalPassportNumber(textValue('personalPassportNumber'));
+    setPersonalPassportExpirationDate(textValue('personalPassportExpirationDate'));
+    setExpirationReminderLeadDays(textValue('expirationReminderLeadDays') || String(settings.defaultReminderDays));
+  };
+
+  const openActivity = async (activity: string, restoreDraft = false) => {
     setSelectedActivity(activity);
     setStartTime(null);
     setEndTime(null);
@@ -1266,6 +1486,12 @@ const logout = async () => {
       setLapDistance(defaultLap.distance);
       setLapDistanceUnit(defaultLap.unit);
     }
+    await updateRecentActivity(activity);
+    if (restoreDraft) {
+      const savedDraft = await AsyncStorage.getItem(`activity-draft:${authUserId ?? 'local'}`);
+      const draft: ActivityDraft | null = savedDraft ? JSON.parse(savedDraft) : null;
+      if (draft?.activity === activity) restoreDraftValues(draft.values);
+    }
   };
 
   const openOtherModal = () => {
@@ -1273,6 +1499,31 @@ const logout = async () => {
     setOtherActivityFields('');
     setOtherActivityCategory('');
     setShowOtherModal(true);
+  };
+
+  const repeatLastSession = async () => {
+    const last = sessions[0];
+    if (!last) return;
+    const now = new Date().toISOString();
+    const repeated: Session = {
+      ...last,
+      id: Date.now(),
+      date: now,
+      start: last.start ? now : '',
+      end: last.end ? now : '',
+      details: JSON.parse(JSON.stringify(last.details ?? {})),
+    };
+    const updated = [repeated, ...sessions];
+    setSessions(updated);
+    await saveSessionsToStorage(updated);
+    try {
+      setSyncStatus('syncing');
+      await saveCloudSession(repeated);
+      setSyncStatus('saved');
+    } catch {
+      setSyncStatus('offline');
+    }
+    Alert.alert(isArabic ? 'تم الحفظ' : 'Saved', isArabic ? 'تم تكرار آخر سجل.' : 'The last record was repeated in History.');
   };
 
   const addOtherActivity = async () => {
@@ -1445,7 +1696,10 @@ const logout = async () => {
 
     const total = distanceNumber * lapCount;
 
-    return lapDistanceUnit === 'm' ? total / 1000 : total;
+    if (lapDistanceUnit === 'm') return total / 1000;
+    if (lapDistanceUnit === 'yd') return total / 1093.613;
+    if (lapDistanceUnit === 'mi') return total * 1.609344;
+    return total;
   };
 
   const getDurationSeconds = () => {
@@ -1909,11 +2163,29 @@ if (!isSelectedActivityNonTimed(selectedActivity) && (!startTime || !endTime)) {
     setSessions(newSessions);
     await saveSessionsToStorage(newSessions);
 
+    setSyncStatus('syncing');
     try {
       await saveCloudSession(newSession);
+      setSyncStatus('saved');
     } catch {
+      setSyncStatus('offline');
       alert('Saved on this device, but cloud sync failed.');
     }
+
+    if (settings.notificationsEnabled) {
+      try {
+        await scheduleSessionNotifications(
+          selectedActivity,
+          newSession.details?.reminder,
+          newSession.details?.expirationReminders
+        );
+      } catch {
+        // The record remains saved when notification permission is unavailable.
+      }
+    }
+
+    await AsyncStorage.removeItem(`activity-draft:${authUserId ?? 'local'}`);
+    setCurrentDraft(null);
 
     alert('Session saved successfully');
 
@@ -2573,6 +2845,21 @@ const getGroupedActivities = () => {
           <Text style={[styles.loginSubtitle, isArabic && styles.rtlText]}>
             {isArabic ? 'جارٍ استعادة حسابك الآمن...' : 'Restoring your secure account...'}
           </Text>
+        </View>
+      </GestureHandlerRootView>
+    );
+  }
+
+  if (isLoggedIn && settings.appLockEnabled && !isAppUnlocked) {
+    return (
+      <GestureHandlerRootView style={styles.root}>
+        <View style={styles.lockScreen}>
+          {renderBrand()}
+          <Ionicons name="lock-closed-outline" size={42} color="#050505" />
+          <Text style={styles.lockTitle}>{isArabic ? 'تفاصيلي مقفل' : 'Tafasili is locked'}</Text>
+          <TouchableOpacity style={styles.lockButton} onPress={unlockApp}>
+            <Text style={styles.lockButtonText}>{isArabic ? 'فتح بالبصمة' : 'Unlock with Face ID / device lock'}</Text>
+          </TouchableOpacity>
         </View>
       </GestureHandlerRootView>
     );
@@ -3495,22 +3782,45 @@ const getGroupedActivities = () => {
     );
   }
 
+  const today = new Date().toISOString().slice(0, 10);
+  const todayReminders = sessions.flatMap((session) => {
+    const scheduled = session.details?.reminder?.date === today
+      ? [{ label: session.activity, date: session.details.reminder.date, note: session.details.reminder.note }]
+      : [];
+    const expirations = (session.details?.expirationReminders ?? [])
+      .filter((reminder) => reminder.remindOn <= today && reminder.expirationDate >= today)
+      .map((reminder) => ({ label: reminder.label, date: reminder.expirationDate, note: 'Expiration' }));
+    return [...scheduled, ...expirations];
+  });
+  const syncLabel = syncStatus === 'syncing'
+    ? isArabic ? 'جارٍ المزامنة' : 'Syncing'
+    : syncStatus === 'saved'
+      ? isArabic ? 'محفوظ' : 'Saved'
+      : syncStatus === 'offline'
+        ? isArabic ? 'دون اتصال' : 'Offline'
+        : isArabic ? 'فشلت المزامنة' : 'Sync failed';
 
   return (
     <GestureHandlerRootView style={styles.root}>
       <View style={styles.mainContainer}>
         <ScrollView style={styles.container}>
           <View style={styles.homeTopbar}>
-            <View style={styles.topbarSpacer} />
-            {renderBrand()}
             <TouchableOpacity
-              style={styles.languageButton}
-              onPress={toggleLanguage}
-              accessibilityRole="button"
-              accessibilityLabel={isArabic ? 'التبديل إلى الإنجليزية' : 'Switch to Arabic'}
+              style={styles.logoutButtonTop}
+              onPress={logout}
+              accessibilityLabel={isArabic ? 'تسجيل الخروج' : 'Log out'}
             >
-              <Text style={styles.languageButtonText}>{isArabic ? 'EN' : 'AR'}</Text>
+              <Ionicons name="power-outline" size={26} color="#050505" />
             </TouchableOpacity>
+            {renderBrand()}
+            <View style={styles.homeTopActions}>
+              <TouchableOpacity style={styles.languageButton} onPress={toggleLanguage}>
+                <Text style={styles.languageButtonText}>{isArabic ? 'EN' : 'AR'}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.languageButton} onPress={() => setShowSettingsModal(true)} accessibilityLabel="Settings">
+                <Ionicons name="settings-outline" size={23} color="#050505" />
+              </TouchableOpacity>
+            </View>
           </View>
 
           <Text style={[styles.homeHeading, isArabic && styles.rtlText]}>
@@ -3526,14 +3836,66 @@ const getGroupedActivities = () => {
               : 'Choose an activity type, then save its details to your history.'}
           </Text>
 
-          <TouchableOpacity
-            style={styles.logoutButton}
-            onPress={logout}
-            accessibilityRole="button"
-            accessibilityLabel={isArabic ? 'تسجيل الخروج' : 'Log out'}
-          >
-            <Ionicons name="log-out-outline" size={27} color="#050505" />
-          </TouchableOpacity>
+          <View style={styles.syncRow}>
+            <View style={[styles.syncDot, syncStatus === 'saved' ? styles.syncSaved : styles.syncOffline]} />
+            <Text style={styles.syncText}>{syncLabel}</Text>
+          </View>
+
+          <View style={styles.todaySection}>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={[styles.statsTitle, isArabic && styles.rtlText]}>{isArabic ? 'اليوم' : 'Today'}</Text>
+              {sessions.length > 0 && (
+                <TouchableOpacity style={styles.compactAction} onPress={repeatLastSession}>
+                  <Ionicons name="repeat-outline" size={18} color="#050505" />
+                  <Text style={styles.compactActionText}>{isArabic ? 'تكرار الأخير' : 'Repeat last'}</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+            {todayReminders.length === 0 ? (
+              <Text style={styles.todayEmpty}>{isArabic ? 'لا توجد تذكيرات مستحقة اليوم.' : 'No reminders are due today.'}</Text>
+            ) : todayReminders.slice(0, 4).map((reminder, index) => (
+              <View key={`${reminder.label}-${index}`} style={styles.todayReminderRow}>
+                <Ionicons name="notifications-outline" size={19} color="#050505" />
+                <Text style={styles.todayReminderText}>{reminder.label}: {reminder.date}</Text>
+              </View>
+            ))}
+            {currentDraft && (
+              <TouchableOpacity style={styles.draftBanner} onPress={() => openActivity(currentDraft.activity, true)}>
+                <Ionicons name="document-text-outline" size={21} color="#050505" />
+                <View style={styles.draftTextBox}>
+                  <Text style={styles.draftTitle}>{isArabic ? 'متابعة المسودة' : 'Continue draft'}</Text>
+                  <Text style={styles.draftMeta}>{activityDisplayName(currentDraft.activity)}</Text>
+                </View>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {settings.favoriteActivities.length > 0 && (
+            <View style={styles.quickSection}>
+              <Text style={[styles.statsTitle, isArabic && styles.rtlText]}>{isArabic ? 'المفضلة' : 'Favorites'}</Text>
+              <View style={styles.quickActivityRow}>
+                {settings.favoriteActivities.map((activity) => (
+                  <TouchableOpacity key={activity} style={styles.quickActivityButton} onPress={() => openActivity(activity)}>
+                    <Ionicons name="star" size={16} color="#050505" />
+                    <Text style={styles.quickActivityText}>{activityDisplayName(activity)}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {settings.recentActivities.length > 0 && (
+            <View style={styles.quickSection}>
+              <Text style={[styles.statsTitle, isArabic && styles.rtlText]}>{isArabic ? 'الأخيرة' : 'Recent'}</Text>
+              <View style={styles.quickActivityRow}>
+                {settings.recentActivities.slice(0, 4).map((activity) => (
+                  <TouchableOpacity key={activity} style={styles.quickActivityButton} onPress={() => openActivity(activity)}>
+                    <Text style={styles.quickActivityText}>{activityDisplayName(activity)}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
 
           <View style={styles.statsBox}>
             <Text style={[styles.statsTitle, isArabic && styles.rtlText]}>
@@ -3623,6 +3985,17 @@ const getGroupedActivities = () => {
                       ) : (
                         group.groupActivities.map((activity) => (
                           <View key={activity} style={styles.activityDropdownOptionRow}>
+                            <TouchableOpacity
+                              style={styles.favoriteButton}
+                              onPress={() => toggleFavorite(activity)}
+                              accessibilityLabel={`${settings.favoriteActivities.includes(activity) ? 'Remove' : 'Add'} favorite ${activityDisplayName(activity)}`}
+                            >
+                              <Ionicons
+                                name={settings.favoriteActivities.includes(activity) ? 'star' : 'star-outline'}
+                                size={21}
+                                color="#050505"
+                              />
+                            </TouchableOpacity>
                             <TouchableOpacity
                               style={styles.activityDropdownOption}
                               onPress={() => {
@@ -3717,6 +4090,150 @@ const getGroupedActivities = () => {
                 onPress={() => setShowOtherModal(false)}
               >
                 <Text style={styles.buttonText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+        <Modal visible={showSettingsModal} transparent animationType="slide" onRequestClose={() => setShowSettingsModal(false)}>
+          <View style={styles.modalBackground}>
+            <View style={styles.settingsModal}>
+              <View style={styles.sectionHeaderRow}>
+                <Text style={styles.modalTitle}>{isArabic ? 'الإعدادات والخصوصية' : 'Settings & Privacy'}</Text>
+                <TouchableOpacity onPress={() => setShowSettingsModal(false)} accessibilityLabel="Close settings">
+                  <Ionicons name="close" size={26} color="#050505" />
+                </TouchableOpacity>
+              </View>
+              <ScrollView showsVerticalScrollIndicator={false}>
+                <Text style={styles.settingsLabel}>{isArabic ? 'تنسيق التاريخ' : 'Date format'}</Text>
+                <View style={styles.settingChoiceRow}>
+                  {(['day-first', 'month-first'] as const).map((format) => (
+                    <TouchableOpacity
+                      key={format}
+                      style={[styles.settingChoice, settings.dateFormat === format && styles.settingChoiceActive]}
+                      onPress={() => persistSettings({ ...settings, dateFormat: format })}
+                    >
+                      <Text style={styles.settingChoiceText}>{format === 'day-first' ? 'DD/MM/YYYY' : 'MM/DD/YYYY'}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <Text style={styles.settingsLabel}>{isArabic ? 'وحدات القياس' : 'Measurement units'}</Text>
+                <View style={styles.settingChoiceRow}>
+                  {(['metric', 'imperial'] as const).map((system) => (
+                    <TouchableOpacity
+                      key={system}
+                      style={[styles.settingChoice, settings.measurementSystem === system && styles.settingChoiceActive]}
+                      onPress={() => persistSettings({ ...settings, measurementSystem: system })}
+                    >
+                      <Text style={styles.settingChoiceText}>{system === 'metric' ? 'Metric' : 'Imperial'}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <Text style={styles.settingsLabel}>{isArabic ? 'التذكير الافتراضي' : 'Default expiration reminder'}</Text>
+                <View style={styles.settingChoiceRow}>
+                  {[7, 30, 90].map((days) => (
+                    <TouchableOpacity
+                      key={days}
+                      style={[styles.settingChoice, settings.defaultReminderDays === days && styles.settingChoiceActive]}
+                      onPress={() => persistSettings({ ...settings, defaultReminderDays: days })}
+                    >
+                      <Text style={styles.settingChoiceText}>{days} {isArabic ? 'يوم' : 'days'}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <View style={styles.settingToggleRow}>
+                  <View style={styles.settingToggleText}>
+                    <Text style={styles.settingsLabel}>{isArabic ? 'إشعارات الجهاز' : 'Device notifications'}</Text>
+                    <Text style={styles.settingsHelp}>{isArabic ? 'تنبيهات التذكيرات والانتهاء.' : 'Reminder and expiration alerts.'}</Text>
+                  </View>
+                  <Switch
+                    value={settings.notificationsEnabled}
+                    onValueChange={(notificationsEnabled) => persistSettings({ ...settings, notificationsEnabled })}
+                  />
+                </View>
+
+                <View style={styles.settingToggleRow}>
+                  <View style={styles.settingToggleText}>
+                    <Text style={styles.settingsLabel}>{isArabic ? 'قفل التطبيق' : 'Face ID / device lock'}</Text>
+                    <Text style={styles.settingsHelp}>{isArabic ? 'احمِ سجلاتك عند العودة للتطبيق.' : 'Protect records when returning to the app.'}</Text>
+                  </View>
+                  <Switch value={settings.appLockEnabled} onValueChange={toggleAppLock} />
+                </View>
+
+                <TouchableOpacity style={styles.settingsAction} onPress={() => shareSessionsCsv(sessions)}>
+                  <Ionicons name="download-outline" size={21} color="#050505" />
+                  <Text style={styles.settingsActionText}>{isArabic ? 'تصدير CSV' : 'Export history as CSV'}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.settingsAction} onPress={async () => {
+                  try {
+                    await signOutOtherSupabaseSessions();
+                    await removeOtherDeviceRecords();
+                    setAccountDevices(await registerAndLoadDevices());
+                    Alert.alert('Done', 'Other signed-in devices were signed out.');
+                  } catch {
+                    Alert.alert('Could not sign out other devices');
+                  }
+                }}>
+                  <Ionicons name="phone-portrait-outline" size={21} color="#050505" />
+                  <Text style={styles.settingsActionText}>{isArabic ? 'تسجيل الخروج من الأجهزة الأخرى' : 'Sign out other devices'}</Text>
+                </TouchableOpacity>
+                <Text style={styles.settingsLabel}>{isArabic ? 'الأجهزة المسجلة' : 'Signed-in devices'}</Text>
+                {accountDevices.length === 0 ? (
+                  <Text style={styles.settingsHelp}>{isArabic ? 'ستظهر الأجهزة بعد تحديث قاعدة البيانات.' : 'Devices appear after the database update is applied.'}</Text>
+                ) : accountDevices.map((device) => (
+                  <View key={device.deviceId} style={styles.deviceRow}>
+                    <Ionicons name={device.platform === 'web' ? 'globe-outline' : 'phone-portrait-outline'} size={20} color="#050505" />
+                    <View style={styles.settingToggleText}>
+                      <Text style={styles.settingsActionText}>{device.label}{device.current ? ' (This device)' : ''}</Text>
+                      <Text style={styles.settingsHelp}>{new Date(device.lastSeen).toLocaleString()}</Text>
+                    </View>
+                  </View>
+                ))}
+                <TouchableOpacity style={styles.settingsAction} onPress={() => { setShowSettingsModal(false); clearAllHistory(); }}>
+                  <Ionicons name="trash-outline" size={21} color="#050505" />
+                  <Text style={styles.settingsActionText}>{isArabic ? 'حذف كل بيانات السجل' : 'Delete all history data'}</Text>
+                </TouchableOpacity>
+              </ScrollView>
+            </View>
+          </View>
+        </Modal>
+
+        <Modal visible={showOnboarding} transparent animationType="fade" onRequestClose={finishOnboarding}>
+          <View style={styles.modalBackground}>
+            <View style={styles.onboardingModal}>
+              <Ionicons
+                name={onboardingStep === 0 ? 'today-outline' : onboardingStep === 1 ? 'star-outline' : 'cloud-done-outline'}
+                size={44}
+                color="#050505"
+              />
+              <Text style={styles.onboardingTitle}>
+                {onboardingStep === 0
+                  ? isArabic ? 'كل ما يهمك اليوم' : 'Everything important today'
+                  : onboardingStep === 1
+                    ? isArabic ? 'وصول أسرع' : 'Faster access'
+                    : isArabic ? 'محفوظ ومتزامن' : 'Saved and synchronized'}
+              </Text>
+              <Text style={styles.onboardingText}>
+                {onboardingStep === 0
+                  ? isArabic ? 'شاهد التذكيرات والمسودات من الرئيسية.' : 'See reminders and unfinished drafts on Home.'
+                  : onboardingStep === 1
+                    ? isArabic ? 'ثبّت الأنشطة المفضلة وكرر آخر سجل.' : 'Pin favorites and repeat your latest record in one tap.'
+                    : isArabic ? 'تظهر حالة المزامنة وتتيح الإعدادات قفل التطبيق.' : 'Sync status stays visible, with optional Face ID protection.'}
+              </Text>
+              <View style={styles.onboardingDots}>
+                {[0, 1, 2].map((step) => <View key={step} style={[styles.onboardingDot, onboardingStep === step && styles.onboardingDotActive]} />)}
+              </View>
+              <TouchableOpacity
+                style={styles.lockButton}
+                onPress={() => onboardingStep < 2 ? setOnboardingStep(onboardingStep + 1) : finishOnboarding()}
+              >
+                <Text style={styles.lockButtonText}>{onboardingStep < 2 ? (isArabic ? 'التالي' : 'Next') : (isArabic ? 'ابدأ' : 'Get started')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={finishOnboarding}>
+                <Text style={styles.skipText}>{isArabic ? 'تخطٍ' : 'Skip'}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -4709,5 +5226,274 @@ sessionTimeText: {
 selectedOptionButton: {
   backgroundColor: '#DDE7FC',
   borderColor: '#2563EB',
+},
+lockScreen: {
+  flex: 1,
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 18,
+  padding: 28,
+  backgroundColor: '#F6F7F9',
+},
+lockTitle: {
+  color: '#050505',
+  fontSize: 22,
+  fontWeight: '900',
+},
+lockButton: {
+  minHeight: 48,
+  alignItems: 'center',
+  justifyContent: 'center',
+  paddingHorizontal: 18,
+  borderRadius: 8,
+  backgroundColor: '#E7E9EE',
+},
+lockButtonText: {
+  color: '#050505',
+  fontSize: 16,
+  fontWeight: '900',
+},
+homeTopActions: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  gap: 4,
+},
+logoutButtonTop: {
+  width: 44,
+  minHeight: 44,
+  alignItems: 'center',
+  justifyContent: 'center',
+},
+syncRow: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  gap: 7,
+  marginBottom: 14,
+},
+syncDot: {
+  width: 8,
+  height: 8,
+  borderRadius: 4,
+},
+syncSaved: {
+  backgroundColor: '#17805C',
+},
+syncOffline: {
+  backgroundColor: '#667085',
+},
+syncText: {
+  color: '#050505',
+  fontSize: 14,
+  fontWeight: '700',
+},
+todaySection: {
+  marginBottom: 16,
+  padding: 16,
+  borderWidth: 1,
+  borderColor: '#E7E9EE',
+  borderRadius: 8,
+  backgroundColor: 'rgba(255,255,255,0.34)',
+},
+sectionHeaderRow: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: 12,
+},
+compactAction: {
+  minHeight: 38,
+  flexDirection: 'row',
+  alignItems: 'center',
+  gap: 6,
+  paddingHorizontal: 10,
+  borderRadius: 8,
+  backgroundColor: '#E7E9EE',
+},
+compactActionText: {
+  color: '#050505',
+  fontSize: 13,
+  fontWeight: '800',
+},
+todayEmpty: {
+  marginTop: 8,
+  color: '#050505',
+  fontSize: 15,
+},
+todayReminderRow: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  gap: 8,
+  marginTop: 9,
+},
+todayReminderText: {
+  flex: 1,
+  color: '#050505',
+  fontSize: 15,
+},
+draftBanner: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  gap: 10,
+  marginTop: 14,
+  paddingTop: 12,
+  borderTopWidth: 1,
+  borderTopColor: '#E7E9EE',
+},
+draftTextBox: {
+  flex: 1,
+},
+draftTitle: {
+  color: '#050505',
+  fontSize: 15,
+  fontWeight: '900',
+},
+draftMeta: {
+  color: '#050505',
+  fontSize: 14,
+},
+quickSection: {
+  marginBottom: 16,
+},
+quickActivityRow: {
+  flexDirection: 'row',
+  flexWrap: 'wrap',
+  gap: 8,
+  marginTop: 8,
+},
+quickActivityButton: {
+  minHeight: 42,
+  flexDirection: 'row',
+  alignItems: 'center',
+  gap: 6,
+  paddingHorizontal: 12,
+  borderWidth: 1,
+  borderColor: '#E7E9EE',
+  borderRadius: 8,
+  backgroundColor: 'rgba(255,255,255,0.32)',
+},
+quickActivityText: {
+  color: '#050505',
+  fontSize: 14,
+  fontWeight: '800',
+},
+favoriteButton: {
+  width: 42,
+  minHeight: 42,
+  alignItems: 'center',
+  justifyContent: 'center',
+},
+settingsModal: {
+  width: '92%',
+  maxHeight: '88%',
+  padding: 20,
+  borderRadius: 8,
+  backgroundColor: '#F6F7F9',
+},
+settingsLabel: {
+  marginTop: 16,
+  marginBottom: 8,
+  color: '#050505',
+  fontSize: 16,
+  fontWeight: '900',
+},
+settingsHelp: {
+  color: '#050505',
+  fontSize: 13,
+},
+settingChoiceRow: {
+  flexDirection: 'row',
+  flexWrap: 'wrap',
+  gap: 8,
+},
+settingChoice: {
+  minHeight: 42,
+  alignItems: 'center',
+  justifyContent: 'center',
+  paddingHorizontal: 12,
+  borderWidth: 1,
+  borderColor: '#E7E9EE',
+  borderRadius: 8,
+},
+settingChoiceActive: {
+  backgroundColor: '#E7E9EE',
+  borderColor: '#667085',
+},
+settingChoiceText: {
+  color: '#050505',
+  fontSize: 14,
+  fontWeight: '800',
+},
+settingToggleRow: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: 16,
+},
+settingToggleText: {
+  flex: 1,
+},
+settingsAction: {
+  minHeight: 48,
+  flexDirection: 'row',
+  alignItems: 'center',
+  gap: 10,
+  marginTop: 12,
+  paddingHorizontal: 12,
+  borderWidth: 1,
+  borderColor: '#E7E9EE',
+  borderRadius: 8,
+},
+settingsActionText: {
+  flex: 1,
+  color: '#050505',
+  fontSize: 15,
+  fontWeight: '800',
+},
+deviceRow: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  gap: 10,
+  minHeight: 48,
+  paddingVertical: 8,
+  borderBottomWidth: 1,
+  borderBottomColor: '#E7E9EE',
+},
+onboardingModal: {
+  width: '88%',
+  alignItems: 'center',
+  gap: 16,
+  padding: 24,
+  borderRadius: 8,
+  backgroundColor: '#F6F7F9',
+},
+onboardingTitle: {
+  color: '#050505',
+  fontSize: 22,
+  fontWeight: '900',
+  textAlign: 'center',
+},
+onboardingText: {
+  color: '#050505',
+  fontSize: 16,
+  lineHeight: 23,
+  textAlign: 'center',
+},
+onboardingDots: {
+  flexDirection: 'row',
+  gap: 7,
+},
+onboardingDot: {
+  width: 8,
+  height: 8,
+  borderRadius: 4,
+  backgroundColor: '#B8BEC8',
+},
+onboardingDotActive: {
+  backgroundColor: '#050505',
+},
+skipText: {
+  color: '#050505',
+  fontSize: 15,
+  textDecorationLine: 'underline',
 },
 });

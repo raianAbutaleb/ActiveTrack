@@ -204,6 +204,33 @@ export type Session = {
   date: string;
   details?: SessionDetails;
 };
+
+export type TafasiliSettings = {
+  favoriteActivities: string[];
+  recentActivities: string[];
+  dateFormat: 'day-first' | 'month-first';
+  measurementSystem: 'metric' | 'imperial';
+  defaultReminderDays: number;
+  notificationsEnabled: boolean;
+  appLockEnabled: boolean;
+  onboardingComplete: boolean;
+};
+
+export type ActivityDraft = {
+  activity: string;
+  updatedAt: string;
+  values: Record<string, string | number | boolean>;
+};
+
+export type SyncStatus = 'saved' | 'syncing' | 'offline' | 'failed';
+
+export type UserDevice = {
+  deviceId: string;
+  label: string;
+  platform: string;
+  lastSeen: string;
+  current?: boolean;
+};
 export type VehicleMaintenanceDetails = {
   vehicleName: string;
   plateNumber?: string;

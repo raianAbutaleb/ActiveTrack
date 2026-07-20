@@ -1414,6 +1414,244 @@ body.rtl .category-card {
   resize: vertical;
 }
 
+.today-dashboard {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 18px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.34);
+}
+
+.today-head,
+.today-head > div,
+.calendar-day header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.today-head > div {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.today-head h2,
+.quick-access h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.sync-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #050505;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.sync-status i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #667085;
+}
+
+.sync-status i.saved {
+  background: #17805c;
+}
+
+.today-items {
+  display: grid;
+  gap: 8px;
+}
+
+.today-items > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.today-items p {
+  margin: 0;
+}
+
+.draft-resume {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 48px;
+  padding: 12px 0 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+  background: transparent;
+  color: #050505;
+}
+
+.quick-access {
+  margin-bottom: 18px;
+}
+
+.quick-access > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 9px;
+}
+
+.quick-activity {
+  min-height: 42px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.3);
+  color: #050505;
+  font-weight: 800;
+}
+
+.activity-option-row {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: stretch;
+}
+
+.favorite-toggle {
+  min-height: 42px;
+  border: 0;
+  background: transparent;
+  color: #050505;
+  font-size: 1.25rem;
+}
+
+.history-tools {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.calendar-day {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.32);
+}
+
+.calendar-day p {
+  margin: 10px 0 0;
+}
+
+.settings-fields {
+  display: grid;
+  gap: 12px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.settings-fields > label:not(.settings-toggle) {
+  display: grid;
+  gap: 7px;
+  color: #050505;
+  font-weight: 800;
+}
+
+.settings-toggle {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  color: #050505;
+  font-weight: 800;
+}
+
+.settings-toggle input {
+  width: 22px;
+  height: 22px;
+}
+
+.device-list {
+  display: grid;
+  gap: 8px;
+  padding: 12px 0;
+  color: #050505;
+}
+
+.device-list > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.device-list span,
+.device-list small {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.device-list small {
+  color: #20242a;
+}
+
+.onboarding-card {
+  display: grid;
+  width: min(100%, 460px);
+  justify-items: center;
+  gap: 16px;
+  padding: 26px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f6f7f9;
+  text-align: center;
+}
+
+.onboarding-card h2,
+.onboarding-card p {
+  margin: 0;
+}
+
+.onboarding-icon {
+  font-size: 2.5rem;
+}
+
+.onboarding-dots {
+  display: flex;
+  gap: 7px;
+}
+
+.onboarding-dots i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #b8bec8;
+}
+
+.onboarding-dots i.active {
+  background: #050505;
+}
+
+@media print {
+  .topbar,
+  .history-tools,
+  .panel-head .button-row,
+  .history-card-actions,
+  #activity-canvas {
+    display: none !important;
+  }
+
+  body,
+  .shell {
+    width: 100%;
+    max-width: none;
+    background: #fff;
+  }
+}
+
 @media (max-width: 900px) {
   .auth-view.active,
   .tracker-layout,
@@ -1475,6 +1713,15 @@ body.rtl .category-card {
 
   .edit-session-fields {
     grid-template-columns: 1fr;
+  }
+
+  .history-tools {
+    grid-template-columns: 1fr;
+  }
+
+  .device-list > div {
+    grid-template-columns: 1fr;
+    gap: 3px;
   }
 }
 

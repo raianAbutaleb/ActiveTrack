@@ -47,6 +47,9 @@ export default function LapTracker(props: Props) {
   }
 
   const showMovementFields = movementActivities.includes(props.selectedActivity);
+  const distanceUnits = props.lapDistanceUnit === 'yd' || props.lapDistanceUnit === 'mi'
+    ? ['yd', 'mi']
+    : ['m', 'km'];
 
   const addLap = () => {
     if (!props.startTime) {
@@ -121,25 +124,18 @@ export default function LapTracker(props: Props) {
           keyboardType="decimal-pad"
         />
 
-        <TouchableOpacity
-          style={[
-            styles.unitButton,
-            props.lapDistanceUnit === 'm' && styles.selectedUnitButton,
-          ]}
-          onPress={() => props.setLapDistanceUnit('m')}
-        >
-          <Text style={styles.unitButtonText}>m</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.unitButton,
-            props.lapDistanceUnit === 'km' && styles.selectedUnitButton,
-          ]}
-          onPress={() => props.setLapDistanceUnit('km')}
-        >
-          <Text style={styles.unitButtonText}>km</Text>
-        </TouchableOpacity>
+        {distanceUnits.map((unit) => (
+          <TouchableOpacity
+            key={unit}
+            style={[
+              styles.unitButton,
+              props.lapDistanceUnit === unit && styles.selectedUnitButton,
+            ]}
+            onPress={() => props.setLapDistanceUnit(unit)}
+          >
+            <Text style={styles.unitButtonText}>{unit}</Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
       <View style={styles.lapBox}>

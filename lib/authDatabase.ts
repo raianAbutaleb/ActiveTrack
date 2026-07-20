@@ -71,3 +71,9 @@ export const signOutFromSupabase = async () => {
     throw error;
   }
 };
+
+export const signOutOtherSupabaseSessions = async () => {
+  if (!isSupabaseConfigured || !supabase) return;
+  const { error } = await supabase.auth.signOut({ scope: 'others' });
+  if (error) throw error;
+};
