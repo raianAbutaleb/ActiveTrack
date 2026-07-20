@@ -659,9 +659,12 @@ function applyLanguage() {
   document.documentElement.dir = 'ltr';
   document.body.dir = 'ltr';
   document.body.classList.toggle('rtl', state.language === 'ar');
-  languageButton.textContent = text('languageButton');
-  backButton.textContent = text('back');
-  logoutButton.textContent = text('logout');
+  languageButton.textContent = state.language === 'ar' ? 'EN' : 'AR';
+  languageButton.setAttribute('aria-label', state.language === 'ar' ? 'التبديل إلى الإنجليزية' : 'Switch to Arabic');
+  backButton.textContent = state.language === 'ar' ? '→' : '←';
+  backButton.setAttribute('aria-label', state.language === 'ar' ? 'رجوع' : 'Go back');
+  logoutButton.textContent = '↪';
+  logoutButton.setAttribute('aria-label', state.language === 'ar' ? 'تسجيل الخروج' : 'Log out');
   setText('#auth-eyebrow', text('authEyebrow'));
   setText('#hero-title', text('heroTitle'));
   setText('#hero-copy', text('heroCopy'));

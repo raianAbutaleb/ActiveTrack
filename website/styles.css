@@ -147,6 +147,32 @@ a {
   gap: 8px;
 }
 
+.topbar > #back-button,
+.top-actions > #language-button,
+.top-actions > #logout-button {
+  width: 42px;
+  min-width: 42px;
+  min-height: 42px;
+  padding: 6px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #050505;
+  font-size: 21px;
+  line-height: 1;
+}
+
+.topbar > #back-button:hover,
+.top-actions > #language-button:hover,
+.top-actions > #logout-button:hover,
+.topbar > #back-button:focus-visible,
+.top-actions > #language-button:focus-visible,
+.top-actions > #logout-button:focus-visible {
+  background: rgba(255, 255, 255, 0.38);
+  outline: 2px solid #667085;
+  outline-offset: 2px;
+}
+
 #logout-button.hidden {
   display: none;
 }

@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useNavigation } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -2586,8 +2587,13 @@ const getGroupedActivities = () => {
         <View style={styles.authTopbar}>
           <View style={styles.topbarSpacer} />
           {renderBrand()}
-          <TouchableOpacity style={styles.languageButton} onPress={toggleLanguage}>
-            <Text style={styles.languageButtonText}>{isArabic ? 'English' : 'العربية'}</Text>
+          <TouchableOpacity
+            style={styles.languageButton}
+            onPress={toggleLanguage}
+            accessibilityRole="button"
+            accessibilityLabel={isArabic ? 'التبديل إلى الإنجليزية' : 'Switch to Arabic'}
+          >
+            <Text style={styles.languageButtonText}>{isArabic ? 'EN' : 'AR'}</Text>
           </TouchableOpacity>
         </View>
         <Text style={[styles.loginTagline, isArabic && styles.rtlText]}>
@@ -2765,8 +2771,13 @@ const getGroupedActivities = () => {
     return (
       <GestureHandlerRootView style={styles.root}>
         <ScrollView style={styles.container}>
-          <TouchableOpacity style={styles.backButton} onPress={goBackToList}>
-            <Text style={styles.backButtonText}>{isArabic ? 'رجوع →' : '← Back'}</Text>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={goBackToList}
+            accessibilityRole="button"
+            accessibilityLabel={isArabic ? 'رجوع' : 'Back'}
+          >
+            <Ionicons name={isArabic ? 'arrow-forward' : 'arrow-back'} size={27} color="#050505" />
           </TouchableOpacity>
 
           <Text style={[styles.title, isArabic && styles.rtlText]}>
@@ -3492,8 +3503,13 @@ const getGroupedActivities = () => {
           <View style={styles.homeTopbar}>
             <View style={styles.topbarSpacer} />
             {renderBrand()}
-            <TouchableOpacity style={styles.languageButton} onPress={toggleLanguage}>
-              <Text style={styles.languageButtonText}>{isArabic ? 'English' : 'العربية'}</Text>
+            <TouchableOpacity
+              style={styles.languageButton}
+              onPress={toggleLanguage}
+              accessibilityRole="button"
+              accessibilityLabel={isArabic ? 'التبديل إلى الإنجليزية' : 'Switch to Arabic'}
+            >
+              <Text style={styles.languageButtonText}>{isArabic ? 'EN' : 'AR'}</Text>
             </TouchableOpacity>
           </View>
 
@@ -3510,8 +3526,13 @@ const getGroupedActivities = () => {
               : 'Choose an activity type, then save its details to your history.'}
           </Text>
 
-          <TouchableOpacity style={styles.logoutButton} onPress={logout}>
-            <Text style={styles.logoutButtonText}>{isArabic ? 'تسجيل الخروج' : 'Logout'}</Text>
+          <TouchableOpacity
+            style={styles.logoutButton}
+            onPress={logout}
+            accessibilityRole="button"
+            accessibilityLabel={isArabic ? 'تسجيل الخروج' : 'Log out'}
+          >
+            <Ionicons name="log-out-outline" size={27} color="#050505" />
           </TouchableOpacity>
 
           <View style={styles.statsBox}>
@@ -3724,17 +3745,12 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     alignSelf: 'flex-start',
     minHeight: 44,
-    paddingHorizontal: 14,
+    width: 44,
+    paddingHorizontal: 0,
+    alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#E7E9EE',
-    borderRadius: 8,
-    backgroundColor: '#FFFFFF',
-  },
-  backButtonText: {
-    color: '#050505',
-    fontSize: 20,
-    fontWeight: '600',
+    borderWidth: 0,
+    backgroundColor: 'transparent',
   },
   title: {
     fontSize: 22,
@@ -3791,18 +3807,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   languageButton: {
-    minWidth: 76,
+    width: 44,
     minHeight: 42,
-    paddingHorizontal: 12,
+    paddingHorizontal: 0,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E7E9EE',
-    backgroundColor: '#FFFFFF',
+    borderWidth: 0,
+    backgroundColor: 'transparent',
   },
   topbarSpacer: {
-    width: 76,
+    width: 44,
   },
   languageButtonText: {
     color: '#050505',
@@ -4623,18 +4638,16 @@ socialButtonText: {
   textAlign: 'center',
 },
 logoutButton: {
-  backgroundColor: '#FFFFFF',
-  borderWidth: 1,
-  borderColor: '#E7E9EE',
-  padding: 12,
-  borderRadius: 12,
+  width: 44,
+  minHeight: 44,
+  alignItems: 'center',
+  justifyContent: 'center',
+  backgroundColor: 'transparent',
+  borderWidth: 0,
+  padding: 0,
+  borderRadius: 8,
   marginBottom: 20,
-},
-logoutButtonText: {
-  color: '#050505',
-  fontSize: 18,
-  fontWeight: '700',
-  textAlign: 'center',
+  alignSelf: 'flex-start',
 },
 homeDescription: {
   color: '#050505',

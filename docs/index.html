@@ -9,7 +9,7 @@
       content="Tafasili keeps your activity sessions and important life records organized in one private place."
     />
     <link rel="icon" type="image/png" href="./assets/tafasili-favicon.png" />
-    <link rel="stylesheet" href="./styles.css?v=20260720-expiration-reminders" />
+    <link rel="stylesheet" href="./styles.css?v=20260720-compact-navigation" />
   </head>
   <body>
     <canvas id="activity-canvas" aria-hidden="true"></canvas>
@@ -17,7 +17,7 @@
     <div class="shell">
       <header class="topbar">
         <button class="icon-button hidden" id="back-button" type="button" aria-label="Go back">
-          Back
+          &larr;
         </button>
         <a class="brand" href="#" data-view="home" aria-label="Tafasili home">
           <span class="brand-mark" aria-hidden="true">
@@ -28,8 +28,8 @@
           </span>
         </a>
         <div class="top-actions">
-          <button class="text-button" id="language-button" type="button">العربية</button>
-          <button class="text-button hidden" id="logout-button" type="button">Logout</button>
+          <button class="text-button" id="language-button" type="button" aria-label="Switch language">AR</button>
+          <button class="icon-button hidden" id="logout-button" type="button" aria-label="Log out">&#8618;</button>
         </div>
       </header>
 

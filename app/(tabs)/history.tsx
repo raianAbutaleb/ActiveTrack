@@ -966,9 +966,13 @@ export default function HistoryScreen() {
 
   return (
     <ScrollView style={styles.container}>
-      <TouchableOpacity style={styles.backButton} onPress={() => router.replace('/')}>
-        <Ionicons name="arrow-back" size={20} color="#050505" />
-        <Text style={styles.backButtonText}>Back</Text>
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => router.replace('/')}
+        accessibilityRole="button"
+        accessibilityLabel="Back"
+      >
+        <Ionicons name="arrow-back" size={27} color="#050505" />
       </TouchableOpacity>
 
       <View style={styles.headerRow}>
@@ -1235,20 +1239,15 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     minHeight: 44,
     marginTop: 52,
-    paddingHorizontal: 14,
-    borderWidth: 1,
-    borderColor: '#E7E9EE',
+    width: 44,
+    justifyContent: 'center',
+    paddingHorizontal: 0,
+    borderWidth: 0,
     borderRadius: 8,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'transparent',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-  },
-
-  backButtonText: {
-    color: '#050505',
-    fontSize: 18,
-    fontWeight: '600',
   },
 
   title: {
