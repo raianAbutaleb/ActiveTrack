@@ -154,6 +154,7 @@ export type SessionDetails = {
   teamTwoScore?: string;
 
   gymWorkoutDay?: string;
+  gymCustomWorkout?: string;
   gymExercises?: GymExercise[];
 
   laps?: number;

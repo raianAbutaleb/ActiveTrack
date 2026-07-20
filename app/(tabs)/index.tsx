@@ -218,6 +218,7 @@ export default function HomeScreen() {
   const [footballTeamTwoScore, setFootballTeamTwoScore] = useState('');
 
   const [gymWorkoutDay, setGymWorkoutDay] = useState('');
+  const [gymCustomWorkout, setGymCustomWorkout] = useState('');
   const [gymExerciseName, setGymExerciseName] = useState('');
   const [gymSetReps, setGymSetReps] = useState('');
   const [gymSetWeight, setGymSetWeight] = useState('');
@@ -397,7 +398,7 @@ export default function HomeScreen() {
 
   draftValuesRef.current = {
     footballTeamOneName, footballTeamTwoName, footballTeamOneScore, footballTeamTwoScore,
-    gymWorkoutDay, routeName, elevationGain, splitNotes, movementGoal, personalRecord,
+    gymWorkoutDay, gymCustomWorkout, gymExerciseName, routeName, elevationGain, splitNotes, movementGoal, personalRecord,
     matchTeamOneName, matchTeamTwoName, balootUsName, balootThemName,
     studySubject, studyType, studyExamDate, studyCoursework, studyPomodoroPlan,
     studyStreak, studyTotalHours, studyNotes, workProjectName, workCandleHours,
@@ -1284,6 +1285,7 @@ const logout = async () => {
     setFootballTeamTwoScore('');
 
     setGymWorkoutDay('');
+    setGymCustomWorkout('');
     setGymExerciseName('');
     setGymSetReps('');
     setGymSetWeight('');
@@ -1420,6 +1422,8 @@ const logout = async () => {
     setFootballTeamOneScore(textValue('footballTeamOneScore'));
     setFootballTeamTwoScore(textValue('footballTeamTwoScore'));
     setGymWorkoutDay(textValue('gymWorkoutDay'));
+    setGymCustomWorkout(textValue('gymCustomWorkout'));
+    setGymExerciseName(textValue('gymExerciseName'));
     setRouteName(textValue('routeName'));
     setElevationGain(textValue('elevationGain'));
     setSplitNotes(textValue('splitNotes'));
@@ -1948,6 +1952,7 @@ if (!isSelectedActivityNonTimed(selectedActivity) && (!startTime || !endTime)) {
     if (selectedActivity === 'Gym') {
       newSession.details = {
         gymWorkoutDay: gymWorkoutDay.trim(),
+        gymCustomWorkout: gymCustomWorkout.trim(),
         gymExercises: finalGymExercises,
       };
     }
@@ -2376,6 +2381,12 @@ const getGroupedActivities = () => {
           <Text style={styles.savedDetailsText}>
             Workout Day: {session.details.gymWorkoutDay || 'Not filled'}
           </Text>
+
+          {session.details.gymCustomWorkout ? (
+            <Text style={styles.savedDetailsText}>
+              Custom Workout: {session.details.gymCustomWorkout}
+            </Text>
+          ) : null}
 
           <Text style={styles.savedDetailsHeader}>Exercises:</Text>
 
@@ -3168,10 +3179,18 @@ const getGroupedActivities = () => {
 
           <GymTracker
   selectedActivity={selectedActivity}
+  isArabic={isArabic}
   gymWorkoutDay={gymWorkoutDay}
   setGymWorkoutDay={setGymWorkoutDay}
+  gymCustomWorkout={gymCustomWorkout}
+  setGymCustomWorkout={setGymCustomWorkout}
   gymExerciseName={gymExerciseName}
   setGymExerciseName={setGymExerciseName}
+  gymExerciseOptions={[...new Map(
+    [...sessions.flatMap((session) => session.activity === 'Gym' ? session.details?.gymExercises ?? [] : []), ...gymExercises]
+      .filter((exercise) => exercise.name.trim())
+      .map((exercise) => [exercise.name.trim().toLowerCase(), exercise.name.trim()])
+  ).values()].sort((a, b) => a.localeCompare(b))}
   gymSetReps={gymSetReps}
   setGymSetReps={setGymSetReps}
   gymSetWeight={gymSetWeight}

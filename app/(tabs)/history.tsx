@@ -466,6 +466,12 @@ export default function HistoryScreen() {
             {session.details.gymWorkoutDay || 'Not filled'}
           </Text>
 
+          {session.details.gymCustomWorkout ? (
+            <Text style={styles.detailsText}>
+              Custom Workout: {session.details.gymCustomWorkout}
+            </Text>
+          ) : null}
+
           <Text style={styles.detailsSectionTitle}>
             Exercises
           </Text>

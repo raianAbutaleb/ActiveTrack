@@ -21,12 +21,18 @@ const gymWorkoutDays = [
 
 type Props = {
   selectedActivity: string | null;
+  isArabic: boolean;
 
   gymWorkoutDay: string;
   setGymWorkoutDay: Dispatch<SetStateAction<string>>;
 
+  gymCustomWorkout: string;
+  setGymCustomWorkout: Dispatch<SetStateAction<string>>;
+
   gymExerciseName: string;
   setGymExerciseName: Dispatch<SetStateAction<string>>;
+
+  gymExerciseOptions: string[];
 
   gymSetReps: string;
   setGymSetReps: Dispatch<SetStateAction<string>>;
@@ -178,11 +184,37 @@ export default function GymTracker(props: Props) {
         ))}
       </View>
 
-      <Text style={styles.detailsSubtitle}>Current Exercise</Text>
+      <Text style={styles.detailsSubtitle}>{props.isArabic ? 'تمرين مخصص' : 'Custom Workout'}</Text>
+      <TextInput
+        style={styles.input}
+        placeholder={props.isArabic ? 'اسم التمرين، مثال: يوم الدفع' : 'Workout name, example: Push Day'}
+        placeholderTextColor="#050505"
+        value={props.gymCustomWorkout}
+        onChangeText={props.setGymCustomWorkout}
+      />
+
+      <Text style={styles.detailsSubtitle}>{props.isArabic ? 'التمرين الحالي' : 'Current Exercise'}</Text>
+
+      {props.gymExerciseOptions.length > 0 && (
+        <View style={styles.exerciseOptionsBox}>
+          <Text style={styles.exerciseOptionsTitle}>{props.isArabic ? 'خيارات التمارين المحفوظة' : 'Saved exercise options'}</Text>
+          <View style={styles.exerciseOptionsRow}>
+            {props.gymExerciseOptions.map((exerciseName) => (
+              <TouchableOpacity
+                key={exerciseName.toLowerCase()}
+                style={styles.exerciseOptionButton}
+                onPress={() => props.setGymExerciseName(exerciseName)}
+              >
+                <Text style={styles.exerciseOptionText}>{exerciseName}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      )}
 
       <TextInput
         style={styles.input}
-        placeholder="Exercise name, example: Bench Press"
+        placeholder={props.isArabic ? 'اسم التمرين' : 'Exercise name, example: Bench Press'}
         placeholderTextColor="#050505"
         value={props.gymExerciseName}
         onChangeText={props.setGymExerciseName}
@@ -376,6 +408,34 @@ const styles = StyleSheet.create({
   scoreRow: {
     flexDirection: 'row',
     gap: 10,
+  },
+  exerciseOptionsBox: {
+    marginBottom: 12,
+  },
+  exerciseOptionsTitle: {
+    color: '#050505',
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  exerciseOptionsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  exerciseOptionButton: {
+    minHeight: 40,
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: '#E7E9EE',
+    borderRadius: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+  },
+  exerciseOptionText: {
+    color: '#050505',
+    fontSize: 16,
+    fontWeight: '700',
   },
   scoreInput: {
     flex: 1,

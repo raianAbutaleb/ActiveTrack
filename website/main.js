@@ -513,7 +513,10 @@ function gymText(key) {
     en: {
       title: 'Gym Workout',
       chooseWorkoutDay: 'Choose workout day',
+      customWorkout: 'Custom workout',
+      customWorkoutPlaceholder: 'Workout name, example: Push Day',
       currentExercise: 'Current Exercise',
+      savedExerciseOptions: 'Saved exercise options',
       exerciseName: 'Exercise name',
       exercisePlaceholder: 'Exercise name, example: Bench Press',
       setWeight: 'Weight',
@@ -547,7 +550,10 @@ function gymText(key) {
     ar: {
       title: 'تمرين النادي',
       chooseWorkoutDay: 'اختر يوم التمرين',
+      customWorkout: 'تمرين مخصص',
+      customWorkoutPlaceholder: 'اسم التمرين، مثال: يوم الدفع',
       currentExercise: 'التمرين الحالي',
+      savedExerciseOptions: 'خيارات التمارين المحفوظة',
       exerciseName: 'اسم التمرين',
       exercisePlaceholder: 'اسم التمرين، مثال: Bench Press',
       setWeight: 'الوزن',
@@ -1939,8 +1945,18 @@ function getFieldsForActivity(activity) {
             .join('')}
         </div>
 
+        ${inputField(gymText('customWorkout'), 'gymCustomWorkout', gymText('customWorkoutPlaceholder'))}
+
         <h2 class="gym-section-title">${gymText('currentExercise')}</h2>
-        ${inputField(gymText('exerciseName'), 'gymExerciseName', gymText('exercisePlaceholder'))}
+        <div class="gym-exercise-options">
+          <strong>${gymText('savedExerciseOptions')}</strong>
+          <div class="gym-option-list" id="gym-exercise-option-list"></div>
+        </div>
+        <label>
+          ${gymText('exerciseName')}
+          <input name="gymExerciseName" type="text" list="gym-exercise-name-options" placeholder="${gymText('exercisePlaceholder')}" />
+          <datalist id="gym-exercise-name-options"></datalist>
+        </label>
 
         <div class="gym-set-row">
           ${inputField(gymText('setWeight'), 'gymSetWeight', gymText('setWeight'), 'number')}
@@ -2869,12 +2885,30 @@ function getBestGymSet() {
   );
 }
 
+function getGymExerciseOptions() {
+  const names = new Map();
+  const exercises = [
+    ...state.sessions.flatMap((session) => session.activity === 'Gym' && Array.isArray(session.details?.gymExercises)
+      ? session.details.gymExercises
+      : []),
+    ...state.gymExercises,
+  ];
+  exercises.forEach((exercise) => {
+    const cleanName = String(exercise.name || '').trim();
+    if (cleanName) names.set(cleanName.toLowerCase(), cleanName);
+  });
+  return [...names.values()].sort((a, b) => a.localeCompare(b));
+}
+
 function renderGymWorkoutBuilder() {
   const selectedDay = document.querySelector('#gym-workout-day')?.value || '';
   const restTimer = document.querySelector('#gym-rest-time');
   const currentSetList = document.querySelector('#gym-current-set-list');
   const exerciseList = document.querySelector('#gym-exercise-list');
   const progressSummary = document.querySelector('#gym-progress-summary');
+  const exerciseOptionList = document.querySelector('#gym-exercise-option-list');
+  const exerciseDatalist = document.querySelector('#gym-exercise-name-options');
+  const exerciseOptions = getGymExerciseOptions();
 
   document.querySelectorAll('[data-gym-day]').forEach((button) => {
     button.classList.toggle('selected', button.dataset.gymDay === selectedDay);
@@ -2882,6 +2916,24 @@ function renderGymWorkoutBuilder() {
 
   if (restTimer) {
     restTimer.textContent = formatGymRestTime();
+  }
+
+  if (exerciseDatalist) {
+    exerciseDatalist.innerHTML = exerciseOptions
+      .map((exerciseName) => `<option value="${escapeHtml(exerciseName)}"></option>`)
+      .join('');
+  }
+
+  if (exerciseOptionList) {
+    exerciseOptionList.innerHTML = exerciseOptions.length
+      ? exerciseOptions.map((exerciseName) => `<button class="gym-option-button" type="button" data-gym-exercise-option="${escapeHtml(exerciseName)}">${escapeHtml(exerciseName)}</button>`).join('')
+      : `<small>${gymText('noExercises')}</small>`;
+    exerciseOptionList.querySelectorAll('[data-gym-exercise-option]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const exerciseInput = sessionForm.querySelector('[name="gymExerciseName"]');
+        if (exerciseInput) exerciseInput.value = button.dataset.gymExerciseOption;
+      });
+    });
   }
 
   if (currentSetList) {
@@ -3461,6 +3513,7 @@ function getSessionDetails() {
 
   if (state.selectedActivity === 'Gym') {
     const workoutDay = sessionForm.querySelector('[name="gymWorkoutDay"]').value;
+    const customWorkout = sessionForm.querySelector('[name="gymCustomWorkout"]').value.trim();
     const exerciseName = sessionForm.querySelector('[name="gymExerciseName"]').value.trim();
     const gymExercises =
       exerciseName !== '' && state.currentGymSets.length > 0
@@ -3476,6 +3529,7 @@ function getSessionDetails() {
 
     return {
       gymWorkoutDay: workoutDay,
+      gymCustomWorkout: customWorkout,
       gymExercises,
       reminder: getReminderDetails(),
     };
@@ -3998,6 +4052,7 @@ function renderSessionDetails(session) {
 
     return `
       <div><span>${gymText('workoutDay')}</span>${session.details.gymWorkoutDay || text('noDetails')}</div>
+      ${session.details.gymCustomWorkout ? `<div><span>${gymText('customWorkout')}</span>${escapeHtml(session.details.gymCustomWorkout)}</div>` : ''}
       ${exerciseDetails}
     `;
   }
