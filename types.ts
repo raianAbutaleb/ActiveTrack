@@ -131,6 +131,13 @@ export type ReminderDetails = {
   note?: string;
 };
 
+export type ExpirationReminderDetails = {
+  label: string;
+  expirationDate: string;
+  remindOn: string;
+  daysBefore: number;
+};
+
 export type PersonalInfoDetails = {
   idNumberEnding?: string;
   idExpirationDate?: string;
@@ -181,6 +188,7 @@ export type SessionDetails = {
   work?: WorkDetails;
   customFields?: CustomFieldValue[];
   reminder?: ReminderDetails;
+  expirationReminders?: ExpirationReminderDetails[];
   personalInfo?: PersonalInfoDetails;
 
   vehicleMaintenance?: VehicleMaintenanceDetails;

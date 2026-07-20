@@ -343,6 +343,8 @@ const state = {
   balootScores: [],
   balootDealerDirection: '↑',
   horseFeedCount: 1,
+  editingSessionId: null,
+  editableSessionFields: [],
 };
 
 const authCard = document.querySelector('.auth-card');
@@ -384,6 +386,11 @@ const exportHistoryButton = document.querySelector('#export-history-button');
 const totalSessions = document.querySelector('#total-sessions');
 const lastActivity = document.querySelector('#last-activity');
 const customCount = document.querySelector('#custom-count');
+const editSessionModal = document.querySelector('#edit-session-modal');
+const editSessionForm = document.querySelector('#edit-session-form');
+const editSessionFields = document.querySelector('#edit-session-fields');
+const editSessionClose = document.querySelector('#edit-session-close');
+const editSessionCancel = document.querySelector('#edit-session-cancel');
 const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 function text(key) {
@@ -921,6 +928,32 @@ async function restoreCloudCustomActivities(userId) {
   localStorage.setItem(migrationKey, 'true');
 }
 
+function showDueExpirationReminders() {
+  if (!state.userId) {
+    return;
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+  const dueReminders = state.sessions
+    .flatMap((session) => session.details?.expirationReminders || [])
+    .filter((reminder) => reminder.remindOn <= today && reminder.expirationDate >= today);
+  const uniqueReminders = [...new Map(
+    dueReminders.map((reminder) => [`${reminder.label}:${reminder.expirationDate}`, reminder])
+  ).values()];
+  const alertKey = `tafasili-expiration-reminder-alert:${state.userId}:${today}`;
+
+  if (uniqueReminders.length === 0 || localStorage.getItem(alertKey)) {
+    return;
+  }
+
+  localStorage.setItem(alertKey, 'true');
+  const title = state.language === 'ar' ? 'تذكيرات الانتهاء' : 'Expiration reminders';
+  const message = uniqueReminders
+    .map((reminder) => `${reminder.label}: ${reminder.expirationDate}`)
+    .join('\n');
+  window.alert(`${title}\n\n${message}`);
+}
+
 async function completeCloudSignIn(user) {
   state.userId = user.id;
   state.userEmail = user.email || user.phone || '';
@@ -941,6 +974,7 @@ async function completeCloudSignIn(user) {
 
   showView('home');
   renderHome();
+  showDueExpirationReminders();
   renderHistory();
 }
 
@@ -1073,6 +1107,76 @@ function getReminderDetails() {
   const note = sessionForm.querySelector('[name="reminderNote"]')?.value.trim() || '';
 
   return date || time || note ? { date, time, note } : undefined;
+}
+
+function expirationReminderField() {
+  const label = state.language === 'ar' ? 'تذكير تلقائي بالانتهاء' : 'Automatic expiration reminder';
+  const options = state.language === 'ar'
+    ? [
+        ['0', 'إيقاف'],
+        ['7', 'قبل أسبوع'],
+        ['30', 'قبل شهر'],
+        ['90', 'قبل 3 أشهر'],
+      ]
+    : [
+        ['0', 'Off'],
+        ['7', '1 week before'],
+        ['30', '1 month before'],
+        ['90', '3 months before'],
+      ];
+
+  return `
+    <label>
+      ${label}
+      <select name="expirationReminderLeadDays">
+        ${options.map(([value, text]) => `<option value="${value}" ${value === '30' ? 'selected' : ''}>${text}</option>`).join('')}
+      </select>
+    </label>
+  `;
+}
+
+function calculateExpirationReminderDate(expirationDate, daysBefore) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(expirationDate)) {
+    return '';
+  }
+
+  const expiration = new Date(`${expirationDate}T00:00:00Z`);
+
+  if (Number.isNaN(expiration.getTime())) {
+    return '';
+  }
+
+  expiration.setUTCDate(expiration.getUTCDate() - daysBefore);
+  return expiration.toISOString().slice(0, 10);
+}
+
+function getExpirationReminders() {
+  const daysBefore = Number(sessionForm.querySelector('[name="expirationReminderLeadDays"]')?.value || 0);
+
+  if (daysBefore <= 0) {
+    return [];
+  }
+
+  const fields = state.selectedActivity === 'Personal Info'
+    ? [
+        ['ID expiration', 'personalIdExpirationDate'],
+        ['Driving license expiration', 'personalDlExpirationDate'],
+        ['Passport expiration', 'personalPassportExpirationDate'],
+      ]
+    : state.selectedActivity === 'Vehicle Maintenance'
+      ? [
+          ['Insurance expiration', 'insuranceExpirationDate'],
+          ['Registration expiration', 'registrationEndDate'],
+        ]
+      : [];
+
+  return fields.flatMap(([label, fieldName]) => {
+    const expirationDate = sessionForm.querySelector(`[name="${fieldName}"]`)?.value || '';
+    const remindOn = calculateExpirationReminderDate(expirationDate, daysBefore);
+    return expirationDate && remindOn
+      ? [{ label, expirationDate, remindOn, daysBefore }]
+      : [];
+  });
 }
 
 function setAuthMode(mode) {
@@ -1828,6 +1932,7 @@ function getFieldsForActivity(activity) {
       inputField('Next service mileage', 'nextServiceMileage', '17000'),
       inputField('Insurance expiration date', 'insuranceExpirationDate', '2027-07-17', 'date'),
       inputField('Registration end date', 'registrationEndDate', '2027-07-17', 'date'),
+      expirationReminderField(),
       inputField('Reminder date', 'reminderDate', '2026-08-01', 'date'),
       inputField('Reminder time', 'reminderTime', '18:30', 'time'),
       textAreaField('Reminder note', 'reminderNote', 'Renew insurance or book service', true),
@@ -1860,6 +1965,7 @@ function getFieldsForActivity(activity) {
           ${inputField(labels.dlExpiration, 'personalDlExpirationDate', '2027-01-01', 'date')}
           ${inputField(labels.passportNumber, 'personalPassportNumber', labels.passportNumber, 'password')}
           ${inputField(labels.passportExpiration, 'personalPassportExpirationDate', '2027-01-01', 'date')}
+          ${expirationReminderField()}
         </div>
       </section>
     `;
@@ -3008,6 +3114,7 @@ async function saveSession(event) {
 
 function getSessionDetails() {
   if (state.selectedActivity === 'Personal Info') {
+    const expirationReminders = getExpirationReminders();
     return {
       personalInfo: {
         idNumberEnding: getSensitiveEnding(sessionForm.querySelector('[name="personalIdNumber"]')?.value),
@@ -3016,6 +3123,7 @@ function getSessionDetails() {
         passportNumberEnding: getSensitiveEnding(sessionForm.querySelector('[name="personalPassportNumber"]')?.value),
         passportExpirationDate: sessionForm.querySelector('[name="personalPassportExpirationDate"]')?.value || '',
       },
+      ...(expirationReminders.length > 0 ? { expirationReminders } : {}),
     };
   }
 
@@ -3153,6 +3261,12 @@ function getSessionDetails() {
     delete details.reminderNote;
   }
 
+  const expirationReminders = getExpirationReminders();
+  if (expirationReminders.length > 0) {
+    details.expirationReminders = expirationReminders;
+  }
+  delete details.expirationReminderLeadDays;
+
   if (movementActivities.includes(state.selectedActivity)) {
     const durationSeconds = state.startTime && state.endTime
       ? Math.floor((state.endTime - state.startTime) / 1000)
@@ -3213,6 +3327,7 @@ function renderHistory() {
           <div class="history-details">
             ${details || `<div><span>${text('details')}</span>${text('noDetails')}</div>`}
             ${renderReminderDetails(session)}
+            ${renderExpirationReminderDetails(session)}
             ${renderHistoryNote(session)}
           </div>
         </article>
@@ -3231,48 +3346,117 @@ function renderHistoryNote(session) {
   return `<div><span>${state.language === 'ar' ? 'ملاحظة السجل' : 'History note'}</span>${escapeHtml(note)}</div>`;
 }
 
-async function editHistorySession(sessionId) {
+const calculatedEditFieldKeys = new Set([
+  'historyNote',
+  'expirationReminders',
+  'candleSeconds',
+  'candleTime',
+  'candleTargetSeconds',
+  'candleTargetTime',
+  'balootShareText',
+  'totalDistance',
+  'averagePace',
+  'averageSpeed',
+]);
+
+function collectEditableSessionFields(value, path = []) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return [];
+  }
+
+  return Object.entries(value).flatMap(([key, fieldValue]) => {
+    if (calculatedEditFieldKeys.has(key) || Array.isArray(fieldValue)) {
+      return [];
+    }
+
+    const nextPath = [...path, key];
+
+    if (typeof fieldValue === 'string' || typeof fieldValue === 'number') {
+      const rawLabel = labelFromKey(key);
+      return [{
+        path: nextPath.join('.'),
+        label: state.language === 'ar' ? localizedFieldLabel(rawLabel) : rawLabel,
+        type: typeof fieldValue,
+        value: String(fieldValue),
+      }];
+    }
+
+    return collectEditableSessionFields(fieldValue, nextPath);
+  });
+}
+
+function setNestedSessionField(target, path, value, type) {
+  const keys = path.split('.');
+  const finalKey = keys.pop();
+  const parent = keys.reduce((current, key) => {
+    current[key] = current[key] && typeof current[key] === 'object' ? current[key] : {};
+    return current[key];
+  }, target);
+
+  parent[finalKey] = type === 'number' ? Number(value || 0) : value;
+}
+
+function refreshEditedExpirationReminders(session) {
+  const existing = session.details?.expirationReminders;
+
+  if (!Array.isArray(existing) || existing.length === 0) {
+    return;
+  }
+
+  const daysBefore = Number(existing[0]?.daysBefore || 0);
+  const fields = session.activity === 'Personal Info'
+    ? [
+        ['ID expiration', session.details?.personalInfo?.idExpirationDate],
+        ['Driving license expiration', session.details?.personalInfo?.drivingLicenseExpirationDate],
+        ['Passport expiration', session.details?.personalInfo?.passportExpirationDate],
+      ]
+    : session.activity === 'Vehicle Maintenance'
+      ? [
+          ['Insurance expiration', session.details?.insuranceExpirationDate],
+          ['Registration expiration', session.details?.registrationEndDate],
+        ]
+      : [];
+
+  session.details.expirationReminders = fields.flatMap(([label, expirationDate]) => {
+    const remindOn = calculateExpirationReminderDate(expirationDate || '', daysBefore);
+    return expirationDate && remindOn
+      ? [{ label, expirationDate, remindOn, daysBefore }]
+      : [];
+  });
+}
+
+function closeEditSessionModal() {
+  state.editingSessionId = null;
+  state.editableSessionFields = [];
+  editSessionModal.classList.add('hidden');
+}
+
+function editHistorySession(sessionId) {
   const session = state.sessions.find((item) => String(item.id) === String(sessionId));
 
   if (!session) {
     return;
   }
 
-  const dateLabel = state.language === 'ar' ? 'تعديل تاريخ الجلسة' : 'Edit session date';
-  const noteLabel = state.language === 'ar' ? 'تعديل ملاحظة السجل' : 'Edit history note';
-  const nextDate = window.prompt(dateLabel, session.date || '');
+  state.editingSessionId = session.id;
+  state.editableSessionFields = collectEditableSessionFields(session.details || {});
+  const labels = state.language === 'ar'
+    ? { title: 'تعديل البيانات المحفوظة', date: 'تاريخ الجلسة', note: 'ملاحظة السجل', cancel: 'إلغاء', save: 'حفظ التعديلات' }
+    : { title: 'Edit saved details', date: 'Session date', note: 'History note', cancel: 'Cancel', save: 'Save changes' };
 
-  if (nextDate === null) {
-    return;
-  }
-
-  const nextNote = window.prompt(noteLabel, session.details?.historyNote || '');
-
-  if (nextNote === null) {
-    return;
-  }
-
-  session.date = nextDate.trim() || session.date;
-  session.details = {
-    ...(session.details || {}),
-    historyNote: nextNote.trim(),
-  };
-  writeJson(accountStorageKey(storageKeys.sessions), state.sessions);
-
-  if (cloudClient && state.userId) {
-    const { error } = await cloudClient
-      .from('activity_sessions')
-      .update({ session_date: session.date, details: session.details })
-      .eq('user_id', state.userId)
-      .eq('id', session.id);
-
-    if (error) {
-      window.alert(state.language === 'ar' ? 'حُفظ التعديل على هذا الجهاز، لكن فشل الحفظ السحابي.' : 'Saved on this device, but cloud update failed.');
-    }
-  }
-
-  renderHome();
-  renderHistory();
+  document.querySelector('#edit-session-title').textContent = labels.title;
+  editSessionCancel.textContent = labels.cancel;
+  document.querySelector('#edit-session-save').textContent = labels.save;
+  editSessionFields.innerHTML = `
+    <label class="full">${labels.date}<input name="sessionDate" value="${escapeHtml(session.date || '')}"></label>
+    ${state.editableSessionFields.map((field) => `
+      <label>${escapeHtml(field.label)}
+        <input data-edit-path="${escapeHtml(field.path)}" data-edit-type="${field.type}" type="${field.type === 'number' ? 'number' : 'text'}" value="${escapeHtml(field.value)}">
+      </label>
+    `).join('')}
+    <label class="full">${labels.note}<textarea name="historyNote">${escapeHtml(session.details?.historyNote || '')}</textarea></label>
+  `;
+  editSessionModal.classList.remove('hidden');
 }
 
 function getRecentSessions(days) {
@@ -3370,6 +3554,27 @@ function renderReminderDetails(session) {
     <div><span>${labels.time}</span>${escapeHtml(reminder.time || text('noDetails'))}</div>
     <div><span>${labels.note}</span>${escapeHtml(reminder.note || text('noDetails'))}</div>
   `;
+}
+
+function renderExpirationReminderDetails(session) {
+  const reminders = session.details?.expirationReminders;
+
+  if (!Array.isArray(reminders) || reminders.length === 0) {
+    return '';
+  }
+
+  const labels = state.language === 'ar'
+    ? { expires: 'ينتهي في', remindOn: 'التذكير في', days: 'يوم قبل الانتهاء' }
+    : { expires: 'Expires', remindOn: 'Remind on', days: 'days before expiration' };
+
+  return reminders
+    .map(
+      (reminder) => `
+        <div><span>${escapeHtml(reminder.label)}</span>${labels.expires}: ${escapeHtml(reminder.expirationDate)}</div>
+        <div><span>${labels.remindOn}</span>${escapeHtml(reminder.remindOn)} (${escapeHtml(reminder.daysBefore)} ${labels.days})</div>
+      `
+    )
+    .join('');
 }
 
 function renderSessionDetails(session) {
@@ -3862,6 +4067,49 @@ sessionForm.addEventListener('submit', saveSession);
 historyFilter.addEventListener('change', renderHistory);
 clearHistoryButton.addEventListener('click', clearHistory);
 exportHistoryButton.addEventListener('click', exportHistory);
+editSessionClose.addEventListener('click', closeEditSessionModal);
+editSessionCancel.addEventListener('click', closeEditSessionModal);
+editSessionModal.addEventListener('click', (event) => {
+  if (event.target === editSessionModal) {
+    closeEditSessionModal();
+  }
+});
+editSessionForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const session = state.sessions.find((item) => String(item.id) === String(state.editingSessionId));
+
+  if (!session) {
+    closeEditSessionModal();
+    return;
+  }
+
+  const details = JSON.parse(JSON.stringify(session.details || {}));
+  editSessionFields.querySelectorAll('[data-edit-path]').forEach((input) => {
+    setNestedSessionField(details, input.dataset.editPath, input.value.trim(), input.dataset.editType);
+  });
+  details.historyNote = editSessionFields.querySelector('[name="historyNote"]')?.value.trim() || '';
+
+  const updatedSession = {
+    ...session,
+    date: editSessionFields.querySelector('[name="sessionDate"]')?.value.trim() || session.date,
+    details,
+  };
+  refreshEditedExpirationReminders(updatedSession);
+  state.sessions = state.sessions.map((item) => String(item.id) === String(updatedSession.id) ? updatedSession : item);
+  writeJson(accountStorageKey(storageKeys.sessions), state.sessions);
+
+  try {
+    await saveSessionToCloud(updatedSession);
+  } catch {
+    window.alert(state.language === 'ar'
+      ? 'حُفظ التعديل على هذا الجهاز، لكن فشل الحفظ السحابي.'
+      : 'Saved on this device, but cloud update failed.');
+  }
+
+  closeEditSessionModal();
+  renderHome();
+  renderHistory();
+});
 document.addEventListener('visibilitychange', syncStudyCandleWithClock);
 window.addEventListener('focus', syncStudyCandleWithClock);
 window.addEventListener('pageshow', syncStudyCandleWithClock);

@@ -21,6 +21,126 @@ import {
   saveCloudSession,
 } from '../../lib/sessionDatabase';
 
+type EditableSessionField = {
+  path: string;
+  label: string;
+  type: 'string' | 'number';
+};
+
+const calculatedEditFieldKeys = new Set([
+  'historyNote',
+  'expirationReminders',
+  'candleSeconds',
+  'candleTime',
+  'candleTargetSeconds',
+  'candleTargetTime',
+  'balootShareText',
+  'totalDistance',
+  'averagePace',
+  'averageSpeed',
+]);
+
+const formatFieldLabel = (path: string) => {
+  const key = path.split('.').pop() || path;
+  return key
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/^./, (letter) => letter.toUpperCase());
+};
+
+const collectEditableSessionFields = (
+  value: unknown,
+  path: string[] = []
+): EditableSessionField[] => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return [];
+  }
+
+  return Object.entries(value as Record<string, unknown>).flatMap(([key, fieldValue]) => {
+    const nextPath = [...path, key];
+    const joinedPath = nextPath.join('.');
+
+    if (calculatedEditFieldKeys.has(key) || Array.isArray(fieldValue)) {
+      return [];
+    }
+
+    if (typeof fieldValue === 'string' || typeof fieldValue === 'number') {
+      return [{
+        path: joinedPath,
+        label: formatFieldLabel(joinedPath),
+        type: typeof fieldValue === 'number' ? 'number' : 'string',
+      }];
+    }
+
+    return collectEditableSessionFields(fieldValue, nextPath);
+  });
+};
+
+const setNestedFieldValue = (
+  target: Record<string, unknown>,
+  path: string,
+  value: string,
+  type: EditableSessionField['type']
+) => {
+  const keys = path.split('.');
+  const finalKey = keys.pop();
+
+  if (!finalKey) {
+    return;
+  }
+
+  let current = target;
+  keys.forEach((key) => {
+    const next = current[key];
+    if (!next || typeof next !== 'object' || Array.isArray(next)) {
+      current[key] = {};
+    }
+    current = current[key] as Record<string, unknown>;
+  });
+  current[finalKey] = type === 'number' ? Number(value || 0) : value;
+};
+
+const calculateReminderDate = (expirationDate: string, daysBefore: number) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(expirationDate)) {
+    return '';
+  }
+
+  const expiration = new Date(`${expirationDate}T00:00:00Z`);
+  if (Number.isNaN(expiration.getTime())) {
+    return '';
+  }
+  expiration.setUTCDate(expiration.getUTCDate() - daysBefore);
+  return expiration.toISOString().slice(0, 10);
+};
+
+const refreshExpirationReminders = (session: Session) => {
+  const existingReminders = session.details?.expirationReminders;
+  const daysBefore = existingReminders?.[0]?.daysBefore;
+
+  if (!daysBefore || !session.details) {
+    return;
+  }
+
+  const fields = session.activity === 'Personal Info' && session.details.personalInfo
+    ? [
+        ['ID expiration', session.details.personalInfo.idExpirationDate || ''],
+        ['Driving license expiration', session.details.personalInfo.drivingLicenseExpirationDate || ''],
+        ['Passport expiration', session.details.personalInfo.passportExpirationDate || ''],
+      ]
+    : session.activity === 'Vehicle Maintenance' && session.details.vehicleMaintenance
+      ? [
+          ['Insurance expiration', session.details.vehicleMaintenance.insuranceExpirationDate || ''],
+          ['Registration expiration', session.details.vehicleMaintenance.registrationEndDate || ''],
+        ]
+      : [];
+
+  session.details.expirationReminders = fields.flatMap(([label, expirationDate]) => {
+    const remindOn = calculateReminderDate(expirationDate, daysBefore);
+    return expirationDate && remindOn
+      ? [{ label, expirationDate, remindOn, daysBefore }]
+      : [];
+  });
+};
+
 export default function HistoryScreen() {
   const router = useRouter();
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -28,6 +148,8 @@ export default function HistoryScreen() {
   const [editingSession, setEditingSession] = useState<Session | null>(null);
   const [editDate, setEditDate] = useState('');
   const [editNote, setEditNote] = useState('');
+  const [editableFields, setEditableFields] = useState<EditableSessionField[]>([]);
+  const [editFieldValues, setEditFieldValues] = useState<Record<string, string>>({});
 
   useFocusEffect(
     useCallback(() => {
@@ -106,15 +228,28 @@ export default function HistoryScreen() {
   };
 
   const openEditSession = (session: Session) => {
+    const fields = collectEditableSessionFields(session.details);
     setEditingSession(session);
     setEditDate(session.date || '');
     setEditNote(session.details?.historyNote || '');
+    setEditableFields(fields);
+    setEditFieldValues(Object.fromEntries(fields.map((field) => {
+      const value = field.path.split('.').reduce<unknown>((current, key) => {
+        if (!current || typeof current !== 'object') {
+          return '';
+        }
+        return (current as Record<string, unknown>)[key];
+      }, session.details);
+      return [field.path, String(value ?? '')];
+    })));
   };
 
   const closeEditSession = () => {
     setEditingSession(null);
     setEditDate('');
     setEditNote('');
+    setEditableFields([]);
+    setEditFieldValues({});
   };
 
   const saveEditedSession = async () => {
@@ -122,14 +257,19 @@ export default function HistoryScreen() {
       return;
     }
 
+    const updatedDetails = JSON.parse(JSON.stringify(editingSession.details || {}));
+    editableFields.forEach((field) => {
+      setNestedFieldValue(updatedDetails, field.path, editFieldValues[field.path] ?? '', field.type);
+    });
     const updatedSession: Session = {
       ...editingSession,
       date: editDate.trim() || editingSession.date,
       details: {
-        ...(editingSession.details || {}),
+        ...updatedDetails,
         historyNote: editNote.trim(),
       },
     };
+    refreshExpirationReminders(updatedSession);
     const updatedSessions = sessions.map((session) =>
       session.id === updatedSession.id ? updatedSession : session
     );
@@ -978,6 +1118,18 @@ export default function HistoryScreen() {
               </View>
             )}
 
+            {session.details?.expirationReminders?.map((reminder) => (
+              <View key={`${session.id}-${reminder.label}`} style={styles.detailsBox}>
+                <Text style={styles.detailsTitle}>{reminder.label}</Text>
+                <Text style={styles.detailsText}>
+                  Expires: {reminder.expirationDate}
+                </Text>
+                <Text style={styles.detailsText}>
+                  Remind on: {reminder.remindOn} ({reminder.daysBefore} days before)
+                </Text>
+              </View>
+            ))}
+
             {session.details?.historyNote && (
               <View style={styles.detailsBox}>
                 <Text style={styles.detailsTitle}>History Note</Text>
@@ -1013,23 +1165,40 @@ export default function HistoryScreen() {
         <View style={styles.modalBackground}>
           <View style={styles.editModal}>
             <Text style={styles.editModalTitle}>Edit Session</Text>
-            <Text style={styles.editLabel}>Session date</Text>
-            <TextInput
-              style={styles.editInput}
-              value={editDate}
-              onChangeText={setEditDate}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor="#050505"
-            />
-            <Text style={styles.editLabel}>History note</Text>
-            <TextInput
-              style={[styles.editInput, styles.editNoteInput]}
-              value={editNote}
-              onChangeText={setEditNote}
-              placeholder="Add a note"
-              placeholderTextColor="#050505"
-              multiline
-            />
+            <ScrollView style={styles.editFieldsScroll} keyboardShouldPersistTaps="handled">
+              <Text style={styles.editLabel}>Session date</Text>
+              <TextInput
+                style={styles.editInput}
+                value={editDate}
+                onChangeText={setEditDate}
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor="#050505"
+              />
+              {editableFields.map((field) => (
+                <View key={field.path}>
+                  <Text style={styles.editLabel}>{field.label}</Text>
+                  <TextInput
+                    style={styles.editInput}
+                    value={editFieldValues[field.path] ?? ''}
+                    onChangeText={(value) => setEditFieldValues((current) => ({
+                      ...current,
+                      [field.path]: value,
+                    }))}
+                    keyboardType={field.type === 'number' ? 'numeric' : 'default'}
+                    placeholderTextColor="#050505"
+                  />
+                </View>
+              ))}
+              <Text style={styles.editLabel}>History note</Text>
+              <TextInput
+                style={[styles.editInput, styles.editNoteInput]}
+                value={editNote}
+                onChangeText={setEditNote}
+                placeholder="Add a note"
+                placeholderTextColor="#050505"
+                multiline
+              />
+            </ScrollView>
             <View style={styles.modalActions}>
               <TouchableOpacity style={styles.modalCancelButton} onPress={closeEditSession}>
                 <Text style={styles.editButtonText}>Cancel</Text>
@@ -1361,6 +1530,7 @@ const styles = StyleSheet.create({
   },
 
   editModal: {
+    maxHeight: '86%',
     padding: 20,
     borderRadius: 14,
     borderWidth: 1,
@@ -1373,6 +1543,10 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 18,
+  },
+
+  editFieldsScroll: {
+    marginBottom: 16,
   },
 
   editLabel: {

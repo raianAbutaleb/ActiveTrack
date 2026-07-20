@@ -9,7 +9,7 @@
       content="Tafasili keeps your activity sessions and important life records organized in one private place."
     />
     <link rel="icon" type="image/png" href="./assets/tafasili-favicon.png" />
-    <link rel="stylesheet" href="./styles.css?v=20260719-cloud-custom-activities" />
+    <link rel="stylesheet" href="./styles.css?v=20260720-expiration-reminders" />
   </head>
   <body>
     <canvas id="activity-canvas" aria-hidden="true"></canvas>
@@ -191,8 +191,22 @@
       </main>
     </div>
 
+    <div class="edit-session-modal hidden" id="edit-session-modal" role="dialog" aria-modal="true" aria-labelledby="edit-session-title">
+      <form class="edit-session-card" id="edit-session-form">
+        <div class="edit-session-head">
+          <h2 id="edit-session-title">Edit saved details</h2>
+          <button class="icon-button" type="button" id="edit-session-close" aria-label="Close">&times;</button>
+        </div>
+        <div class="edit-session-fields" id="edit-session-fields"></div>
+        <div class="button-row">
+          <button class="button secondary" type="button" id="edit-session-cancel">Cancel</button>
+          <button class="button primary" type="submit" id="edit-session-save">Save changes</button>
+        </div>
+      </form>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.7/dist/umd/supabase.min.js"></script>
     <script src="./supabase-config.js?v=20260718-supabase"></script>
-    <script src="./main.js?v=20260719-cloud-custom-activities"></script>
+    <script src="./main.js?v=20260720-history-quick-edit"></script>
   </body>
 </html>

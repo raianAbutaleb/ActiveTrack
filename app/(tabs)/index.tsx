@@ -44,6 +44,7 @@ import { isSupabaseConfigured } from '../../lib/supabase';
 import {
   BalootScore,
   CustomFieldValue,
+  ExpirationReminderDetails,
   GymExercise,
   GymSet,
   HorseFeedEntry,
@@ -315,6 +316,7 @@ export default function HomeScreen() {
   const [personalDlExpirationDate, setPersonalDlExpirationDate] = useState('');
   const [personalPassportNumber, setPersonalPassportNumber] = useState('');
   const [personalPassportExpirationDate, setPersonalPassportExpirationDate] = useState('');
+  const [expirationReminderLeadDays, setExpirationReminderLeadDays] = useState('30');
 
   const latestStudySessionRef = useRef({
     sessions,
@@ -359,6 +361,7 @@ export default function HomeScreen() {
   autoSaveCompletedStudyCandleRef.current = () => {
     void autoSaveCompletedStudyCandle();
   };
+  const isArabic = language === 'ar';
 
   useEffect(() => {
     void AsyncStorage.getItem('language').then((savedLanguage) => {
@@ -367,6 +370,43 @@ export default function HomeScreen() {
       }
     });
   }, []);
+
+  useEffect(() => {
+    if (!isLoggedIn || sessions.length === 0) {
+      return;
+    }
+
+    const showDueReminders = async () => {
+      const today = new Date().toISOString().slice(0, 10);
+      const dueReminders = sessions
+        .flatMap((session) => session.details?.expirationReminders ?? [])
+        .filter((reminder) => reminder.remindOn <= today && reminder.expirationDate >= today);
+      const uniqueReminders = [...new Map(
+        dueReminders.map((reminder) => [`${reminder.label}:${reminder.expirationDate}`, reminder])
+      ).values()];
+
+      if (uniqueReminders.length === 0) {
+        return;
+      }
+
+      const alertKey = `expirationReminderAlert:${authUserId ?? 'local'}:${today}`;
+      const alreadyShown = await AsyncStorage.getItem(alertKey);
+
+      if (alreadyShown) {
+        return;
+      }
+
+      await AsyncStorage.setItem(alertKey, 'true');
+      Alert.alert(
+        isArabic ? 'تذكيرات الانتهاء' : 'Expiration Reminders',
+        uniqueReminders
+          .map((reminder) => `${reminder.label}: ${reminder.expirationDate}`)
+          .join('\n')
+      );
+    };
+
+    void showDueReminders();
+  }, [authUserId, isArabic, isLoggedIn, sessions]);
 
   useEffect(() => {
     navigation.setOptions({
@@ -383,7 +423,6 @@ export default function HomeScreen() {
     });
   }, [isLoggedIn, navigation]);
 
-  const isArabic = language === 'ar';
   const toggleLanguage = async () => {
     const nextLanguage = isArabic ? 'en' : 'ar';
     setLanguage(nextLanguage);
@@ -838,6 +877,51 @@ const logout = async () => {
     return Boolean(activity && (['Gym', 'Studying', 'Work', 'Vehicle Maintenance'].includes(activity) || horseActivities.includes(activity)));
   };
 
+  const supportsExpirationReminders = (activity: string | null) => {
+    return activity === 'Personal Info' || activity === 'Vehicle Maintenance';
+  };
+
+  const calculateReminderDate = (expirationDate: string, daysBefore: number) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(expirationDate)) {
+      return '';
+    }
+
+    const expiration = new Date(`${expirationDate}T00:00:00Z`);
+
+    if (Number.isNaN(expiration.getTime())) {
+      return '';
+    }
+
+    expiration.setUTCDate(expiration.getUTCDate() - daysBefore);
+    return expiration.toISOString().slice(0, 10);
+  };
+
+  const getExpirationReminders = (): ExpirationReminderDetails[] => {
+    const daysBefore = Number(expirationReminderLeadDays);
+
+    if (!supportsExpirationReminders(selectedActivity) || daysBefore <= 0) {
+      return [];
+    }
+
+    const expirationFields = selectedActivity === 'Personal Info'
+      ? [
+          { label: 'ID expiration', date: personalIdExpirationDate.trim() },
+          { label: 'Driving license expiration', date: personalDlExpirationDate.trim() },
+          { label: 'Passport expiration', date: personalPassportExpirationDate.trim() },
+        ]
+      : [
+          { label: 'Insurance expiration', date: vehicleInsuranceExpirationDate.trim() },
+          { label: 'Registration expiration', date: vehicleRegistrationEndDate.trim() },
+        ];
+
+    return expirationFields.flatMap(({ label, date }) => {
+      const remindOn = calculateReminderDate(date, daysBefore);
+      return date && remindOn
+        ? [{ label, expirationDate: date, remindOn, daysBefore }]
+        : [];
+    });
+  };
+
   const formatStudyCandleDuration = (durationSeconds: number) => {
     const hours = Math.floor(durationSeconds / 3600);
     const minutes = Math.floor((durationSeconds % 3600) / 60);
@@ -1119,6 +1203,7 @@ const logout = async () => {
     setPersonalDlExpirationDate('');
     setPersonalPassportNumber('');
     setPersonalPassportExpirationDate('');
+    setExpirationReminderLeadDays('30');
     setCustomFieldValues({});
 
     setHorseRiderName('');
@@ -1794,6 +1879,15 @@ if (!isSelectedActivityNonTimed(selectedActivity) && (!startTime || !endTime)) {
           passportNumberEnding: getSensitiveEnding(personalPassportNumber),
           passportExpirationDate: personalPassportExpirationDate.trim(),
         },
+      };
+    }
+
+    const expirationReminders = getExpirationReminders();
+
+    if (expirationReminders.length > 0) {
+      newSession.details = {
+        ...newSession.details,
+        expirationReminders,
       };
     }
 
@@ -2709,14 +2803,14 @@ const getGroupedActivities = () => {
               />
               <TextInput
                 style={styles.input}
-                placeholder="ID expiration date"
+                placeholder="ID expiration date (YYYY-MM-DD)"
                 placeholderTextColor="#050505"
                 value={personalIdExpirationDate}
                 onChangeText={setPersonalIdExpirationDate}
               />
               <TextInput
                 style={styles.input}
-                placeholder="Driving license expiration date"
+                placeholder="Driving license expiration date (YYYY-MM-DD)"
                 placeholderTextColor="#050505"
                 value={personalDlExpirationDate}
                 onChangeText={setPersonalDlExpirationDate}
@@ -2732,7 +2826,7 @@ const getGroupedActivities = () => {
               />
               <TextInput
                 style={styles.input}
-                placeholder="Passport expiration date"
+                placeholder="Passport expiration date (YYYY-MM-DD)"
                 placeholderTextColor="#050505"
                 value={personalPassportExpirationDate}
                 onChangeText={setPersonalPassportExpirationDate}
@@ -3268,7 +3362,7 @@ const getGroupedActivities = () => {
 
     <TextInput
       style={styles.input}
-      placeholder="Insurance expiration date"
+      placeholder="Insurance expiration date (YYYY-MM-DD)"
       placeholderTextColor="#050505"
       value={vehicleInsuranceExpirationDate}
       onChangeText={setVehicleInsuranceExpirationDate}
@@ -3276,7 +3370,7 @@ const getGroupedActivities = () => {
 
     <TextInput
       style={styles.input}
-      placeholder="Registration end date"
+      placeholder="Registration end date (YYYY-MM-DD)"
       placeholderTextColor="#050505"
       value={vehicleRegistrationEndDate}
       onChangeText={setVehicleRegistrationEndDate}
@@ -3318,6 +3412,40 @@ const getGroupedActivities = () => {
                 onChangeText={setReminderNote}
                 multiline
               />
+            </View>
+          )}
+
+          {supportsExpirationReminders(selectedActivity) && (
+            <View style={styles.infoBox}>
+              <Text style={[styles.savedDetailsHeader, isArabic && styles.rtlText]}>
+                {isArabic ? 'تذكير تلقائي بالانتهاء' : 'Automatic Expiration Reminder'}
+              </Text>
+              <Text style={[styles.candleHint, isArabic && styles.rtlText]}>
+                {isArabic
+                  ? 'يتم إنشاء تذكير لكل تاريخ انتهاء تم إدخاله.'
+                  : 'A reminder is created for every expiration date you enter.'}
+              </Text>
+              <View style={styles.categoryChoiceGrid}>
+                {[
+                  { value: '0', en: 'Off', ar: 'إيقاف' },
+                  { value: '7', en: '1 week before', ar: 'قبل أسبوع' },
+                  { value: '30', en: '1 month before', ar: 'قبل شهر' },
+                  { value: '90', en: '3 months before', ar: 'قبل 3 أشهر' },
+                ].map((option) => (
+                  <TouchableOpacity
+                    key={option.value}
+                    style={[
+                      styles.categoryChoiceButton,
+                      expirationReminderLeadDays === option.value && styles.selectedOptionButton,
+                    ]}
+                    onPress={() => setExpirationReminderLeadDays(option.value)}
+                  >
+                    <Text style={[styles.categoryChoiceText, isArabic && styles.rtlText]}>
+                      {isArabic ? option.ar : option.en}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
           )}
 
