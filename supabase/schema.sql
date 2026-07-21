@@ -15,6 +15,20 @@ create table if not exists public.activity_sessions (
 create index if not exists activity_sessions_user_created_idx
   on public.activity_sessions (user_id, created_at desc);
 
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_publication_tables
+    where pubname = 'supabase_realtime'
+      and schemaname = 'public'
+      and tablename = 'activity_sessions'
+  ) then
+    alter publication supabase_realtime add table public.activity_sessions;
+  end if;
+end
+$$;
+
 alter table public.activity_sessions enable row level security;
 
 revoke all on table public.activity_sessions from anon;

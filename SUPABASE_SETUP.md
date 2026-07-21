@@ -15,7 +15,7 @@ Supabase gives Tafasili a real cloud database for accounts and saved history.
 2. Copy the SQL from `supabase/schema.sql`.
 3. Run it.
 
-This creates the `activity_sessions` and `custom_activities` tables. Row Level Security ensures each signed-in user can only access their own history and custom activities.
+This creates the `activity_sessions` and `custom_activities` tables. It also enables realtime history updates. Row Level Security ensures each signed-in user can only access their own history and custom activities.
 
 ## 3. Add your app keys
 
@@ -43,3 +43,11 @@ Do not put the service-role secret key in the app.
 5. Check both `activity_sessions` and `custom_activities`.
 
 If email confirmation is enabled in Supabase, confirm the email before testing database sync.
+
+## 5. Verify realtime history
+
+After pulling an update that changes `supabase/schema.sql`, run the schema again in the SQL Editor. The statements are safe to rerun. Then sign in to two devices with the same account:
+
+1. Save a session on the first device and confirm it appears on the second.
+2. Delete that session on either device and confirm it disappears from both.
+3. If a device was asleep or offline, bring it back online; History refreshes when the app or browser becomes active.

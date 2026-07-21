@@ -212,8 +212,10 @@ export default function HorseRidingTracker(props: Props) {
   };
 
   return (
-    <View style={styles.detailsBox}>
-      <Text style={styles.detailsTitle}>{horseLogType}</Text>
+    <View style={[styles.detailsBox, horseLogType === 'Riding Test' && styles.ridingTestContainer]}>
+      {horseLogType !== 'Riding Test' && (
+        <Text style={styles.detailsTitle}>{horseLogType}</Text>
+      )}
 
       {horseLogType === 'Horse Riding' && (
         <TextInput
@@ -676,6 +678,11 @@ const styles = StyleSheet.create({
     padding: 18,
     borderRadius: 16,
     marginBottom: 22,
+  },
+  ridingTestContainer: {
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+    padding: 0,
   },
   detailsTitle: {
     color: '#050505',

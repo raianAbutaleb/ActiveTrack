@@ -1519,17 +1519,35 @@ body.rtl .category-card {
   margin: 0;
 }
 
+.draft-resume-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0 0;
+  border-top: 1px solid var(--line);
+}
+
 .draft-resume {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   min-height: 48px;
-  padding: 12px 0 0;
+  padding: 0;
   border: 0;
-  border-top: 1px solid var(--line);
   background: transparent;
   color: #050505;
+}
+
+.draft-delete {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  background: transparent;
+  color: #050505;
+  font-size: 1.65rem;
+  font-weight: 800;
 }
 
 .quick-access {

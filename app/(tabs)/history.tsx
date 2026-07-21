@@ -1,9 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
+  AppState,
   Modal,
   ScrollView,
   StyleSheet,
@@ -19,6 +20,7 @@ import {
   deleteCloudSession,
   loadCloudSessions,
   saveCloudSession,
+  subscribeToCloudSessions,
 } from '../../lib/sessionDatabase';
 import { shareSessionsCsv, shareSessionsPdf } from '../../lib/deviceFeatures';
 import { loadLocalSettings } from '../../lib/userPreferences';
@@ -157,13 +159,7 @@ export default function HistoryScreen() {
   const [editableFields, setEditableFields] = useState<EditableSessionField[]>([]);
   const [editFieldValues, setEditFieldValues] = useState<Record<string, string>>({});
 
-  useFocusEffect(
-    useCallback(() => {
-      loadSessions();
-    }, [])
-  );
-
-  const loadSessions = async () => {
+  const loadSessions = useCallback(async () => {
     try {
       const authSession = await getSupabaseSession();
       const storageKey = authSession?.user.id
@@ -173,19 +169,42 @@ export default function HistoryScreen() {
       setDateFormat(savedSettings.dateFormat);
       const savedSessions = await AsyncStorage.getItem(storageKey);
       const localSessions: Session[] = savedSessions ? JSON.parse(savedSessions) : [];
-      const cloudSessions = await loadCloudSessions();
-
-      const mergedSessions = new Map<number, Session>();
-      localSessions.forEach((session) => mergedSessions.set(session.id, session));
-      cloudSessions?.forEach((session) => mergedSessions.set(session.id, session));
-
-      const restoredSessions = [...mergedSessions.values()].sort((first, second) => second.id - first.id);
+      let cloudSessions: Session[] | null = null;
+      try {
+        cloudSessions = await loadCloudSessions();
+      } catch {
+        // Keep the account-scoped cache visible until the connection returns.
+      }
+      const restoredSessions = Array.isArray(cloudSessions) ? cloudSessions : localSessions;
       setSessions(restoredSessions);
       await AsyncStorage.setItem(storageKey, JSON.stringify(restoredSessions));
     } catch (error) {
       alert('Error loading history');
     }
-  };
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadSessions();
+    }, [loadSessions])
+  );
+
+  useEffect(() => {
+    let active = true;
+    const refresh = () => {
+      if (active) void loadSessions();
+    };
+    const unsubscribe = subscribeToCloudSessions(refresh);
+    const appStateSubscription = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active') refresh();
+    });
+
+    return () => {
+      active = false;
+      unsubscribe();
+      appStateSubscription.remove();
+    };
+  }, [loadSessions]);
 
   const saveSessions = async (updatedSessions: Session[]) => {
     try {
@@ -207,13 +226,12 @@ export default function HistoryScreen() {
       (session) => session.id !== sessionId
     );
 
-    setSessions(updatedSessions);
-    await saveSessions(updatedSessions);
-
     try {
       await deleteCloudSession(sessionId);
+      setSessions(updatedSessions);
+      await saveSessions(updatedSessions);
     } catch {
-      alert('Deleted on this device, but cloud delete failed.');
+      alert('Cloud delete failed. The session was not deleted; please try again.');
     }
   };
 

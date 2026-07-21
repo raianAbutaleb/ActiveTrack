@@ -364,6 +364,7 @@ const state = {
   syncStatus: 'saved',
   onboardingStep: 0,
   devices: [],
+  historyChannel: null,
 };
 
 const authCard = document.querySelector('.auth-card');
@@ -922,26 +923,19 @@ async function saveSessionToCloud(session) {
 async function restoreCloudHistory(userId) {
   const scopedKey = accountStorageKey(storageKeys.sessions, userId);
   const migrationKey = `tafasili-cloud-migrated:${userId}`;
-  const scopedSessions = readJson(scopedKey, []);
-  const legacySessions = localStorage.getItem(migrationKey)
-    ? []
-    : readJson(storageKeys.sessions, []);
-  const localSessions = [...scopedSessions, ...legacySessions];
+  const shouldMigrate = !localStorage.getItem(migrationKey);
+  const localSessions = shouldMigrate
+    ? [...readJson(scopedKey, []), ...readJson(storageKeys.sessions, [])]
+    : [];
 
-  const { data, error } = await cloudClient
-    .from('activity_sessions')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    throw error;
-  }
-
-  if (legacySessions.length > 0) {
+  if (localSessions.length > 0) {
+    const uniqueSessions = [...new Map(
+      localSessions.map((session) => [String(session.id), session])
+    ).values()];
     const { error: migrationError } = await cloudClient
       .from('activity_sessions')
       .upsert(
-        legacySessions.map((session) => sessionToCloudRow(session, userId)),
+        uniqueSessions.map((session) => sessionToCloudRow(session, userId)),
         { onConflict: 'user_id,id' }
       );
 
@@ -950,18 +944,51 @@ async function restoreCloudHistory(userId) {
     }
   }
 
-  const mergedSessions = new Map();
-  localSessions.forEach((session) => mergedSessions.set(String(session.id), session));
-  (data || []).forEach((row) => {
-    const session = cloudRowToSession(row);
-    mergedSessions.set(String(session.id), session);
-  });
-
-  state.sessions = [...mergedSessions.values()].sort(
-    (first, second) => new Date(second.date) - new Date(first.date)
-  );
-  writeJson(scopedKey, state.sessions);
   localStorage.setItem(migrationKey, 'true');
+  await refreshCloudHistory(userId);
+}
+
+async function refreshCloudHistory(userId = state.userId) {
+  if (!cloudClient || !userId || userId !== state.userId) {
+    return;
+  }
+
+  const { data, error } = await cloudClient
+    .from('activity_sessions')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    state.syncStatus = 'offline';
+    throw error;
+  }
+
+  state.sessions = (data || []).map(cloudRowToSession);
+  writeJson(accountStorageKey(storageKeys.sessions, userId), state.sessions);
+  state.syncStatus = 'saved';
+  renderHome();
+  renderHistory();
+}
+
+function stopHistorySubscription() {
+  if (cloudClient && state.historyChannel) {
+    void cloudClient.removeChannel(state.historyChannel);
+  }
+  state.historyChannel = null;
+}
+
+function subscribeToHistoryChanges() {
+  stopHistorySubscription();
+  if (!cloudClient || !state.userId) return;
+
+  state.historyChannel = cloudClient
+    .channel(`activity-sessions-${state.userId}`)
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'activity_sessions' },
+      () => { void refreshCloudHistory().catch(() => {}); }
+    )
+    .subscribe();
 }
 
 function customActivityToCloudRow(name, userId, templates, groups) {
@@ -1139,6 +1166,7 @@ async function completeCloudSignIn(user) {
   } catch {
     authMessage.textContent = 'Signed in. Cloud history will retry when your connection returns.';
   }
+  subscribeToHistoryChanges();
 
   try {
     await restoreCloudCustomActivities(user.id);
@@ -1660,10 +1688,13 @@ function renderTodayAndQuickAccess() {
         : `<p>${state.language === 'ar' ? 'لا توجد تذكيرات مستحقة اليوم.' : 'No reminders are due today.'}</p>`}
     </div>
     ${state.draft ? `
-      <button class="draft-resume" type="button" data-continue-draft>
-        <strong>${state.language === 'ar' ? 'متابعة المسودة' : 'Continue draft'}</strong>
-        <span>${escapeHtml(activityLabel(state.draft.activity))}</span>
-      </button>` : ''}
+      <div class="draft-resume-row">
+        <button class="draft-resume" type="button" data-continue-draft>
+          <strong>${state.language === 'ar' ? 'متابعة المسودة' : 'Continue draft'}</strong>
+          <span>${escapeHtml(activityLabel(state.draft.activity))}</span>
+        </button>
+        <button class="draft-delete" type="button" data-delete-draft aria-label="${state.language === 'ar' ? 'حذف المسودة' : 'Delete draft'}">−</button>
+      </div>` : ''}
   `;
 
   renderQuickActivityGroup(favoriteActivities, state.language === 'ar' ? 'المفضلة' : 'Favorites', state.settings.favoriteActivities, true);
@@ -1706,6 +1737,18 @@ async function deleteCustomActivity(activity) {
       ? 'تم الحذف من هذا الجهاز، لكن تعذر حذفه من السحابة.'
       : 'Deleted on this device, but cloud deletion failed.');
   }
+  renderHome();
+}
+
+function deleteDraft() {
+  const confirmed = window.confirm(
+    state.language === 'ar'
+      ? 'حذف المسودة غير المحفوظة؟'
+      : 'Delete this unfinished draft?'
+  );
+  if (!confirmed) return;
+  state.draft = null;
+  localStorage.removeItem(accountStorageKey(storageKeys.draft));
   renderHome();
 }
 
@@ -2421,7 +2464,6 @@ function getFieldsForActivity(activity) {
           ${inputField(studyText('studyType'), 'studyType', studyText('studyTypePlaceholder'))}
           ${inputField(studyText('examDate'), 'examDate', studyText('examDatePlaceholder'))}
           ${inputField(studyText('coursework'), 'coursework', studyText('courseworkPlaceholder'))}
-          ${inputField(studyText('pomodoroPlan'), 'pomodoroPlan', studyText('pomodoroPlaceholder'))}
           ${inputField(studyText('streak'), 'streak', studyText('streakPlaceholder'))}
           ${inputField(studyText('totalStudyHours'), 'totalStudyHours', studyText('totalHoursPlaceholder'), 'number')}
         </div>
@@ -3728,7 +3770,6 @@ function getSessionDetails() {
         studyType: sessionForm.querySelector('[name="studyType"]').value.trim(),
         examDate: sessionForm.querySelector('[name="examDate"]').value.trim(),
         coursework: sessionForm.querySelector('[name="coursework"]').value.trim(),
-        pomodoroPlan: sessionForm.querySelector('[name="pomodoroPlan"]').value.trim(),
         streak: sessionForm.querySelector('[name="streak"]').value.trim(),
         totalStudyHours: sessionForm.querySelector('[name="totalStudyHours"]').value.trim(),
         candleSeconds: state.studyCandleSeconds,
@@ -4268,7 +4309,6 @@ function renderSessionDetails(session) {
       <div><span>${studyText('studyType')}</span>${escapeHtml(study.studyType || text('noDetails'))}</div>
       <div><span>${studyText('examDate')}</span>${escapeHtml(study.examDate || text('noDetails'))}</div>
       <div><span>${studyText('coursework')}</span>${escapeHtml(study.coursework || text('noDetails'))}</div>
-      <div><span>${studyText('pomodoroPlan')}</span>${escapeHtml(study.pomodoroPlan || text('noDetails'))}</div>
       <div><span>${studyText('streak')}</span>${escapeHtml(study.streak || text('noDetails'))}</div>
       <div><span>${studyText('totalStudyHours')}</span>${escapeHtml(study.totalStudyHours || text('noDetails'))}</div>
       <div><span>${studyText('candleTimer')}</span>${escapeHtml(study.candleTime || '00:00:00')}</div>
@@ -4373,9 +4413,6 @@ async function clearHistory() {
     return;
   }
 
-  state.sessions = [];
-  writeJson(accountStorageKey(storageKeys.sessions), state.sessions);
-
   if (cloudClient && state.userId) {
     const { error } = await cloudClient
       .from('activity_sessions')
@@ -4383,9 +4420,13 @@ async function clearHistory() {
       .eq('user_id', state.userId);
 
     if (error) {
-      sessionMessage.textContent = 'Local history cleared, but cloud deletion failed.';
+      sessionMessage.textContent = 'Cloud deletion failed. History was not cleared; please try again.';
+      return;
     }
   }
+
+  state.sessions = [];
+  writeJson(accountStorageKey(storageKeys.sessions), state.sessions);
 
   renderHome();
   renderHistory();
@@ -4628,6 +4669,7 @@ logoutButton.addEventListener('click', async () => {
   writeJson(accountStorageKey(storageKeys.customActivities), state.customActivities);
   writeJson(accountStorageKey(storageKeys.customTemplates), state.customTemplates);
   writeJson(accountStorageKey(storageKeys.customGroups), state.customGroups);
+  stopHistorySubscription();
   await cloudClient?.auth.signOut();
   state.userId = null;
   state.userEmail = null;
@@ -4645,7 +4687,7 @@ backButton.addEventListener('click', () => {
   showView(state.previousView && state.previousView !== 'auth' ? state.previousView : 'home', false);
 });
 
-document.addEventListener('click', (event) => {
+document.addEventListener('click', async (event) => {
   const viewButton = event.target.closest('[data-view]');
   const activityButton = event.target.closest('[data-activity]');
   const categoryButton = event.target.closest('[data-category]');
@@ -4656,6 +4698,7 @@ document.addEventListener('click', (event) => {
   const deleteCustomActivityButton = event.target.closest('[data-delete-custom-activity]');
   const repeatButton = event.target.closest('[data-repeat-last]');
   const continueDraftButton = event.target.closest('[data-continue-draft]');
+  const deleteDraftButton = event.target.closest('[data-delete-draft]');
   const settingsAction = event.target.closest('[data-settings-action]');
 
   if (viewButton) {
@@ -4698,6 +4741,10 @@ document.addEventListener('click', (event) => {
     void openTracker(state.draft.activity, true);
   }
 
+  if (deleteDraftButton && state.draft) {
+    deleteDraft();
+  }
+
   if (settingsAction?.dataset.settingsAction === 'devices') {
     void cloudClient?.auth.signOut({ scope: 'others' }).then(async ({ error }) => {
       if (!error) {
@@ -4724,17 +4771,24 @@ document.addEventListener('click', (event) => {
 
   if (deleteButton) {
     const sessionId = deleteButton.dataset.deleteSession;
-    state.sessions = state.sessions.filter((session) => String(session.id) !== sessionId);
-    writeJson(accountStorageKey(storageKeys.sessions), state.sessions);
 
     if (cloudClient && state.userId) {
-      void cloudClient
+      const { error } = await cloudClient
         .from('activity_sessions')
         .delete()
         .eq('user_id', state.userId)
         .eq('id', Number(sessionId));
+
+      if (error) {
+        window.alert(state.language === 'ar'
+          ? 'تعذر الحذف من السحابة. لم يتم حذف السجل، حاول مرة أخرى.'
+          : 'Cloud delete failed. The session was not deleted; please try again.');
+        return;
+      }
     }
 
+    state.sessions = state.sessions.filter((session) => String(session.id) !== sessionId);
+    writeJson(accountStorageKey(storageKeys.sessions), state.sessions);
     renderHome();
     renderHistory();
   }
@@ -4873,6 +4927,17 @@ editSessionForm.addEventListener('submit', async (event) => {
 document.addEventListener('visibilitychange', syncStudyCandleWithClock);
 window.addEventListener('focus', syncStudyCandleWithClock);
 window.addEventListener('pageshow', syncStudyCandleWithClock);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && state.userId) {
+    void refreshCloudHistory().catch(() => {});
+  }
+});
+window.addEventListener('focus', () => {
+  if (state.userId) void refreshCloudHistory().catch(() => {});
+});
+window.addEventListener('pageshow', () => {
+  if (state.userId) void refreshCloudHistory().catch(() => {});
+});
 
 async function initializeCloudAccount() {
   if (!cloudClient) {

@@ -43,6 +43,7 @@ import {
   deleteCloudSession,
   loadCloudSessions,
   saveCloudSession,
+  subscribeToCloudSessions,
 } from '../../lib/sessionDatabase';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import {
@@ -521,6 +522,45 @@ export default function HomeScreen() {
   }, [isLoggedIn, settings.appLockEnabled]);
 
   useEffect(() => {
+    if (!isLoggedIn || !authUserId) {
+      return;
+    }
+
+    let active = true;
+    const refreshCloudHistory = async () => {
+      try {
+        const cloudSessions = await loadCloudSessions();
+        if (!active || !Array.isArray(cloudSessions)) {
+          return;
+        }
+
+        setSessions(cloudSessions);
+        await AsyncStorage.setItem(`sessions:${authUserId}`, JSON.stringify(cloudSessions));
+        if (active) setSyncStatus('saved');
+      } catch {
+        if (active) setSyncStatus('offline');
+      }
+    };
+
+    const unsubscribe = subscribeToCloudSessions(() => {
+      void refreshCloudHistory();
+    });
+    const appStateSubscription = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active') {
+        void refreshCloudHistory();
+      }
+    });
+
+    void refreshCloudHistory();
+
+    return () => {
+      active = false;
+      unsubscribe();
+      appStateSubscription.remove();
+    };
+  }, [authUserId, isLoggedIn]);
+
+  useEffect(() => {
     if (!isLoggedIn || !selectedActivity) return;
     const draftKey = `activity-draft:${authUserId ?? 'local'}`;
     const saveDraft = async () => {
@@ -793,6 +833,7 @@ const logout = async () => {
       ? `customActivityTemplates:${userId}`
       : 'customActivityTemplates';
     const groupsStorageKey = userId ? `customActivityGroups:${userId}` : 'customActivityGroups';
+    const historyMigrationKey = userId ? `historyCloudAuthoritativeV1:${userId}` : null;
 
     try {
       const scopedSessions = await AsyncStorage.getItem(sessionsStorageKey);
@@ -848,20 +889,26 @@ const logout = async () => {
     }
 
     try {
-      const cloudSessions = await loadCloudSessions();
+      let cloudSessions = await loadCloudSessions();
 
       if (Array.isArray(cloudSessions)) {
-        const mergedSessions = new Map<number, Session>();
+        const historyAlreadyMigrated = historyMigrationKey
+          ? await AsyncStorage.getItem(historyMigrationKey)
+          : 'true';
 
-        localSessions.forEach((session) => mergedSessions.set(session.id, session));
-        cloudSessions.forEach((session) => mergedSessions.set(session.id, session));
+        if (!historyAlreadyMigrated && localSessions.length > 0) {
+          await Promise.all(localSessions.map((session) => saveCloudSession(session)));
+          const migratedCloudSessions = await loadCloudSessions();
+          if (Array.isArray(migratedCloudSessions)) {
+            cloudSessions = migratedCloudSessions;
+          }
+        }
 
-        const restoredSessions = [...mergedSessions.values()].sort((first, second) => second.id - first.id);
-        setSessions(restoredSessions);
-        await AsyncStorage.setItem(sessionsStorageKey, JSON.stringify(restoredSessions));
-
-        if (userId) {
-          await Promise.allSettled(localSessions.map((session) => saveCloudSession(session)));
+        const authoritativeSessions = cloudSessions ?? [];
+        setSessions(authoritativeSessions);
+        await AsyncStorage.setItem(sessionsStorageKey, JSON.stringify(authoritativeSessions));
+        if (historyMigrationKey) {
+          await AsyncStorage.setItem(historyMigrationKey, 'true');
         }
       }
     } catch {
@@ -1169,7 +1216,6 @@ const logout = async () => {
                 studyType: snapshot.studyType.trim(),
                 examDate: snapshot.examDate.trim(),
                 coursework: snapshot.coursework.trim(),
-                pomodoroPlan: snapshot.pomodoroPlan.trim(),
                 streak: snapshot.streak.trim(),
                 totalStudyHours: snapshot.totalStudyHours.trim(),
                 candleSeconds: completedDurationSeconds,
@@ -1546,6 +1592,25 @@ const logout = async () => {
       setSyncStatus('offline');
     }
     Alert.alert(isArabic ? 'تم الحفظ' : 'Saved', isArabic ? 'تم تكرار آخر سجل.' : 'The last record was repeated in History.');
+  };
+
+  const confirmDeleteDraft = () => {
+    Alert.alert(
+      isArabic ? 'حذف المسودة؟' : 'Delete draft?',
+      isArabic ? 'سيتم حذف المسودة غير المحفوظة فقط.' : 'Only this unfinished draft will be deleted.',
+      [
+        { text: isArabic ? 'إلغاء' : 'Cancel', style: 'cancel' },
+        {
+          text: isArabic ? 'حذف' : 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            void AsyncStorage.removeItem(`activity-draft:${authUserId ?? 'local'}`).then(() => {
+              setCurrentDraft(null);
+            });
+          },
+        },
+      ]
+    );
   };
 
   const addOtherActivity = async () => {
@@ -2043,7 +2108,6 @@ if (!isSelectedActivityNonTimed(selectedActivity) && (!startTime || !endTime)) {
           studyType: studyType.trim(),
           examDate: studyExamDate.trim(),
           coursework: studyCoursework.trim(),
-          pomodoroPlan: studyPomodoroPlan.trim(),
           streak: studyStreak.trim(),
           totalStudyHours: studyTotalHours.trim(),
           candleSeconds: studyCandleSeconds,
@@ -2236,13 +2300,14 @@ if (!isSelectedActivityNonTimed(selectedActivity) && (!startTime || !endTime)) {
   const deleteSession = async (sessionId: number) => {
     const newSessions = sessions.filter((session) => session.id !== sessionId);
 
-    setSessions(newSessions);
-    await saveSessionsToStorage(newSessions);
-
     try {
       await deleteCloudSession(sessionId);
+      setSessions(newSessions);
+      await saveSessionsToStorage(newSessions);
     } catch {
-      alert('Deleted on this device, but cloud delete failed.');
+      alert(isArabic
+        ? 'تعذر الحذف من السحابة. لم يتم حذف السجل، حاول مرة أخرى.'
+        : 'Cloud delete failed. The session was not deleted; please try again.');
     }
   };
 
@@ -2595,9 +2660,6 @@ const getGroupedActivities = () => {
           </Text>
           <Text style={styles.savedDetailsText}>
             Coursework: {study.coursework || 'Not filled'}
-          </Text>
-          <Text style={styles.savedDetailsText}>
-            Pomodoro: {study.pomodoroPlan || 'Not filled'}
           </Text>
           <Text style={styles.savedDetailsText}>
             Streak: {study.streak || 'Not filled'}
@@ -3383,14 +3445,6 @@ const getGroupedActivities = () => {
 
     <TextInput
       style={styles.input}
-      placeholder="Pomodoro plan, example: 25/5 x 4"
-      placeholderTextColor="#050505"
-      value={studyPomodoroPlan}
-      onChangeText={setStudyPomodoroPlan}
-    />
-
-    <TextInput
-      style={styles.input}
       placeholder="Study streak, example: 5 days"
       placeholderTextColor="#050505"
       value={studyStreak}
@@ -3978,13 +4032,26 @@ const getGroupedActivities = () => {
               </View>
             ))}
             {currentDraft && (
-              <TouchableOpacity style={styles.draftBanner} onPress={() => openActivity(currentDraft.activity, true)}>
-                <Ionicons name="document-text-outline" size={21} color="#050505" />
-                <View style={styles.draftTextBox}>
-                  <Text style={styles.draftTitle}>{isArabic ? 'متابعة المسودة' : 'Continue draft'}</Text>
-                  <Text style={styles.draftMeta}>{activityDisplayName(currentDraft.activity)}</Text>
-                </View>
-              </TouchableOpacity>
+              <View style={styles.draftBanner}>
+                <TouchableOpacity
+                  style={styles.draftContinueButton}
+                  onPress={() => openActivity(currentDraft.activity, true)}
+                >
+                  <Ionicons name="document-text-outline" size={21} color="#050505" />
+                  <View style={styles.draftTextBox}>
+                    <Text style={styles.draftTitle}>{isArabic ? 'متابعة المسودة' : 'Continue draft'}</Text>
+                    <Text style={styles.draftMeta}>{activityDisplayName(currentDraft.activity)}</Text>
+                  </View>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.draftDeleteButton}
+                  onPress={confirmDeleteDraft}
+                  accessibilityRole="button"
+                  accessibilityLabel={isArabic ? 'حذف المسودة' : 'Delete draft'}
+                >
+                  <Text style={styles.draftDeleteText}>−</Text>
+                </TouchableOpacity>
+              </View>
             )}
           </View>
 
@@ -5450,11 +5517,28 @@ todayReminderText: {
 draftBanner: {
   flexDirection: 'row',
   alignItems: 'center',
-  gap: 10,
   marginTop: 14,
   paddingTop: 12,
   borderTopWidth: 1,
   borderTopColor: '#E7E9EE',
+},
+draftContinueButton: {
+  flex: 1,
+  minHeight: 44,
+  flexDirection: 'row',
+  alignItems: 'center',
+  gap: 10,
+},
+draftDeleteButton: {
+  width: 44,
+  height: 44,
+  alignItems: 'center',
+  justifyContent: 'center',
+},
+draftDeleteText: {
+  color: '#050505',
+  fontSize: 28,
+  fontWeight: '700',
 },
 draftTextBox: {
   flex: 1,

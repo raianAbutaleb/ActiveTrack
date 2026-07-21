@@ -66,6 +66,26 @@ export const loadCloudSessions = async () => {
   return (data as SessionRow[]).map(toSession);
 };
 
+export const subscribeToCloudSessions = (onChange: () => void) => {
+  if (!isSupabaseConfigured || !supabase) {
+    return () => {};
+  }
+
+  const client = supabase;
+  const channel = client
+    .channel(`activity-sessions-${Date.now()}-${Math.random()}`)
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'activity_sessions' },
+      onChange
+    )
+    .subscribe();
+
+  return () => {
+    void client.removeChannel(channel);
+  };
+};
+
 export const saveCloudSession = async (session: Session) => {
   if (!isSupabaseConfigured || !supabase) {
     return;
