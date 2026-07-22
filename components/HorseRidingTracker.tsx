@@ -221,7 +221,7 @@ export default function HorseRidingTracker(props: Props) {
         <TextInput
           style={styles.input}
           placeholder="Rider name"
-          placeholderTextColor="#050505"
+          placeholderTextColor="#F4F7F6"
           value={props.horseRiderName}
           onChangeText={props.setHorseRiderName}
         />
@@ -231,7 +231,7 @@ export default function HorseRidingTracker(props: Props) {
         <TextInput
           style={styles.input}
           placeholder="Horse name, example: Durkji"
-          placeholderTextColor="#050505"
+          placeholderTextColor="#F4F7F6"
           value={props.horseName}
           onChangeText={props.setHorseName}
         />
@@ -243,7 +243,7 @@ export default function HorseRidingTracker(props: Props) {
       <TextInput
         style={styles.input}
         placeholder="Training type, example: Dressage / Flatwork / Jumping"
-        placeholderTextColor="#050505"
+        placeholderTextColor="#F4F7F6"
         value={props.horseTrainingType}
         onChangeText={props.setHorseTrainingType}
       />
@@ -275,7 +275,7 @@ export default function HorseRidingTracker(props: Props) {
       <TextInput
         style={styles.input}
         placeholder="Time of training, example: 45 min"
-        placeholderTextColor="#050505"
+        placeholderTextColor="#F4F7F6"
         value={props.horseTrainingTime}
         onChangeText={props.setHorseTrainingTime}
       />
@@ -287,7 +287,7 @@ export default function HorseRidingTracker(props: Props) {
       <TextInput
         style={styles.input}
         placeholder="Daily walking minutes"
-        placeholderTextColor="#050505"
+        placeholderTextColor="#F4F7F6"
         value={props.horseWalkingMinutes}
         onChangeText={props.setHorseWalkingMinutes}
         keyboardType="number-pad"
@@ -296,7 +296,7 @@ export default function HorseRidingTracker(props: Props) {
       <TextInput
         style={styles.input}
         placeholder="Notes"
-        placeholderTextColor="#050505"
+        placeholderTextColor="#F4F7F6"
         value={props.horseNotes}
         onChangeText={props.setHorseNotes}
         multiline
@@ -308,7 +308,7 @@ export default function HorseRidingTracker(props: Props) {
         <TextInput
           style={styles.input}
           placeholder="Walk minutes"
-          placeholderTextColor="#050505"
+          placeholderTextColor="#F4F7F6"
           value={props.horseWalkMinutes}
           onChangeText={props.setHorseWalkMinutes}
           keyboardType="number-pad"
@@ -317,7 +317,7 @@ export default function HorseRidingTracker(props: Props) {
         <TextInput
           style={styles.input}
           placeholder="Trot minutes"
-          placeholderTextColor="#050505"
+          placeholderTextColor="#F4F7F6"
           value={props.horseTrotMinutes}
           onChangeText={props.setHorseTrotMinutes}
           keyboardType="number-pad"
@@ -326,7 +326,7 @@ export default function HorseRidingTracker(props: Props) {
         <TextInput
           style={styles.input}
           placeholder="Canter minutes"
-          placeholderTextColor="#050505"
+          placeholderTextColor="#F4F7F6"
           value={props.horseCanterMinutes}
           onChangeText={props.setHorseCanterMinutes}
           keyboardType="number-pad"
@@ -335,7 +335,7 @@ export default function HorseRidingTracker(props: Props) {
         <TextInput
           style={styles.input}
           placeholder="Ride distance, example: 4.2 km"
-          placeholderTextColor="#050505"
+          placeholderTextColor="#F4F7F6"
           value={props.horseRideDistance}
           onChangeText={props.setHorseRideDistance}
         />
@@ -343,7 +343,7 @@ export default function HorseRidingTracker(props: Props) {
         <TextInput
           style={styles.input}
           placeholder="Average speed, example: 8.5 km/h"
-          placeholderTextColor="#050505"
+          placeholderTextColor="#F4F7F6"
           value={props.horseAverageSpeed}
           onChangeText={props.setHorseAverageSpeed}
         />
@@ -352,7 +352,7 @@ export default function HorseRidingTracker(props: Props) {
           <TextInput
             style={styles.scoreInput}
             placeholder="Left turns"
-            placeholderTextColor="#050505"
+            placeholderTextColor="#F4F7F6"
             value={props.horseLeftTurns}
             onChangeText={props.setHorseLeftTurns}
             keyboardType="number-pad"
@@ -361,7 +361,7 @@ export default function HorseRidingTracker(props: Props) {
           <TextInput
             style={styles.scoreInput}
             placeholder="Right turns"
-            placeholderTextColor="#050505"
+            placeholderTextColor="#F4F7F6"
             value={props.horseRightTurns}
             onChangeText={props.setHorseRightTurns}
             keyboardType="number-pad"
@@ -395,7 +395,7 @@ export default function HorseRidingTracker(props: Props) {
       <TextInput
         style={styles.input}
         placeholder="Notes"
-        placeholderTextColor="#050505"
+        placeholderTextColor="#F4F7F6"
         value={props.horseNotes}
         onChangeText={props.setHorseNotes}
         multiline
@@ -410,7 +410,7 @@ export default function HorseRidingTracker(props: Props) {
           <TextInput
             style={styles.input}
             placeholder="Farrier visit date"
-            placeholderTextColor="#050505"
+            placeholderTextColor="#F4F7F6"
             value={props.horseFarrierVisit}
             onChangeText={props.setHorseFarrierVisit}
           />
@@ -418,7 +418,7 @@ export default function HorseRidingTracker(props: Props) {
           <TextInput
             style={styles.input}
             placeholder="Next farrier visit"
-            placeholderTextColor="#050505"
+            placeholderTextColor="#F4F7F6"
             value={props.horseNextFarrierVisit}
             onChangeText={props.setHorseNextFarrierVisit}
           />
@@ -426,7 +426,7 @@ export default function HorseRidingTracker(props: Props) {
           <TextInput
             style={styles.input}
             placeholder="Notes"
-            placeholderTextColor="#050505"
+            placeholderTextColor="#F4F7F6"
             value={props.horseNotes}
             onChangeText={props.setHorseNotes}
             multiline
@@ -437,7 +437,7 @@ export default function HorseRidingTracker(props: Props) {
           <TextInput
             style={styles.input}
             placeholder="Food oil buying date, example: 06/07/2026"
-            placeholderTextColor="#050505"
+            placeholderTextColor="#F4F7F6"
             value={props.horseFoodOilBuyingDate}
             onChangeText={props.setHorseFoodOilBuyingDate}
           />
@@ -445,7 +445,7 @@ export default function HorseRidingTracker(props: Props) {
           <TextInput
             style={styles.input}
             placeholder="Hoof oil buying date, example: 06/07/2026"
-            placeholderTextColor="#050505"
+            placeholderTextColor="#F4F7F6"
             value={props.horseHoofOilBuyingDate}
             onChangeText={props.setHorseHoofOilBuyingDate}
           />
@@ -459,7 +459,7 @@ export default function HorseRidingTracker(props: Props) {
       <TextInput
         style={styles.input}
         placeholder="Shampoo buying date, example: 06/07/2026"
-        placeholderTextColor="#050505"
+        placeholderTextColor="#F4F7F6"
         value={props.horseShampooBuyingDate}
         onChangeText={props.setHorseShampooBuyingDate}
       />
@@ -471,7 +471,7 @@ export default function HorseRidingTracker(props: Props) {
       <TextInput
         style={styles.input}
         placeholder="Pads cleaning supplies buying date"
-        placeholderTextColor="#050505"
+        placeholderTextColor="#F4F7F6"
         value={props.horsePadsCleaningSuppliesBuyingDate}
         onChangeText={props.setHorsePadsCleaningSuppliesBuyingDate}
       />
@@ -492,14 +492,14 @@ export default function HorseRidingTracker(props: Props) {
           <TextInput
             style={styles.input}
             placeholder="Supply name"
-            placeholderTextColor="#050505"
+            placeholderTextColor="#F4F7F6"
             value={supply.name}
             onChangeText={(value) => updateCleaningSupply(index, 'name', value)}
           />
           <TextInput
             style={styles.input}
             placeholder="Buying date"
-            placeholderTextColor="#050505"
+            placeholderTextColor="#F4F7F6"
             value={supply.buyingDate}
             onChangeText={(value) => updateCleaningSupply(index, 'buyingDate', value)}
           />
@@ -535,14 +535,14 @@ export default function HorseRidingTracker(props: Props) {
           <TextInput
             style={styles.input}
             placeholder="Feed amount, example: 2 kg"
-            placeholderTextColor="#050505"
+            placeholderTextColor="#F4F7F6"
             value={feed.amount}
             onChangeText={(value) => updateFeedEntry(index, 'amount', value)}
           />
           <TextInput
             style={styles.input}
             placeholder="Buying date, example: 06/07/2026"
-            placeholderTextColor="#050505"
+            placeholderTextColor="#F4F7F6"
             value={feed.buyingDate}
             onChangeText={(value) => updateFeedEntry(index, 'buyingDate', value)}
           />
@@ -567,21 +567,21 @@ export default function HorseRidingTracker(props: Props) {
             <TextInput
               style={styles.input}
               placeholder="Rider name"
-              placeholderTextColor="#050505"
+              placeholderTextColor="#F4F7F6"
               value={props.horseRiderName}
               onChangeText={props.setHorseRiderName}
             />
             <TextInput
               style={styles.input}
               placeholder="Horse name"
-              placeholderTextColor="#050505"
+              placeholderTextColor="#F4F7F6"
               value={props.horseName}
               onChangeText={props.setHorseName}
             />
             <TextInput
               style={styles.input}
               placeholder="Notes"
-              placeholderTextColor="#050505"
+              placeholderTextColor="#F4F7F6"
               value={props.horseNotes}
               onChangeText={props.setHorseNotes}
               multiline
@@ -609,7 +609,7 @@ export default function HorseRidingTracker(props: Props) {
           <TextInput
             style={styles.input}
             placeholder="Dressage test name"
-            placeholderTextColor="#050505"
+            placeholderTextColor="#F4F7F6"
             value={props.horseDressageTestName}
             onChangeText={props.setHorseDressageTestName}
           />
@@ -617,7 +617,7 @@ export default function HorseRidingTracker(props: Props) {
           <TextInput
             style={styles.input}
             placeholder="Dressage score %, example: 68.5"
-            placeholderTextColor="#050505"
+            placeholderTextColor="#F4F7F6"
             value={props.horseDressageScore}
             onChangeText={props.setHorseDressageScore}
             keyboardType="decimal-pad"
@@ -626,7 +626,7 @@ export default function HorseRidingTracker(props: Props) {
           <TextInput
             style={styles.input}
             placeholder="Dressage judge notes"
-            placeholderTextColor="#050505"
+            placeholderTextColor="#F4F7F6"
             value={props.horseDressageNotes}
             onChangeText={props.setHorseDressageNotes}
           />
@@ -639,7 +639,7 @@ export default function HorseRidingTracker(props: Props) {
           <TextInput
             style={styles.input}
             placeholder="Fence height, example: 80 cm"
-            placeholderTextColor="#050505"
+            placeholderTextColor="#F4F7F6"
             value={props.horseFenceHeight}
             onChangeText={props.setHorseFenceHeight}
           />
@@ -647,7 +647,7 @@ export default function HorseRidingTracker(props: Props) {
           <TextInput
             style={styles.input}
             placeholder="Fence count"
-            placeholderTextColor="#050505"
+            placeholderTextColor="#F4F7F6"
             value={props.horseFenceCount}
             onChangeText={props.setHorseFenceCount}
             keyboardType="number-pad"
@@ -656,7 +656,7 @@ export default function HorseRidingTracker(props: Props) {
           <TextInput
             style={styles.input}
             placeholder="Jumping notes"
-            placeholderTextColor="#050505"
+            placeholderTextColor="#F4F7F6"
             value={props.horseJumpingNotes}
             onChangeText={props.setHorseJumpingNotes}
           />
@@ -672,9 +672,9 @@ export default function HorseRidingTracker(props: Props) {
 
 const styles = StyleSheet.create({
   detailsBox: {
-    backgroundColor: 'rgba(255, 255, 255, 0.24)',
+    backgroundColor: 'rgba(12, 20, 21, 0.82)',
     borderWidth: 1,
-    borderColor: '#E7E9EE',
+    borderColor: '#304243',
     padding: 18,
     borderRadius: 16,
     marginBottom: 22,
@@ -685,39 +685,39 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   detailsTitle: {
-    color: '#050505',
+    color: '#F4F7F6',
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 14,
   },
   detailsSubtitle: {
-    color: '#050505',
+    color: '#F4F7F6',
     fontSize: 18,
     marginBottom: 12,
     marginTop: 6,
   },
   performanceBox: {
     borderWidth: 1,
-    borderColor: '#D0D5DD',
+    borderColor: '#425655',
     borderRadius: 10,
     padding: 14,
     marginBottom: 14,
   },
   performanceTitle: {
-    color: '#050505',
+    color: '#F4F7F6',
     fontSize: 18,
     fontWeight: '700',
     marginBottom: 12,
   },
   input: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#121C1D',
     borderWidth: 1,
-    borderColor: '#E7E9EE',
+    borderColor: '#304243',
     borderRadius: 12,
     padding: 16,
     fontSize: 20,
     marginBottom: 12,
-    color: '#050505',
+    color: '#F4F7F6',
   },
   scoreRow: {
     flexDirection: 'row',
@@ -725,21 +725,21 @@ const styles = StyleSheet.create({
   },
   scoreInput: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#121C1D',
     borderWidth: 1,
-    borderColor: '#E7E9EE',
+    borderColor: '#304243',
     borderRadius: 12,
     padding: 16,
     fontSize: 18,
     marginBottom: 12,
-    color: '#050505',
+    color: '#F4F7F6',
   },
   testDayOption: {
     flex: 1,
   },
   feedEntryBox: {
     borderTopWidth: 1,
-    borderTopColor: '#D0D5DD',
+    borderTopColor: '#425655',
     paddingTop: 12,
     marginBottom: 4,
   },
@@ -750,7 +750,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   feedEntryTitle: {
-    color: '#050505',
+    color: '#F4F7F6',
     fontSize: 17,
     fontWeight: '700',
   },
@@ -761,7 +761,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   removeFeedButtonText: {
-    color: '#050505',
+    color: '#F4F7F6',
     fontSize: 28,
     fontWeight: '700',
   },
@@ -770,32 +770,32 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#D0D5DD',
+    borderColor: '#425655',
     borderRadius: 10,
     marginBottom: 14,
   },
   addFeedButtonText: {
-    color: '#050505',
+    color: '#F4F7F6',
     fontSize: 17,
     fontWeight: '700',
   },
   toggleButton: {
-    backgroundColor: '#E7E9EE',
+    backgroundColor: '#304243',
     padding: 14,
     borderRadius: 12,
     marginBottom: 12,
   },
   selectedToggleButton: {
-    backgroundColor: '#2563EB',
+    backgroundColor: '#22A398',
   },
   toggleText: {
-    color: '#050505',
+    color: '#F4F7F6',
     fontSize: 19,
     fontWeight: '600',
     textAlign: 'center',
   },
   selectedToggleText: {
-    color: '#050505',
+    color: '#F4F7F6',
     fontWeight: '800',
   },
 });

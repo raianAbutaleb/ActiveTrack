@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/images/tafasili-app-icon.png",
     "scheme": "tafasili",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
@@ -16,7 +16,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#F6F7F9",
+        "backgroundColor": "#080F10",
         "foregroundImage": "./assets/images/tafasili-adaptive-icon.png"
       },
       "edgeToEdgeEnabled": true,
@@ -34,9 +34,9 @@
           "image": "./assets/images/tafasili-logo.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#F6F7F9",
+          "backgroundColor": "#080F10",
           "dark": {
-            "backgroundColor": "#F6F7F9"
+            "backgroundColor": "#080F10"
           }
         }
       ],

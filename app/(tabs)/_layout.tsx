@@ -8,15 +8,15 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#FFFFFF',
-          borderTopColor: '#E7E9EE',
+          backgroundColor: '#0D1718',
+          borderTopColor: '#304243',
           borderTopWidth: 1,
           height: 85,
           paddingTop: 8,
           paddingBottom: 18,
         },
-        tabBarActiveTintColor: '#050505',
-        tabBarInactiveTintColor: '#050505',
+        tabBarActiveTintColor: '#5ED3C7',
+        tabBarInactiveTintColor: '#9AABA8',
         tabBarLabelStyle: {
           fontSize: 15,
           fontWeight: '600',

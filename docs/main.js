@@ -426,6 +426,12 @@ const onboardingNext = document.querySelector('#onboarding-next');
 const onboardingSkip = document.querySelector('#onboarding-skip');
 const todayDashboard = document.querySelector('#today-dashboard');
 const favoriteActivities = document.querySelector('#favorite-activities');
+const weekHours = document.querySelector('#week-hours');
+const weeklyDateRange = document.querySelector('#weekly-date-range');
+const weeklyChart = document.querySelector('#weekly-chart');
+const dashboardRecentHistory = document.querySelector('#dashboard-recent-history');
+const dashboardProfileName = document.querySelector('#dashboard-profile-name');
+const dashboardAvatar = document.querySelector('#dashboard-avatar');
 const historySearch = document.querySelector('#history-search');
 const historyDateRange = document.querySelector('#history-date-range');
 const historyViewMode = document.querySelector('#history-view-mode');
@@ -1568,31 +1574,81 @@ function showView(viewName, remember = true) {
 
 function renderHome() {
   const user = readJson(storageKeys.user, null);
-  welcomeText.textContent = user
-    ? text('welcomeUser')(user.fullName || user.identifier)
-    : text('welcome');
+  const displayName = (user?.fullName || user?.identifier || state.userEmail || 'Tafasili').split('@')[0];
+  const hour = new Date().getHours();
+  const greeting = state.language === 'ar'
+    ? hour < 12 ? 'صباح الخير' : 'مساء الخير'
+    : hour < 12 ? 'Good morning' : 'Good evening';
+  document.querySelector('#home-title').textContent = `${greeting}, ${displayName}`;
+  welcomeText.textContent = state.language === 'ar'
+    ? 'حافظ على تركيزك. تتبع كل شيء. أنجز أكثر.'
+    : 'Stay focused. Track everything. Achieve more.';
+  dashboardProfileName.textContent = displayName;
+  dashboardAvatar.textContent = displayName.charAt(0).toUpperCase();
+  const dashboardLabels = state.language === 'ar'
+    ? { nav: ['الرئيسية', 'ركوب الخيل', 'الرياضة', 'المستندات', 'الدراسة', 'العمل', 'التذكيرات', 'السجل', 'الإعدادات'], activityTypes: 'أنواع الأنشطة', custom: '+ مخصص', viewHistory: 'عرض السجل', week: 'هذا الأسبوع', recent: 'السجل الحديث', viewAll: 'عرض الكل', sessions: 'الجلسات', hours: 'الساعات', last: 'آخر نشاط', customCount: 'مخصص' }
+    : { nav: ['Home', 'Horse Riding', 'Sports', 'Documents', 'Study', 'Work', 'Reminders', 'History', 'Settings'], activityTypes: 'Activity Types', custom: '+ Custom', viewHistory: 'View history', week: 'This Week', recent: 'Recent History', viewAll: 'View all', sessions: 'Sessions', hours: 'Hours', last: 'Last activity', customCount: 'Custom' };
+  document.querySelectorAll('.sidebar-nav button b').forEach((label, index) => { label.textContent = dashboardLabels.nav[index]; });
+  document.querySelector('.activity-types-panel .dashboard-panel-head h2').textContent = dashboardLabels.activityTypes;
+  document.querySelector('.activity-types-panel [data-category="custom"]').textContent = dashboardLabels.custom;
+  document.querySelector('#home-history-button').textContent = dashboardLabels.viewHistory;
+  document.querySelector('#weekly-heading').textContent = dashboardLabels.week;
+  document.querySelector('#recent-history-heading').textContent = dashboardLabels.recent;
+  document.querySelector('.recent-history-panel [data-view="history"]').textContent = dashboardLabels.viewAll;
+  document.querySelector('#total-sessions-label').textContent = dashboardLabels.sessions;
+  document.querySelector('#week-hours-label').textContent = dashboardLabels.hours;
+  document.querySelector('#last-activity-label').textContent = dashboardLabels.last;
+  document.querySelector('#custom-count-label').textContent = dashboardLabels.customCount;
+  document.querySelectorAll('.sidebar-nav [data-category]').forEach((button) => {
+    button.classList.toggle('active', button.dataset.category === state.selectedCategory);
+  });
+  document.querySelectorAll('[data-dashboard-language]').forEach((button) => {
+    button.classList.toggle('active', (state.language === 'en' && button.textContent.trim() === 'English') || (state.language === 'ar' && button.textContent.trim() === 'العربية'));
+  });
 
   totalSessions.textContent = String(state.sessions.length);
   lastActivity.textContent = state.sessions[0] ? activityLabel(state.sessions[0].activity) : text('none');
   customCount.textContent = String(state.customActivities.length);
 
+  const weeklySessions = getRecentSessions(7);
+  const weeklySeconds = weeklySessions.reduce((total, session) => total + Number(session.durationSeconds || 0), 0);
+  weekHours.textContent = (weeklySeconds / 3600).toFixed(weeklySeconds >= 360 ? 1 : 0);
+  const weekStart = new Date();
+  weekStart.setDate(weekStart.getDate() - 6);
+  weeklyDateRange.textContent = `${weekStart.toLocaleDateString(state.language, { month: 'short', day: 'numeric' })} – ${new Date().toLocaleDateString(state.language, { month: 'short', day: 'numeric' })}`;
+  weeklyChart.innerHTML = Array.from({ length: 7 }, (_, index) => {
+    const day = new Date();
+    day.setDate(day.getDate() - (6 - index));
+    const dayKey = day.toISOString().slice(0, 10);
+    const count = weeklySessions.filter((session) => String(session.date).slice(0, 10) === dayKey).length;
+    return `<i style="--bar-height:${Math.max(16, Math.min(100, 20 + count * 24))}%"></i>`;
+  }).join('');
+
+  dashboardRecentHistory.innerHTML = state.sessions.length
+    ? state.sessions.slice(0, 4).map((session) => `
+        <button class="recent-history-row" type="button" data-view="history">
+          <span class="recent-history-icon">${dashboardActivityIcon(session.activity)}</span>
+          <span><strong>${escapeHtml(activityLabel(session.activity))}</strong><small>${escapeHtml(formatDate(session.date))}${session.start ? ` · ${escapeHtml(formatTime(session.start))}` : ''}</small></span>
+          <em>${escapeHtml(activityGroupLabel(session.activity))}</em>
+        </button>`).join('')
+    : `<p class="dashboard-empty">${state.language === 'ar' ? 'لا يوجد سجل بعد.' : 'No history yet.'}</p>`;
+
   renderTodayAndQuickAccess();
 
   customActivityForm.classList.toggle('collapsed', state.selectedCategory !== 'custom');
 
+  const activitiesForSections = (...sectionKeys) => sectionKeys.flatMap((sectionKey) => {
+    const section = activitySections.find((item) => item.key === sectionKey);
+    const assignedCustomActivities = state.customActivities.filter((activity) => state.customGroups[activity] === sectionKey);
+    return [...(section?.activities || []), ...assignedCustomActivities];
+  });
   const categories = [
-    ...activitySections.map((section) => {
-      const assignedCustomActivities = state.customActivities.filter(
-        (activity) => state.customGroups[activity] === section.key
-      );
-      const activities = [...section.activities, ...assignedCustomActivities];
-
-      return { key: section.key, count: activities.length, activities };
-    }),
-    {
-      key: 'custom',
-      activities: state.customActivities.filter((activity) => !state.customGroups[activity]),
-    },
+    { key: 'horse', activities: activitiesForSections('horse') },
+    { key: 'sportsDashboard', activities: activitiesForSections('sportsGames', 'fitnessMovement') },
+    { key: 'documentsDashboard', activities: activitiesForSections('lifeTracking', 'vehicle') },
+    { key: 'studyDashboard', activities: ['Studying'] },
+    { key: 'workDashboard', activities: ['Work', ...state.customActivities.filter((activity) => state.customGroups[activity] === 'studyWork')] },
+    { key: 'remindersDashboard', activities: [] },
   ].map((category) => ({
     ...category,
     count: category.activities.length,
@@ -1610,17 +1666,16 @@ function renderHome() {
 
   activityGrid.innerHTML = `
     <section class="activity-section">
-      <h2>${state.language === 'ar' ? 'أنواع الأنشطة' : 'Activity types'}</h2>
       <div class="activity-section-grid category-grid">
         ${categories
           .map(
             (category) => `
               <div class="category-group-card">
-                <button class="activity-card category-card${state.selectedCategory === category.key ? ' active' : ''}" type="button" data-category="${category.key}">
-                  <strong>${translations[state.language].sections[category.key]}</strong>
-                  <span>${category.count} ${state.language === 'ar' ? category.count === 1 ? 'نشاط' : 'أنشطة' : category.count === 1 ? 'activity' : 'activities'}</span>
+                <button class="activity-card category-card${state.selectedCategory === category.key || (!state.selectedCategory && category.key === 'horse') ? ' active' : ''}" type="button" ${category.key === 'remindersDashboard' ? 'data-reminders-jump' : `data-category="${category.key}"`}>
+                  <span class="dashboard-category-icon" aria-hidden="true">${dashboardCategoryIcon(category.key)}</span>
+                  <strong>${dashboardCategoryLabel(category.key)}</strong>
                 </button>
-                ${state.selectedCategory === category.key ? renderActivitySection(category.activities) : ''}
+                ${state.selectedCategory === category.key && category.activities.length ? renderActivitySection(category.activities) : ''}
               </div>
             `
           )
@@ -1628,6 +1683,31 @@ function renderHome() {
       </div>
     </section>
   `;
+}
+
+function dashboardCategoryIcon(category) {
+  const icon = ({ sportsDashboard: 'sports', horse: 'horse', studyDashboard: 'study', workDashboard: 'work', documentsDashboard: 'documents', remindersDashboard: 'reminders', custom: 'custom' })[category] || 'activity';
+  return `<span class="dashboard-icon icon-${icon}"></span>`;
+}
+
+function dashboardCategoryLabel(category) {
+  const labels = state.language === 'ar'
+    ? { horse: 'أنشطة الخيل', sportsDashboard: 'الرياضة', documentsDashboard: 'المستندات', studyDashboard: 'الدراسة', workDashboard: 'العمل', remindersDashboard: 'التذكيرات' }
+    : { horse: 'Horse Riding', sportsDashboard: 'Sports', documentsDashboard: 'Documents', studyDashboard: 'Study', workDashboard: 'Work', remindersDashboard: 'Reminders' };
+  return labels[category] || category;
+}
+
+function dashboardActivityIcon(activity) {
+  if (horseActivities.includes(activity)) return '<span class="dashboard-icon icon-horse"></span>';
+  if (['Studying'].includes(activity)) return '<span class="dashboard-icon icon-study"></span>';
+  if (['Work'].includes(activity)) return '<span class="dashboard-icon icon-work"></span>';
+  if (['Personal Info', 'Vehicle Maintenance'].includes(activity)) return '<span class="dashboard-icon icon-documents"></span>';
+  return '<span class="dashboard-icon icon-activity"></span>';
+}
+
+function activityGroupLabel(activity) {
+  const section = activitySections.find((item) => item.activities.includes(activity) || state.customGroups[activity] === item.key);
+  return section ? translations[state.language].sections[section.key] : translations[state.language].sections.custom;
 }
 
 function renderActivitySection(activities) {
@@ -1662,31 +1742,29 @@ function renderActivitySection(activities) {
 function renderTodayAndQuickAccess() {
   const today = new Date().toISOString().slice(0, 10);
   const due = state.sessions.flatMap((session) => {
-    const standard = session.details?.reminder?.date === today
-      ? [{ label: session.activity, date: session.details.reminder.date }]
+    const standard = session.details?.reminder?.date >= today
+      ? [{ label: session.details.reminder.note || session.activity, date: session.details.reminder.date, time: session.details.reminder.time }]
       : [];
     const expirations = (session.details?.expirationReminders || [])
-      .filter((reminder) => reminder.remindOn <= today && reminder.expirationDate >= today)
-      .map((reminder) => ({ label: reminder.label, date: reminder.expirationDate }));
+      .filter((reminder) => reminder.expirationDate >= today)
+      .map((reminder) => ({ label: reminder.label, date: reminder.expirationDate, time: '' }));
     return [...standard, ...expirations];
-  });
+  }).sort((first, second) => first.date.localeCompare(second.date));
   const syncLabels = state.language === 'ar'
     ? { saved: 'محفوظ', syncing: 'جارٍ المزامنة', offline: 'دون اتصال', failed: 'فشلت المزامنة' }
     : { saved: 'Saved', syncing: 'Syncing', offline: 'Offline', failed: 'Sync failed' };
 
   todayDashboard.innerHTML = `
     <div class="today-head">
-      <div>
-        <h2>${state.language === 'ar' ? 'اليوم' : 'Today'}</h2>
-        <span class="sync-status"><i class="${state.syncStatus === 'saved' ? 'saved' : ''}"></i>${syncLabels[state.syncStatus] || syncLabels.saved}</span>
-      </div>
-      ${state.sessions.length ? `<button class="button secondary" type="button" data-repeat-last>${state.language === 'ar' ? 'تكرار الأخير' : 'Repeat last'}</button>` : ''}
+      <h2>${state.language === 'ar' ? 'التذكيرات' : 'Reminders'}</h2>
+      <button class="panel-link" type="button" data-view="history">${state.language === 'ar' ? 'عرض الكل' : 'View all'}</button>
     </div>
     <div class="today-items">
       ${due.length
-        ? due.slice(0, 5).map((item) => `<div><strong>${escapeHtml(item.label)}</strong><span>${escapeHtml(item.date)}</span></div>`).join('')
-        : `<p>${state.language === 'ar' ? 'لا توجد تذكيرات مستحقة اليوم.' : 'No reminders are due today.'}</p>`}
+        ? due.slice(0, 5).map((item) => `<div class="reminder-row"><i aria-hidden="true"></i><span><strong>${escapeHtml(item.label)}</strong><small>${escapeHtml(item.date)}${item.time ? ` · ${escapeHtml(item.time)}` : ''}</small></span></div>`).join('')
+        : `<p>${state.language === 'ar' ? 'لا توجد تذكيرات قادمة.' : 'No upcoming reminders.'}</p>`}
     </div>
+    <div class="today-footer"><span class="sync-status"><i class="${state.syncStatus === 'saved' ? 'saved' : ''}"></i>${syncLabels[state.syncStatus] || syncLabels.saved}</span>${state.sessions.length ? `<button class="panel-link" type="button" data-repeat-last>${state.language === 'ar' ? 'تكرار الأخير' : 'Repeat last'}</button>` : ''}</div>
     ${state.draft ? `
       <div class="draft-resume-row">
         <button class="draft-resume" type="button" data-continue-draft>
@@ -4716,6 +4794,22 @@ document.addEventListener('click', async (event) => {
   const continueDraftButton = event.target.closest('[data-continue-draft]');
   const deleteDraftButton = event.target.closest('[data-delete-draft]');
   const settingsAction = event.target.closest('[data-settings-action]');
+  const dashboardLanguageButton = event.target.closest('[data-dashboard-language]');
+  const remindersJumpButton = event.target.closest('[data-reminders-jump]');
+  const settingsOpenButton = event.target.closest('[data-settings-open]');
+
+  if (dashboardLanguageButton) {
+    const targetLanguage = dashboardLanguageButton.textContent.trim() === 'العربية' ? 'ar' : 'en';
+    if (state.language !== targetLanguage) languageButton.click();
+  }
+
+  if (remindersJumpButton) {
+    todayDashboard.scrollIntoView({ behavior: motionQuery.matches ? 'auto' : 'smooth', block: 'center' });
+  }
+
+  if (settingsOpenButton && settingsOpenButton !== settingsButton) {
+    settingsButton.click();
+  }
 
   if (viewButton) {
     event.preventDefault();
@@ -4956,6 +5050,18 @@ window.addEventListener('pageshow', () => {
 });
 
 async function initializeCloudAccount() {
+  const localDashboardPreview = ['localhost', '127.0.0.1'].includes(window.location.hostname)
+    && new URLSearchParams(window.location.search).get('preview') === 'dashboard';
+
+  if (localDashboardPreview) {
+    state.userId = 'local-dashboard-preview';
+    state.userEmail = 'user@example.com';
+    markSignedIn();
+    restorePersistentData();
+    showView('home', false);
+    return;
+  }
+
   if (!cloudClient) {
     authMessage.textContent = 'Cloud account configuration is unavailable.';
     showView('auth', false);

@@ -97,7 +97,7 @@ export default function LapTracker(props: Props) {
           <TextInput
             style={styles.input}
             placeholder="Route name or location"
-            placeholderTextColor="#050505"
+            placeholderTextColor="#F4F7F6"
             value={props.routeName}
             onChangeText={props.setRouteName}
           />
@@ -105,7 +105,7 @@ export default function LapTracker(props: Props) {
           <TextInput
             style={styles.input}
             placeholder="Goal, example: 5 km easy pace"
-            placeholderTextColor="#050505"
+            placeholderTextColor="#F4F7F6"
             value={props.movementGoal}
             onChangeText={props.setMovementGoal}
           />
@@ -118,7 +118,7 @@ export default function LapTracker(props: Props) {
         <TextInput
           style={styles.scoreInput}
           placeholder="Lap distance"
-          placeholderTextColor="#050505"
+          placeholderTextColor="#F4F7F6"
           value={props.lapDistance}
           onChangeText={props.setLapDistance}
           keyboardType="decimal-pad"
@@ -153,7 +153,7 @@ export default function LapTracker(props: Props) {
           <TextInput
             style={styles.input}
             placeholder="Elevation gain"
-            placeholderTextColor="#050505"
+            placeholderTextColor="#F4F7F6"
             value={props.elevationGain}
             onChangeText={props.setElevationGain}
             keyboardType="decimal-pad"
@@ -162,7 +162,7 @@ export default function LapTracker(props: Props) {
           <TextInput
             style={styles.input}
             placeholder="Splits, example: 1km 6:10, 2km 6:05"
-            placeholderTextColor="#050505"
+            placeholderTextColor="#F4F7F6"
             value={props.splitNotes}
             onChangeText={props.setSplitNotes}
             multiline
@@ -171,7 +171,7 @@ export default function LapTracker(props: Props) {
           <TextInput
             style={styles.input}
             placeholder="Personal record note"
-            placeholderTextColor="#050505"
+            placeholderTextColor="#F4F7F6"
             value={props.personalRecord}
             onChangeText={props.setPersonalRecord}
             multiline
@@ -192,34 +192,34 @@ export default function LapTracker(props: Props) {
 
 const styles = StyleSheet.create({
   detailsBox: {
-    backgroundColor: 'rgba(255, 255, 255, 0.24)',
+    backgroundColor: 'rgba(12, 20, 21, 0.82)',
     borderWidth: 1,
-    borderColor: '#E7E9EE',
+    borderColor: '#304243',
     padding: 18,
     borderRadius: 16,
     marginBottom: 22,
   },
   detailsTitle: {
-    color: '#050505',
+    color: '#F4F7F6',
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 14,
   },
   detailsSubtitle: {
-    color: '#050505',
+    color: '#F4F7F6',
     fontSize: 18,
     marginBottom: 12,
     marginTop: 6,
   },
   input: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#121C1D',
     borderWidth: 1,
-    borderColor: '#E7E9EE',
+    borderColor: '#304243',
     borderRadius: 12,
     padding: 16,
     fontSize: 18,
     marginBottom: 12,
-    color: '#050505',
+    color: '#F4F7F6',
   },
   scoreRow: {
     flexDirection: 'row',
@@ -227,17 +227,17 @@ const styles = StyleSheet.create({
   },
   scoreInput: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#121C1D',
     borderWidth: 1,
-    borderColor: '#E7E9EE',
+    borderColor: '#304243',
     borderRadius: 12,
     padding: 16,
     fontSize: 18,
     marginBottom: 12,
-    color: '#050505',
+    color: '#F4F7F6',
   },
   unitButton: {
-    backgroundColor: '#E7E9EE',
+    backgroundColor: '#304243',
     borderRadius: 12,
     paddingHorizontal: 16,
     height: 54,
@@ -245,53 +245,53 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   selectedUnitButton: {
-    backgroundColor: '#DDE7FC',
+    backgroundColor: '#153B38',
     borderWidth: 1,
-    borderColor: '#2563EB',
+    borderColor: '#22A398',
   },
   unitButtonText: {
-    color: '#050505',
+    color: '#F4F7F6',
     fontSize: 18,
     fontWeight: '800',
   },
   lapBox: {
-    backgroundColor: '#F6F7F9',
+    backgroundColor: '#080F10',
     padding: 22,
     borderRadius: 14,
     alignItems: 'center',
     marginBottom: 12,
   },
   lapNumber: {
-    color: '#050505',
+    color: '#F4F7F6',
     fontSize: 56,
     fontWeight: 'bold',
   },
   lapLabel: {
-    color: '#050505',
+    color: '#F4F7F6',
     fontSize: 19,
     marginTop: 4,
   },
   totalDistanceText: {
-    color: '#050505',
+    color: '#F4F7F6',
     fontSize: 20,
     fontWeight: '700',
     marginTop: 10,
   },
   addExerciseButton: {
-    backgroundColor: '#2563EB',
+    backgroundColor: '#22A398',
     padding: 16,
     borderRadius: 12,
     marginBottom: 16,
     marginTop: 14,
   },
   resetLapButton: {
-    backgroundColor: '#2563EB',
+    backgroundColor: '#22A398',
     padding: 16,
     borderRadius: 12,
     marginBottom: 4,
   },
   buttonText: {
-    color: '#050505',
+    color: '#F4F7F6',
     fontSize: 22,
     fontWeight: '600',
     textAlign: 'center',
