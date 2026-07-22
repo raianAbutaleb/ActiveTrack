@@ -173,7 +173,7 @@ export default function BalootTracker(props: Props) {
         <TextInput
           style={styles.scoreInput}
           placeholder="Us team name"
-          placeholderTextColor="#F4F7F6"
+          placeholderTextColor="#050505"
           value={props.balootUsName}
           onChangeText={props.setBalootUsName}
         />
@@ -181,7 +181,7 @@ export default function BalootTracker(props: Props) {
         <TextInput
           style={styles.scoreInput}
           placeholder="Them team name"
-          placeholderTextColor="#F4F7F6"
+          placeholderTextColor="#050505"
           value={props.balootThemName}
           onChangeText={props.setBalootThemName}
         />
@@ -216,7 +216,7 @@ export default function BalootTracker(props: Props) {
         <TextInput
           style={styles.scoreInput}
           placeholder="Us"
-          placeholderTextColor="#F4F7F6"
+          placeholderTextColor="#050505"
           value={props.balootUsScore}
           onChangeText={props.setBalootUsScore}
           keyboardType="number-pad"
@@ -225,7 +225,7 @@ export default function BalootTracker(props: Props) {
         <TextInput
           style={styles.scoreInput}
           placeholder="Them"
-          placeholderTextColor="#F4F7F6"
+          placeholderTextColor="#050505"
           value={props.balootThemScore}
           onChangeText={props.setBalootThemScore}
           keyboardType="number-pad"
@@ -274,21 +274,21 @@ export default function BalootTracker(props: Props) {
 
 const styles = StyleSheet.create({
   detailsBox: {
-    backgroundColor: 'rgba(12, 20, 21, 0.82)',
+    backgroundColor: 'rgba(255, 255, 255, 0.24)',
     borderWidth: 1,
-    borderColor: '#304243',
+    borderColor: '#E7E9EE',
     padding: 18,
     borderRadius: 16,
     marginBottom: 22,
   },
   detailsTitle: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 14,
   },
   detailsSubtitle: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 18,
     marginBottom: 12,
     marginTop: 6,
@@ -299,30 +299,30 @@ const styles = StyleSheet.create({
   },
   scoreInput: {
     flex: 1,
-    backgroundColor: '#121C1D',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#304243',
+    borderColor: '#E7E9EE',
     borderRadius: 12,
     padding: 16,
     fontSize: 18,
     marginBottom: 12,
-    color: '#F4F7F6',
+    color: '#050505',
   },
   addExerciseButton: {
-    backgroundColor: '#22A398',
+    backgroundColor: '#2563EB',
     padding: 16,
     borderRadius: 12,
     marginBottom: 16,
     marginTop: 14,
   },
   deleteLastButton: {
-    backgroundColor: '#22A398',
+    backgroundColor: '#2563EB',
     padding: 16,
     borderRadius: 12,
     marginBottom: 12,
   },
   resetLapButton: {
-    backgroundColor: '#22A398',
+    backgroundColor: '#2563EB',
     padding: 16,
     borderRadius: 12,
     marginBottom: 4,
@@ -334,68 +334,68 @@ const styles = StyleSheet.create({
   },
   balootTotalColumn: {
     flex: 1,
-    backgroundColor: '#080F10',
+    backgroundColor: '#F6F7F9',
     borderRadius: 14,
     padding: 18,
     alignItems: 'center',
   },
   balootSideTitle: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 20,
     marginBottom: 8,
   },
   balootTotalNumber: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 44,
     fontWeight: 'bold',
   },
   winnerBox: {
-    backgroundColor: '#080F10',
+    backgroundColor: '#F6F7F9',
     padding: 14,
     borderRadius: 12,
     marginBottom: 16,
   },
   winnerLabel: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 17,
     marginBottom: 4,
   },
   winnerText: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 22,
     fontWeight: 'bold',
   },
   dealerBox: {
-    backgroundColor: '#080F10',
+    backgroundColor: '#F6F7F9',
     padding: 18,
     borderRadius: 14,
     alignItems: 'center',
     marginBottom: 16,
   },
   dealerTitle: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 18,
     marginBottom: 8,
   },
   dealerArrow: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 66,
     fontWeight: 'bold',
     marginBottom: 4,
   },
   dealerHint: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 16,
   },
   exerciseListBox: {
-    backgroundColor: '#080F10',
+    backgroundColor: '#F6F7F9',
     padding: 14,
     borderRadius: 12,
     marginTop: 4,
     marginBottom: 12,
   },
   exerciseListTitle: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 10,
@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderBottomColor: '#304243',
+    borderBottomColor: '#E7E9EE',
     borderBottomWidth: 1,
     paddingVertical: 10,
   },
@@ -412,13 +412,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   exerciseName: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 19,
     fontWeight: '700',
     marginBottom: 4,
   },
   exerciseDeleteButton: {
-    backgroundColor: '#304243',
+    backgroundColor: '#E7E9EE',
     width: 34,
     height: 34,
     borderRadius: 17,
@@ -427,16 +427,16 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   exerciseDeleteText: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontWeight: 'bold',
     fontSize: 17,
   },
   emptyHistory: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 18,
   },
   buttonText: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 22,
     fontWeight: '600',
     textAlign: 'center',

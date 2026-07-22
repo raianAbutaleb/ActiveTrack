@@ -164,7 +164,7 @@ export default function MatchTracker(props: Props) {
       <TextInput
         style={styles.input}
         placeholder="Team 1 name"
-        placeholderTextColor="#F4F7F6"
+        placeholderTextColor="#050505"
         value={props.matchTeamOneName}
         onChangeText={props.setMatchTeamOneName}
       />
@@ -172,7 +172,7 @@ export default function MatchTracker(props: Props) {
       <TextInput
         style={styles.input}
         placeholder="Team 2 name"
-        placeholderTextColor="#F4F7F6"
+        placeholderTextColor="#050505"
         value={props.matchTeamTwoName}
         onChangeText={props.setMatchTeamTwoName}
       />
@@ -182,7 +182,7 @@ export default function MatchTracker(props: Props) {
       <TextInput
         style={styles.input}
         placeholder="Set number"
-        placeholderTextColor="#F4F7F6"
+        placeholderTextColor="#050505"
         value={props.matchSetNumber}
         onChangeText={props.setMatchSetNumber}
         keyboardType="number-pad"
@@ -192,7 +192,7 @@ export default function MatchTracker(props: Props) {
         <TextInput
           style={styles.scoreInput}
           placeholder="Team 1 games"
-          placeholderTextColor="#F4F7F6"
+          placeholderTextColor="#050505"
           value={props.matchTeamOneGames}
           onChangeText={props.setMatchTeamOneGames}
           keyboardType="number-pad"
@@ -201,7 +201,7 @@ export default function MatchTracker(props: Props) {
         <TextInput
           style={styles.scoreInput}
           placeholder="Team 2 games"
-          placeholderTextColor="#F4F7F6"
+          placeholderTextColor="#050505"
           value={props.matchTeamTwoGames}
           onChangeText={props.setMatchTeamTwoGames}
           keyboardType="number-pad"
@@ -214,7 +214,7 @@ export default function MatchTracker(props: Props) {
         <TextInput
           style={styles.scoreInput}
           placeholder="Team 1 points"
-          placeholderTextColor="#F4F7F6"
+          placeholderTextColor="#050505"
           value={props.matchTeamOnePoints}
           onChangeText={props.setMatchTeamOnePoints}
         />
@@ -222,7 +222,7 @@ export default function MatchTracker(props: Props) {
         <TextInput
           style={styles.scoreInput}
           placeholder="Team 2 points"
-          placeholderTextColor="#F4F7F6"
+          placeholderTextColor="#050505"
           value={props.matchTeamTwoPoints}
           onChangeText={props.setMatchTeamTwoPoints}
         />
@@ -248,7 +248,7 @@ export default function MatchTracker(props: Props) {
       <TextInput
         style={styles.input}
         placeholder="Tiebreak score, example: 7-5"
-        placeholderTextColor="#F4F7F6"
+        placeholderTextColor="#050505"
         value={props.matchTiebreakScore}
         onChangeText={props.setMatchTiebreakScore}
       />
@@ -259,7 +259,7 @@ export default function MatchTracker(props: Props) {
         <TextInput
           style={styles.scoreInput}
           placeholder="Team 1 winners"
-          placeholderTextColor="#F4F7F6"
+          placeholderTextColor="#050505"
           value={props.matchTeamOneWinners}
           onChangeText={props.setMatchTeamOneWinners}
           keyboardType="number-pad"
@@ -268,7 +268,7 @@ export default function MatchTracker(props: Props) {
         <TextInput
           style={styles.scoreInput}
           placeholder="Team 2 winners"
-          placeholderTextColor="#F4F7F6"
+          placeholderTextColor="#050505"
           value={props.matchTeamTwoWinners}
           onChangeText={props.setMatchTeamTwoWinners}
           keyboardType="number-pad"
@@ -279,7 +279,7 @@ export default function MatchTracker(props: Props) {
         <TextInput
           style={styles.scoreInput}
           placeholder="Team 1 errors"
-          placeholderTextColor="#F4F7F6"
+          placeholderTextColor="#050505"
           value={props.matchTeamOneErrors}
           onChangeText={props.setMatchTeamOneErrors}
           keyboardType="number-pad"
@@ -288,7 +288,7 @@ export default function MatchTracker(props: Props) {
         <TextInput
           style={styles.scoreInput}
           placeholder="Team 2 errors"
-          placeholderTextColor="#F4F7F6"
+          placeholderTextColor="#050505"
           value={props.matchTeamTwoErrors}
           onChangeText={props.setMatchTeamTwoErrors}
           keyboardType="number-pad"
@@ -354,34 +354,34 @@ export default function MatchTracker(props: Props) {
 
 const styles = StyleSheet.create({
   detailsBox: {
-    backgroundColor: 'rgba(12, 20, 21, 0.82)',
+    backgroundColor: 'rgba(255, 255, 255, 0.24)',
     borderWidth: 1,
-    borderColor: '#304243',
+    borderColor: '#E7E9EE',
     padding: 18,
     borderRadius: 16,
     marginBottom: 22,
   },
   detailsTitle: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 14,
   },
   detailsSubtitle: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 18,
     marginBottom: 12,
     marginTop: 6,
   },
   input: {
-    backgroundColor: '#121C1D',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#304243',
+    borderColor: '#E7E9EE',
     borderRadius: 12,
     padding: 16,
     fontSize: 20,
     marginBottom: 12,
-    color: '#F4F7F6',
+    color: '#050505',
   },
   scoreRow: {
     flexDirection: 'row',
@@ -389,31 +389,31 @@ const styles = StyleSheet.create({
   },
   scoreInput: {
     flex: 1,
-    backgroundColor: '#121C1D',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#304243',
+    borderColor: '#E7E9EE',
     borderRadius: 12,
     padding: 16,
     fontSize: 18,
     marginBottom: 12,
-    color: '#F4F7F6',
+    color: '#050505',
   },
   addExerciseButton: {
-    backgroundColor: '#22A398',
+    backgroundColor: '#2563EB',
     padding: 16,
     borderRadius: 12,
     marginBottom: 16,
     marginTop: 14,
   },
   exerciseListBox: {
-    backgroundColor: '#080F10',
+    backgroundColor: '#F6F7F9',
     padding: 14,
     borderRadius: 12,
     marginTop: 4,
     marginBottom: 12,
   },
   exerciseListTitle: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 10,
@@ -422,7 +422,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderBottomColor: '#304243',
+    borderBottomColor: '#E7E9EE',
     borderBottomWidth: 1,
     paddingVertical: 10,
   },
@@ -430,36 +430,36 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   exerciseName: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 19,
     fontWeight: '700',
     marginBottom: 4,
   },
   exerciseDetails: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 16,
     marginBottom: 2,
   },
   serverButton: {
     flex: 1,
-    backgroundColor: '#304243',
+    backgroundColor: '#E7E9EE',
     borderRadius: 12,
     padding: 14,
     marginBottom: 12,
   },
   selectedServerButton: {
-    backgroundColor: '#153B38',
+    backgroundColor: '#DDE7FC',
     borderWidth: 1,
-    borderColor: '#22A398',
+    borderColor: '#2563EB',
   },
   serverButtonText: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 17,
     fontWeight: '700',
     textAlign: 'center',
   },
   exerciseDeleteButton: {
-    backgroundColor: '#304243',
+    backgroundColor: '#E7E9EE',
     width: 34,
     height: 34,
     borderRadius: 17,
@@ -468,33 +468,33 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   exerciseDeleteText: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontWeight: 'bold',
     fontSize: 17,
   },
   matchTotalBox: {
-    backgroundColor: '#080F10',
+    backgroundColor: '#F6F7F9',
     padding: 14,
     borderRadius: 12,
     marginTop: 8,
   },
   matchTotalTitle: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 8,
   },
   matchTotalText: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 19,
     marginBottom: 4,
   },
   emptyHistory: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 18,
   },
   buttonText: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 22,
     fontWeight: '600',
     textAlign: 'center',

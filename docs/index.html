@@ -8,8 +8,8 @@
       name="description"
       content="Tafasili keeps your activity sessions and important life records organized in one private place."
     />
-    <link rel="icon" type="image/png" href="./assets/tafasili-favicon.png?v=20260722-cinematic-v18" />
-    <link rel="stylesheet" href="./styles.css?v=20260722-option2-exact-v21" />
+    <link rel="icon" type="image/png" href="./assets/tafasili-favicon.png?v=20260721-logo-tagline-v14" />
+    <link rel="stylesheet" href="./styles.css?v=20260722-gym-suggestions-v17" />
   </head>
   <body>
     <canvas id="activity-canvas" aria-hidden="true"></canvas>
@@ -21,7 +21,7 @@
         </button>
         <a class="brand" href="#" data-view="home" aria-label="Tafasili home">
           <span class="brand-mark" aria-hidden="true">
-            <img src="./assets/tafasili-logo.png?v=20260722-cinematic-v18" alt="" />
+            <img src="./assets/tafasili-logo.png?v=20260722-logo-no-ring-v16" alt="" />
           </span>
         </a>
         <div class="top-actions">
@@ -88,74 +88,54 @@
         </section>
 
         <section class="view" id="home-view" aria-labelledby="home-title">
-          <div class="dashboard-app">
-            <aside class="dashboard-sidebar" aria-label="Dashboard navigation">
-              <a class="sidebar-brand" href="#" data-view="home" aria-label="Tafasili home">
-                <img src="./assets/tafasili-favicon.png?v=20260722-option2-exact-v21" alt="" />
-                <strong>Tafasili</strong>
-              </a>
-              <nav class="sidebar-nav">
-                <button class="active" type="button" data-view="home"><span class="dashboard-icon icon-home" aria-hidden="true"></span><b>Home</b></button>
-                <button type="button" data-category="horse"><span class="dashboard-icon icon-horse" aria-hidden="true"></span><b>Horse Riding</b></button>
-                <button type="button" data-category="sportsDashboard"><span class="dashboard-icon icon-sports" aria-hidden="true"></span><b>Sports</b></button>
-                <button type="button" data-category="documentsDashboard"><span class="dashboard-icon icon-documents" aria-hidden="true"></span><b>Documents</b></button>
-                <button type="button" data-category="studyDashboard"><span class="dashboard-icon icon-study" aria-hidden="true"></span><b>Study</b></button>
-                <button type="button" data-category="workDashboard"><span class="dashboard-icon icon-work" aria-hidden="true"></span><b>Work</b></button>
-                <button type="button" data-reminders-jump><span class="dashboard-icon icon-reminders" aria-hidden="true"></span><b>Reminders</b></button>
-                <button type="button" data-view="history"><span class="dashboard-icon icon-history" aria-hidden="true"></span><b>History</b></button>
-                <button id="settings-button" type="button" data-settings-open><span class="dashboard-icon icon-settings" aria-hidden="true"></span><b>Settings</b></button>
-              </nav>
-            </aside>
-
-            <div class="dashboard-workspace">
-              <header class="dashboard-toolbar">
-                <button class="dashboard-menu-button" type="button" aria-label="Menu"><span class="dashboard-icon icon-menu" aria-hidden="true"></span></button>
-                <div class="dashboard-language"><span class="dashboard-icon icon-language" aria-hidden="true"></span><button type="button" data-dashboard-language>English</button><button type="button" data-dashboard-language>العربية</button></div>
-                <div class="dashboard-profile"><button type="button" data-reminders-jump aria-label="Reminders"><span class="dashboard-icon icon-reminders" aria-hidden="true"></span></button><span class="dashboard-avatar" id="dashboard-avatar">T</span><strong id="dashboard-profile-name">Tafasili</strong></div>
-              </header>
-
-              <div class="dashboard-scroll">
-                <section class="dashboard-welcome">
-                  <p class="eyebrow" id="home-eyebrow">Home</p>
-                  <h1 id="home-title">Good evening</h1>
-                  <p id="welcome-text">Stay focused. Track everything. Achieve more.</p>
-                </section>
-
-                <div class="dashboard-primary-grid">
-                  <section class="dashboard-panel activity-types-panel">
-                    <div class="dashboard-panel-head"><h2>Activity Types</h2><div><button class="panel-link" type="button" data-category="custom">+ Custom</button><button class="panel-link" type="button" data-view="history" id="home-history-button">View history</button></div></div>
-                    <section class="quick-access hidden" id="favorite-activities" aria-label="Favorites"></section>
-                    <div class="activity-sections" id="activity-grid" aria-label="Activities"></div>
-                  </section>
-                  <section class="today-dashboard dashboard-panel" id="today-dashboard" aria-label="Reminders"></section>
-                </div>
-
-                <div class="dashboard-secondary-grid">
-                  <section class="dashboard-panel weekly-panel">
-                    <div class="dashboard-panel-head"><h2 id="weekly-heading">This Week</h2><span id="weekly-date-range"></span></div>
-                    <div class="quick-stats" aria-label="Quick stats">
-                      <article><span id="total-sessions-label">Sessions</span><strong id="total-sessions">0</strong></article>
-                      <article><span id="week-hours-label">Hours</span><strong id="week-hours">0</strong></article>
-                      <article><span id="last-activity-label">Last activity</span><strong id="last-activity">None</strong></article>
-                      <article><span id="custom-count-label">Custom</span><strong id="custom-count">0</strong></article>
-                    </div>
-                    <div class="weekly-chart" id="weekly-chart" aria-hidden="true"></div>
-                  </section>
-                  <section class="dashboard-panel recent-history-panel">
-                    <div class="dashboard-panel-head"><h2 id="recent-history-heading">Recent History</h2><button class="panel-link" type="button" data-view="history">View all</button></div>
-                    <div id="dashboard-recent-history"></div>
-                  </section>
-                </div>
-
-                <form class="custom-activity collapsed" id="custom-activity-form">
-                  <label><span id="custom-activity-label">Add custom activity</span><input name="customActivity" type="text" placeholder="Example: Hiking" /></label>
-                  <label><span id="custom-fields-label">Reusable fields (separate with commas)</span><input name="customFields" type="text" placeholder="Location, Score" /></label>
-                  <label><span id="custom-category-label">Activity type</span><select name="customCategory" required></select></label>
-                  <button class="button secondary" type="submit" id="custom-activity-button">Add</button>
-                </form>
-              </div>
+          <div class="dashboard-head">
+            <div>
+              <p class="eyebrow" id="home-eyebrow">Home</p>
+              <h1 id="home-title">What do you want to track?</h1>
+              <p id="welcome-text">Choose an activity and save it to History.</p>
+            </div>
+            <div class="button-row">
+              <button class="icon-button" type="button" id="settings-button" aria-label="Settings">&#9881;</button>
+              <button class="button secondary" type="button" data-view="history" id="home-history-button">History</button>
             </div>
           </div>
+
+          <section class="today-dashboard" id="today-dashboard" aria-label="Today"></section>
+          <section class="quick-access hidden" id="favorite-activities" aria-label="Favorites"></section>
+
+          <div class="quick-stats" aria-label="Quick stats">
+            <article>
+              <span id="total-sessions-label">Total sessions</span>
+              <strong id="total-sessions">0</strong>
+            </article>
+            <article>
+              <span id="last-activity-label">Last activity</span>
+              <strong id="last-activity">None</strong>
+            </article>
+            <article>
+              <span id="custom-count-label">Custom activities</span>
+              <strong id="custom-count">0</strong>
+            </article>
+          </div>
+
+          <div class="activity-sections" id="activity-grid" aria-label="Activities"></div>
+
+          <form class="custom-activity collapsed" id="custom-activity-form">
+            <label>
+              <span id="custom-activity-label">Add custom activity</span>
+              <input name="customActivity" type="text" placeholder="Example: Hiking" />
+            </label>
+            <label>
+              <span id="custom-fields-label">Reusable fields (separate with commas)</span>
+              <input name="customFields" type="text" placeholder="Location, Score" />
+            </label>
+            <label>
+              <span id="custom-category-label">Activity type</span>
+              <select name="customCategory" required></select>
+            </label>
+            <button class="button secondary" type="submit" id="custom-activity-button">Add</button>
+          </form>
+
         </section>
 
         <section class="view" id="tracker-view" aria-labelledby="tracker-title">
@@ -272,6 +252,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.7/dist/umd/supabase.min.js"></script>
     <script src="./supabase-config.js?v=20260718-supabase"></script>
-    <script src="./main.js?v=20260722-option2-exact-v21"></script>
+    <script src="./main.js?v=20260722-gym-suggestions-v17"></script>
   </body>
 </html>

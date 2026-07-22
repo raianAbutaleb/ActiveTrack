@@ -1,6 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useNavigation } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -176,17 +175,6 @@ const authErrorMessage = (error: unknown, isArabic: boolean, action: 'signin' | 
     ? isArabic ? 'تعذر تسجيل الدخول.' : 'Could not sign in.'
     : isArabic ? 'تعذر إنشاء الحساب.' : 'Could not create account.';
 };
-
-const CinematicBackdrop = () => (
-  <View pointerEvents="none" style={styles.cinematicBackdrop}>
-    <Image
-      source={require('../../assets/images/friesian-horse-bg.png')}
-      style={styles.cinematicBackdropImage}
-      resizeMode="cover"
-    />
-    <View style={styles.cinematicBackdropScrim} />
-  </View>
-);
 
 export default function HomeScreen() {
   const navigation = useNavigation();
@@ -481,8 +469,8 @@ export default function HomeScreen() {
     navigation.setOptions({
       tabBarStyle: isLoggedIn
         ? {
-            backgroundColor: '#121C1D',
-            borderTopColor: '#304243',
+            backgroundColor: '#FFFFFF',
+            borderTopColor: '#E7E9EE',
             borderTopWidth: 1,
             height: 85,
             paddingTop: 8,
@@ -2969,7 +2957,6 @@ const getGroupedActivities = () => {
   if (isAuthLoading) {
     return (
       <GestureHandlerRootView style={styles.root}>
-        <CinematicBackdrop />
         <View style={styles.loginContainer}>
           {renderBrand()}
           <Text style={[styles.loginSubtitle, isArabic && styles.rtlText]}>
@@ -2983,10 +2970,9 @@ const getGroupedActivities = () => {
   if (isLoggedIn && settings.appLockEnabled && !isAppUnlocked) {
     return (
       <GestureHandlerRootView style={styles.root}>
-        <CinematicBackdrop />
         <View style={styles.lockScreen}>
           {renderBrand()}
-          <Ionicons name="lock-closed-outline" size={42} color="#F4F7F6" />
+          <Ionicons name="lock-closed-outline" size={42} color="#050505" />
           <Text style={styles.lockTitle}>{isArabic ? 'تفاصيلي مقفل' : 'Tafasili is locked'}</Text>
           <TouchableOpacity style={styles.lockButton} onPress={unlockApp}>
             <Text style={styles.lockButtonText}>{isArabic ? 'فتح بالبصمة' : 'Unlock with Face ID / device lock'}</Text>
@@ -3001,7 +2987,6 @@ const getGroupedActivities = () => {
 
     return (
     <GestureHandlerRootView style={styles.root}>
-      <CinematicBackdrop />
       <ScrollView contentContainerStyle={styles.loginContainer}>
         <View style={styles.authTopbar}>
           <View style={styles.topbarSpacer} />
@@ -3049,7 +3034,7 @@ const getGroupedActivities = () => {
         <TextInput
           style={styles.input}
           placeholder={isArabic ? 'البريد الإلكتروني' : 'Email'}
-          placeholderTextColor="#F4F7F6"
+          placeholderTextColor="#050505"
           value={loginUsername}
           onChangeText={(value) => setLoginUsername(value.replace(/\s/g, ''))}
           autoCapitalize="none"
@@ -3065,7 +3050,7 @@ const getGroupedActivities = () => {
             placeholder={isSignupMode
               ? isArabic ? 'كلمة مرور جديدة' : 'New password'
               : isArabic ? 'كلمة المرور' : 'Password'}
-            placeholderTextColor="#F4F7F6"
+            placeholderTextColor="#050505"
             value={loginPassword}
             onChangeText={setLoginPassword}
             autoCapitalize="none"
@@ -3096,7 +3081,7 @@ const getGroupedActivities = () => {
               <TextInput
                 style={[styles.input, styles.passwordInput]}
                 placeholder={isArabic ? 'تأكيد كلمة المرور' : 'Confirm password'}
-                placeholderTextColor="#F4F7F6"
+                placeholderTextColor="#050505"
                 value={signupRepeatPassword}
                 onChangeText={setSignupRepeatPassword}
                 autoCapitalize="none"
@@ -3189,7 +3174,6 @@ const getGroupedActivities = () => {
   if (selectedActivity) {
     return (
       <GestureHandlerRootView style={styles.root}>
-        <CinematicBackdrop />
         <ScrollView style={styles.container}>
           <TouchableOpacity
             style={styles.backButton}
@@ -3197,7 +3181,7 @@ const getGroupedActivities = () => {
             accessibilityRole="button"
             accessibilityLabel={isArabic ? 'رجوع' : 'Back'}
           >
-            <Ionicons name={isArabic ? 'arrow-forward' : 'arrow-back'} size={27} color="#F4F7F6" />
+            <Ionicons name={isArabic ? 'arrow-forward' : 'arrow-back'} size={27} color="#050505" />
           </TouchableOpacity>
 
           <Text style={[styles.title, isArabic && styles.rtlText]}>
@@ -3231,7 +3215,7 @@ const getGroupedActivities = () => {
               <TextInput
                 style={styles.input}
                 placeholder="ID number"
-                placeholderTextColor="#F4F7F6"
+                placeholderTextColor="#050505"
                 value={personalIdNumber}
                 onChangeText={setPersonalIdNumber}
                 secureTextEntry
@@ -3239,21 +3223,21 @@ const getGroupedActivities = () => {
               <TextInput
                 style={styles.input}
                 placeholder="ID expiration date (YYYY-MM-DD)"
-                placeholderTextColor="#F4F7F6"
+                placeholderTextColor="#050505"
                 value={personalIdExpirationDate}
                 onChangeText={setPersonalIdExpirationDate}
               />
               <TextInput
                 style={styles.input}
                 placeholder="Driving license expiration date (YYYY-MM-DD)"
-                placeholderTextColor="#F4F7F6"
+                placeholderTextColor="#050505"
                 value={personalDlExpirationDate}
                 onChangeText={setPersonalDlExpirationDate}
               />
               <TextInput
                 style={styles.input}
                 placeholder="Passport number"
-                placeholderTextColor="#F4F7F6"
+                placeholderTextColor="#050505"
                 value={personalPassportNumber}
                 onChangeText={setPersonalPassportNumber}
                 secureTextEntry
@@ -3262,7 +3246,7 @@ const getGroupedActivities = () => {
               <TextInput
                 style={styles.input}
                 placeholder="Passport expiration date (YYYY-MM-DD)"
-                placeholderTextColor="#F4F7F6"
+                placeholderTextColor="#050505"
                 value={personalPassportExpirationDate}
                 onChangeText={setPersonalPassportExpirationDate}
               />
@@ -3301,7 +3285,7 @@ const getGroupedActivities = () => {
                       key={field}
                       style={styles.input}
                       placeholder={field}
-                      placeholderTextColor="#F4F7F6"
+                      placeholderTextColor="#050505"
                       value={customFieldValues[field] || ''}
                       onChangeText={(value) =>
                         setCustomFieldValues((currentValues) => ({
@@ -3427,7 +3411,7 @@ const getGroupedActivities = () => {
     <TextInput
       style={styles.input}
       placeholder="Subject, example: Math"
-      placeholderTextColor="#F4F7F6"
+      placeholderTextColor="#050505"
       value={studySubject}
       onChangeText={setStudySubject}
     />
@@ -3435,7 +3419,7 @@ const getGroupedActivities = () => {
     <TextInput
       style={styles.input}
       placeholder="Study type, example: Exam, coursework, review"
-      placeholderTextColor="#F4F7F6"
+      placeholderTextColor="#050505"
       value={studyType}
       onChangeText={setStudyType}
     />
@@ -3443,7 +3427,7 @@ const getGroupedActivities = () => {
     <TextInput
       style={styles.input}
       placeholder="Exam date, example: 20/08/2026"
-      placeholderTextColor="#F4F7F6"
+      placeholderTextColor="#050505"
       value={studyExamDate}
       onChangeText={setStudyExamDate}
     />
@@ -3451,7 +3435,7 @@ const getGroupedActivities = () => {
     <TextInput
       style={styles.input}
       placeholder="Coursework, example: Chapter 4 assignment"
-      placeholderTextColor="#F4F7F6"
+      placeholderTextColor="#050505"
       value={studyCoursework}
       onChangeText={setStudyCoursework}
     />
@@ -3459,7 +3443,7 @@ const getGroupedActivities = () => {
     <TextInput
       style={styles.input}
       placeholder="Study streak, example: 5 days"
-      placeholderTextColor="#F4F7F6"
+      placeholderTextColor="#050505"
       value={studyStreak}
       onChangeText={setStudyStreak}
     />
@@ -3467,7 +3451,7 @@ const getGroupedActivities = () => {
     <TextInput
       style={styles.input}
       placeholder="Total study hours"
-      placeholderTextColor="#F4F7F6"
+      placeholderTextColor="#050505"
       value={studyTotalHours}
       onChangeText={setStudyTotalHours}
       keyboardType="decimal-pad"
@@ -3529,7 +3513,7 @@ const getGroupedActivities = () => {
     <TextInput
       style={styles.input}
       placeholder="Study notes"
-      placeholderTextColor="#F4F7F6"
+      placeholderTextColor="#050505"
       value={studyNotes}
       onChangeText={setStudyNotes}
       multiline
@@ -3544,7 +3528,7 @@ const getGroupedActivities = () => {
     <TextInput
       style={styles.input}
       placeholder={isArabic ? 'اسم المشروع' : 'Project name'}
-      placeholderTextColor="#F4F7F6"
+      placeholderTextColor="#050505"
       value={workProjectName}
       onChangeText={setWorkProjectName}
     />
@@ -3555,7 +3539,7 @@ const getGroupedActivities = () => {
         <TextInput
           style={[styles.input, styles.candleTimeSettingInput]}
           placeholder="0"
-          placeholderTextColor="#F4F7F6"
+          placeholderTextColor="#050505"
           value={workCandleHours}
           onChangeText={setWorkCandleHours}
           keyboardType="number-pad"
@@ -3567,7 +3551,7 @@ const getGroupedActivities = () => {
         <TextInput
           style={[styles.input, styles.candleTimeSettingInput]}
           placeholder="0"
-          placeholderTextColor="#F4F7F6"
+          placeholderTextColor="#050505"
           value={workCandleMinutes}
           onChangeText={setWorkCandleMinutes}
           keyboardType="number-pad"
@@ -3634,7 +3618,7 @@ const getGroupedActivities = () => {
     <TextInput
       style={styles.input}
       placeholder={isArabic ? 'ملاحظات العمل' : 'Work notes'}
-      placeholderTextColor="#F4F7F6"
+      placeholderTextColor="#050505"
       value={workNotes}
       onChangeText={setWorkNotes}
       multiline
@@ -3734,7 +3718,7 @@ const getGroupedActivities = () => {
     <TextInput
       style={styles.input}
       placeholder="Vehicle name, example: Indian Motorcycle"
-      placeholderTextColor="#F4F7F6"
+      placeholderTextColor="#050505"
       value={vehicleName}
       onChangeText={setVehicleName}
     />
@@ -3742,7 +3726,7 @@ const getGroupedActivities = () => {
     <TextInput
       style={styles.input}
       placeholder="Plate number"
-      placeholderTextColor="#F4F7F6"
+      placeholderTextColor="#050505"
       value={vehiclePlateNumber}
       onChangeText={setVehiclePlateNumber}
     />
@@ -3750,7 +3734,7 @@ const getGroupedActivities = () => {
     <TextInput
       style={styles.input}
       placeholder="Model / Year, example: Camry 2022"
-      placeholderTextColor="#F4F7F6"
+      placeholderTextColor="#050505"
       value={vehicleModelYear}
       onChangeText={setVehicleModelYear}
     />
@@ -3773,7 +3757,7 @@ const getGroupedActivities = () => {
     <TextInput
       style={styles.input}
       placeholder="Service date, example: 2026-07-17"
-      placeholderTextColor="#F4F7F6"
+      placeholderTextColor="#050505"
       value={vehicleServiceDate}
       onChangeText={setVehicleServiceDate}
     />
@@ -3781,7 +3765,7 @@ const getGroupedActivities = () => {
     <TextInput
       style={styles.input}
       placeholder="Mileage / KM"
-      placeholderTextColor="#F4F7F6"
+      placeholderTextColor="#050505"
       value={vehicleMileage}
       onChangeText={setVehicleMileage}
       keyboardType="numeric"
@@ -3790,7 +3774,7 @@ const getGroupedActivities = () => {
     <TextInput
       style={styles.input}
       placeholder="Cost"
-      placeholderTextColor="#F4F7F6"
+      placeholderTextColor="#050505"
       value={vehicleCost}
       onChangeText={setVehicleCost}
       keyboardType="numeric"
@@ -3799,7 +3783,7 @@ const getGroupedActivities = () => {
     <TextInput
       style={styles.input}
       placeholder="Shop / place name"
-      placeholderTextColor="#F4F7F6"
+      placeholderTextColor="#050505"
       value={vehicleShopName}
       onChangeText={setVehicleShopName}
     />
@@ -3809,7 +3793,7 @@ const getGroupedActivities = () => {
     <TextInput
       style={styles.input}
       placeholder="Next service date"
-      placeholderTextColor="#F4F7F6"
+      placeholderTextColor="#050505"
       value={vehicleNextServiceDate}
       onChangeText={setVehicleNextServiceDate}
     />
@@ -3817,7 +3801,7 @@ const getGroupedActivities = () => {
     <TextInput
       style={styles.input}
       placeholder="Next service mileage / KM"
-      placeholderTextColor="#F4F7F6"
+      placeholderTextColor="#050505"
       value={vehicleNextServiceMileage}
       onChangeText={setVehicleNextServiceMileage}
       keyboardType="numeric"
@@ -3826,7 +3810,7 @@ const getGroupedActivities = () => {
     <TextInput
       style={styles.input}
       placeholder="Insurance expiration date (YYYY-MM-DD)"
-      placeholderTextColor="#F4F7F6"
+      placeholderTextColor="#050505"
       value={vehicleInsuranceExpirationDate}
       onChangeText={setVehicleInsuranceExpirationDate}
     />
@@ -3834,7 +3818,7 @@ const getGroupedActivities = () => {
     <TextInput
       style={styles.input}
       placeholder="Registration end date (YYYY-MM-DD)"
-      placeholderTextColor="#F4F7F6"
+      placeholderTextColor="#050505"
       value={vehicleRegistrationEndDate}
       onChangeText={setVehicleRegistrationEndDate}
     />
@@ -3842,7 +3826,7 @@ const getGroupedActivities = () => {
     <TextInput
       style={styles.input}
       placeholder="Notes"
-      placeholderTextColor="#F4F7F6"
+      placeholderTextColor="#050505"
       value={vehicleNotes}
       onChangeText={setVehicleNotes}
       multiline
@@ -3858,7 +3842,7 @@ const getGroupedActivities = () => {
               <TextInput
                 style={styles.input}
                 placeholder={isArabic ? 'ملاحظة التذكير' : 'Reminder note'}
-                placeholderTextColor="#F4F7F6"
+                placeholderTextColor="#050505"
                 value={reminderNote}
                 onChangeText={setReminderNote}
                 multiline
@@ -3882,14 +3866,14 @@ const getGroupedActivities = () => {
                   <TextInput
                     style={styles.input}
                     placeholder={isArabic ? 'تاريخ التذكير، مثال: 2026-08-01' : 'Reminder date, example: 2026-08-01'}
-                    placeholderTextColor="#F4F7F6"
+                    placeholderTextColor="#050505"
                     value={reminderDate}
                     onChangeText={setReminderDate}
                   />
                   <TextInput
                     style={styles.input}
                     placeholder={isArabic ? 'وقت التذكير، مثال: 18:30' : 'Reminder time, example: 18:30'}
-                    placeholderTextColor="#F4F7F6"
+                    placeholderTextColor="#050505"
                     value={reminderTime}
                     onChangeText={setReminderTime}
                   />
@@ -3984,142 +3968,42 @@ const getGroupedActivities = () => {
       : syncStatus === 'offline'
         ? isArabic ? 'دون اتصال' : 'Offline'
         : isArabic ? 'فشلت المزامنة' : 'Sync failed';
-  const dashboardActivities = (groups: string[]) => activities.filter((activity) => groups.includes(getActivityGroup(activity)));
-  const dashboardGroups = [
-    { key: 'horse-dashboard', label: isArabic ? 'ركوب الخيل' : 'Horse Riding', icon: 'horse-variant' as const, activities: dashboardActivities(['Horse Activities']) },
-    { key: 'sports-dashboard', label: isArabic ? 'الرياضة' : 'Sports', icon: 'run-fast' as const, activities: dashboardActivities(['Sports and Games', 'Fitness and Movement']) },
-    { key: 'documents-dashboard', label: isArabic ? 'المستندات' : 'Documents', icon: 'folder-outline' as const, activities: dashboardActivities(['Life Tracking', 'Vehicle and Maintenance']) },
-    { key: 'study-dashboard', label: isArabic ? 'الدراسة' : 'Study', icon: 'book-open-page-variant-outline' as const, activities: activities.filter((activity) => activity === 'Studying') },
-    { key: 'work-dashboard', label: isArabic ? 'العمل' : 'Work', icon: 'briefcase-outline' as const, activities: activities.filter((activity) => activity === 'Work' || getActivityGroup(activity) === 'Custom Activities') },
-  ];
-  const greeting = new Date().getHours() < 12
-    ? isArabic ? 'صباح الخير' : 'Good morning'
-    : isArabic ? 'مساء الخير' : 'Good evening';
 
   return (
     <GestureHandlerRootView style={styles.root}>
-      <CinematicBackdrop />
       <View style={styles.mainContainer}>
         <ScrollView style={styles.container}>
           <View style={styles.homeTopbar}>
-            <View style={styles.dashboardMobileBrand}>
-              <Image source={require('../../assets/images/tafasili-favicon.png')} style={styles.dashboardMobileLogo} />
-              <Text style={styles.dashboardMobileBrandText}>Tafasili</Text>
-            </View>
+            <TouchableOpacity
+              style={styles.logoutButtonTop}
+              onPress={logout}
+              accessibilityLabel={isArabic ? 'تسجيل الخروج' : 'Log out'}
+            >
+              <Ionicons name="power-outline" size={26} color="#050505" />
+            </TouchableOpacity>
+            {renderBrand()}
             <View style={styles.homeTopActions}>
               <TouchableOpacity style={styles.languageButton} onPress={toggleLanguage}>
                 <Text style={styles.languageButtonText}>{isArabic ? 'EN' : 'AR'}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.languageButton} onPress={() => setShowSettingsModal(true)} accessibilityLabel="Settings">
-                <Ionicons name="notifications-outline" size={22} color="#F4F7F6" />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.languageButton} onPress={logout} accessibilityLabel={isArabic ? 'تسجيل الخروج' : 'Log out'}>
-                <Ionicons name="power-outline" size={22} color="#F4F7F6" />
+                <Ionicons name="settings-outline" size={23} color="#050505" />
               </TouchableOpacity>
             </View>
           </View>
 
           <Text style={[styles.homeHeading, isArabic && styles.rtlText]}>
-            {greeting}{loginUsername ? `, ${loginUsername.split('@')[0]}` : ''}
+            {isArabic ? 'ماذا تريد أن تتتبع؟' : 'What do you want to track?'}
           </Text>
+          <Text style={[styles.subtitle, styles.homeWelcome, isArabic && styles.rtlText]}>
+            {isArabic ? `مرحباً، ${loginUsername}` : `Welcome, ${loginUsername}`}
+          </Text>
+
           <Text style={[styles.homeDescription, isArabic && styles.rtlText]}>
             {isArabic
-              ? 'حافظ على تركيزك. تتبع كل شيء. أنجز أكثر.'
-              : 'Stay focused. Track everything. Achieve more.'}
+              ? 'اختر نوع النشاط، ثم احفظ تفاصيله في سجلك.'
+              : 'Choose an activity type, then save its details to your history.'}
           </Text>
-
-          <View style={styles.dashboardActivityPanel}>
-            <View style={styles.sectionHeaderRow}>
-              <Text style={styles.dashboardPanelTitle}>{isArabic ? 'أنواع الأنشطة' : 'Activity Types'}</Text>
-              <TouchableOpacity onPress={openOtherModal}><Text style={styles.dashboardPanelLink}>{isArabic ? '+ مخصص' : '+ Custom'}</Text></TouchableOpacity>
-            </View>
-            <View style={styles.dashboardCategoryGrid}>
-              {dashboardGroups.map((group, index) => {
-                const selected = selectedActivityCategory === group.key;
-                return (
-                  <View key={group.key} style={[styles.dashboardCategoryWrap, index === 0 && styles.dashboardHorseCategoryWrap]}>
-                    <TouchableOpacity
-                      style={[styles.dashboardCategoryTile, index === 0 && styles.dashboardHorseCategoryTile, selected && styles.dashboardCategoryTileSelected]}
-                      onPress={() => setSelectedActivityCategory(selected ? null : group.key)}
-                    >
-                      <MaterialCommunityIcons name={group.icon} size={index === 0 ? 30 : 25} color="#F4F7F6" />
-                      <Text style={styles.dashboardCategoryText}>{group.label}</Text>
-                      {index === 0 && <Ionicons name={isArabic ? 'chevron-back' : 'chevron-forward'} size={22} color="#F4F7F6" />}
-                    </TouchableOpacity>
-                    {selected && (
-                      <View style={styles.dashboardActivityDropdown}>
-                        {group.activities.map((activity) => (
-                          <View key={activity} style={styles.dashboardActivityOptionRow}>
-                            <TouchableOpacity style={styles.favoriteButton} onPress={() => toggleFavorite(activity)}>
-                              <Ionicons name={settings.favoriteActivities.includes(activity) ? 'star' : 'star-outline'} size={19} color="#F4F7F6" />
-                            </TouchableOpacity>
-                            <TouchableOpacity style={styles.dashboardActivityOption} onPress={() => openActivity(activity)}>
-                              <Text style={styles.dashboardActivityOptionText}>{activityDisplayName(activity)}</Text>
-                            </TouchableOpacity>
-                            {isCustomActivity(activity) && (
-                              <TouchableOpacity style={styles.activityDropdownDelete} onPress={() => confirmDeleteActivity(activity)}>
-                                <Ionicons name="trash-outline" size={18} color="#F4F7F6" />
-                              </TouchableOpacity>
-                            )}
-                          </View>
-                        ))}
-                      </View>
-                    )}
-                  </View>
-                );
-              })}
-            </View>
-          </View>
-
-          <View style={styles.dashboardReminderPanel}>
-            <View style={styles.sectionHeaderRow}>
-              <Text style={styles.dashboardPanelTitle}>{isArabic ? 'التذكيرات' : 'Reminders'}</Text>
-              <Text style={styles.dashboardPanelLink}>{isArabic ? 'عرض الكل' : 'View all'}</Text>
-            </View>
-            {todayReminders.length === 0 ? (
-              <Text style={styles.todayEmpty}>{isArabic ? 'لا توجد تذكيرات قادمة.' : 'No upcoming reminders.'}</Text>
-            ) : todayReminders.slice(0, 4).map((reminder, index) => (
-              <View key={`${reminder.label}-${index}`} style={styles.dashboardReminderRow}>
-                <View style={styles.dashboardReminderCheck} />
-                <View><Text style={styles.todayReminderText}>{reminder.note || reminder.label}</Text><Text style={styles.dashboardReminderDate}>{reminder.date}</Text></View>
-              </View>
-            ))}
-            {currentDraft && (
-              <View style={styles.draftBanner}>
-                <TouchableOpacity style={styles.draftContinueButton} onPress={() => openActivity(currentDraft.activity, true)}>
-                  <Ionicons name="document-text-outline" size={20} color="#F4F7F6" />
-                  <View style={styles.draftTextBox}><Text style={styles.draftTitle}>{isArabic ? 'متابعة المسودة' : 'Continue draft'}</Text><Text style={styles.draftMeta}>{activityDisplayName(currentDraft.activity)}</Text></View>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.draftDeleteButton} onPress={confirmDeleteDraft}><Text style={styles.draftDeleteText}>−</Text></TouchableOpacity>
-              </View>
-            )}
-            <View style={styles.dashboardReminderFooter}>
-              <View style={styles.syncRowVisible}><View style={[styles.syncDot, syncStatus === 'saved' ? styles.syncSaved : styles.syncOffline]} /><Text style={styles.syncText}>{syncLabel}</Text></View>
-              {sessions.length > 0 && <TouchableOpacity onPress={repeatLastSession}><Text style={styles.dashboardPanelLink}>{isArabic ? 'تكرار الأخير' : 'Repeat last'}</Text></TouchableOpacity>}
-            </View>
-          </View>
-
-          <View style={styles.dashboardWeeklyPanel}>
-            <Text style={styles.dashboardPanelTitle}>{isArabic ? 'هذا الأسبوع' : 'This Week'}</Text>
-            <View style={styles.dashboardWeeklyStats}>
-              <View><Text style={styles.dashboardStatLabel}>{isArabic ? 'الجلسات' : 'Sessions'}</Text><Text style={styles.dashboardStatValue}>{sessions.length}</Text></View>
-              <View><Text style={styles.dashboardStatLabel}>{isArabic ? 'الوقت' : 'Time'}</Text><Text style={styles.dashboardStatValue}>{getTotalTime()}</Text></View>
-              <View><Text style={styles.dashboardStatLabel}>{isArabic ? 'الأكثر' : 'Top'}</Text><Text style={styles.dashboardStatValueSmall}>{activityDisplayName(getMostPracticedActivity())}</Text></View>
-            </View>
-          </View>
-
-          <View style={styles.dashboardRecentPanel}>
-            <View style={styles.sectionHeaderRow}><Text style={styles.dashboardPanelTitle}>{isArabic ? 'السجل الحديث' : 'Recent History'}</Text><TouchableOpacity onPress={() => navigation.navigate('history' as never)}><Text style={styles.dashboardPanelLink}>{isArabic ? 'عرض الكل' : 'View all'}</Text></TouchableOpacity></View>
-            {sessions.slice(0, 4).map((session) => (
-              <TouchableOpacity key={session.id} style={styles.dashboardRecentRow} onPress={() => navigation.navigate('history' as never)}>
-                {horseActivities.includes(session.activity)
-                  ? <MaterialCommunityIcons name="horse-variant" size={22} color="#F4F7F6" />
-                  : <Ionicons name="time-outline" size={20} color="#F4F7F6" />}
-                <View style={styles.draftTextBox}><Text style={styles.todayReminderText}>{activityDisplayName(session.activity)}</Text><Text style={styles.dashboardReminderDate}>{new Date(session.date).toLocaleDateString()}</Text></View>
-                <Ionicons name={isArabic ? 'chevron-back' : 'chevron-forward'} size={18} color="#5ED3C7" />
-              </TouchableOpacity>
-            ))}
-          </View>
 
           <View style={styles.syncRow}>
             <View style={[styles.syncDot, syncStatus === 'saved' ? styles.syncSaved : styles.syncOffline]} />
@@ -4131,7 +4015,7 @@ const getGroupedActivities = () => {
               <Text style={[styles.statsTitle, isArabic && styles.rtlText]}>{isArabic ? 'اليوم' : 'Today'}</Text>
               {sessions.length > 0 && (
                 <TouchableOpacity style={styles.compactAction} onPress={repeatLastSession}>
-                  <Ionicons name="repeat-outline" size={18} color="#F4F7F6" />
+                  <Ionicons name="repeat-outline" size={18} color="#050505" />
                   <Text style={styles.compactActionText}>{isArabic ? 'تكرار الأخير' : 'Repeat last'}</Text>
                 </TouchableOpacity>
               )}
@@ -4140,7 +4024,7 @@ const getGroupedActivities = () => {
               <Text style={styles.todayEmpty}>{isArabic ? 'لا توجد تذكيرات مستحقة اليوم.' : 'No reminders are due today.'}</Text>
             ) : todayReminders.slice(0, 4).map((reminder, index) => (
               <View key={`${reminder.label}-${index}`} style={styles.todayReminderRow}>
-                <Ionicons name="notifications-outline" size={19} color="#F4F7F6" />
+                <Ionicons name="notifications-outline" size={19} color="#050505" />
                 <Text style={styles.todayReminderText}>{reminder.label}: {reminder.date}</Text>
               </View>
             ))}
@@ -4150,7 +4034,7 @@ const getGroupedActivities = () => {
                   style={styles.draftContinueButton}
                   onPress={() => openActivity(currentDraft.activity, true)}
                 >
-                  <Ionicons name="document-text-outline" size={21} color="#F4F7F6" />
+                  <Ionicons name="document-text-outline" size={21} color="#050505" />
                   <View style={styles.draftTextBox}>
                     <Text style={styles.draftTitle}>{isArabic ? 'متابعة المسودة' : 'Continue draft'}</Text>
                     <Text style={styles.draftMeta}>{activityDisplayName(currentDraft.activity)}</Text>
@@ -4174,7 +4058,7 @@ const getGroupedActivities = () => {
               <View style={styles.quickActivityRow}>
                 {settings.favoriteActivities.map((activity) => (
                   <TouchableOpacity key={activity} style={styles.quickActivityButton} onPress={() => openActivity(activity)}>
-                    <Ionicons name="star" size={16} color="#F4F7F6" />
+                    <Ionicons name="star" size={16} color="#050505" />
                     <Text style={styles.quickActivityText}>{activityDisplayName(activity)}</Text>
                   </TouchableOpacity>
                 ))}
@@ -4278,7 +4162,7 @@ const getGroupedActivities = () => {
                               <Ionicons
                                 name={settings.favoriteActivities.includes(activity) ? 'star' : 'star-outline'}
                                 size={21}
-                                color="#F4F7F6"
+                                color="#050505"
                               />
                             </TouchableOpacity>
                             <TouchableOpacity
@@ -4299,7 +4183,7 @@ const getGroupedActivities = () => {
                                 accessibilityRole="button"
                                 accessibilityLabel={`${isArabic ? 'حذف' : 'Delete'} ${activityDisplayName(activity)}`}
                               >
-                                <Ionicons name="trash-outline" size={20} color="#F4F7F6" />
+                                <Ionicons name="trash-outline" size={20} color="#050505" />
                               </TouchableOpacity>
                             )}
                           </View>
@@ -4329,7 +4213,7 @@ const getGroupedActivities = () => {
               <TextInput
                 style={styles.input}
                 placeholder="Example: Boxing"
-                placeholderTextColor="#F4F7F6"
+                placeholderTextColor="#050505"
                 value={otherActivityName}
                 onChangeText={setOtherActivityName}
               />
@@ -4341,7 +4225,7 @@ const getGroupedActivities = () => {
               <TextInput
                 style={styles.input}
                 placeholder="Example: Location, Score, Notes"
-                placeholderTextColor="#F4F7F6"
+                placeholderTextColor="#050505"
                 value={otherActivityFields}
                 onChangeText={setOtherActivityFields}
                 multiline
@@ -4388,7 +4272,7 @@ const getGroupedActivities = () => {
               <View style={styles.sectionHeaderRow}>
                 <Text style={styles.modalTitle}>{isArabic ? 'الإعدادات والخصوصية' : 'Settings & Privacy'}</Text>
                 <TouchableOpacity onPress={() => setShowSettingsModal(false)} accessibilityLabel="Close settings">
-                  <Ionicons name="close" size={26} color="#F4F7F6" />
+                  <Ionicons name="close" size={26} color="#050505" />
                 </TouchableOpacity>
               </View>
               <ScrollView showsVerticalScrollIndicator={false}>
@@ -4451,12 +4335,8 @@ const getGroupedActivities = () => {
                 </View>
 
                 <TouchableOpacity style={styles.settingsAction} onPress={() => shareSessionsCsv(sessions)}>
-                  <Ionicons name="download-outline" size={21} color="#F4F7F6" />
+                  <Ionicons name="download-outline" size={21} color="#050505" />
                   <Text style={styles.settingsActionText}>{isArabic ? 'تصدير CSV' : 'Export history as CSV'}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.settingsAction} onPress={resetActivityList}>
-                  <Ionicons name="refresh-outline" size={21} color="#F4F7F6" />
-                  <Text style={styles.settingsActionText}>{isArabic ? 'إعادة ضبط قائمة الأنشطة' : 'Reset activity list'}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.settingsAction} onPress={async () => {
                   try {
@@ -4468,7 +4348,7 @@ const getGroupedActivities = () => {
                     Alert.alert('Could not sign out other devices');
                   }
                 }}>
-                  <Ionicons name="phone-portrait-outline" size={21} color="#F4F7F6" />
+                  <Ionicons name="phone-portrait-outline" size={21} color="#050505" />
                   <Text style={styles.settingsActionText}>{isArabic ? 'تسجيل الخروج من الأجهزة الأخرى' : 'Sign out other devices'}</Text>
                 </TouchableOpacity>
                 <Text style={styles.settingsLabel}>{isArabic ? 'الأجهزة المسجلة' : 'Signed-in devices'}</Text>
@@ -4476,7 +4356,7 @@ const getGroupedActivities = () => {
                   <Text style={styles.settingsHelp}>{isArabic ? 'ستظهر الأجهزة بعد تحديث قاعدة البيانات.' : 'Devices appear after the database update is applied.'}</Text>
                 ) : accountDevices.map((device) => (
                   <View key={device.deviceId} style={styles.deviceRow}>
-                    <Ionicons name={device.platform === 'web' ? 'globe-outline' : 'phone-portrait-outline'} size={20} color="#F4F7F6" />
+                    <Ionicons name={device.platform === 'web' ? 'globe-outline' : 'phone-portrait-outline'} size={20} color="#050505" />
                     <View style={styles.settingToggleText}>
                       <Text style={styles.settingsActionText}>{device.label}{device.current ? ' (This device)' : ''}</Text>
                       <Text style={styles.settingsHelp}>{new Date(device.lastSeen).toLocaleString()}</Text>
@@ -4484,7 +4364,7 @@ const getGroupedActivities = () => {
                   </View>
                 ))}
                 <TouchableOpacity style={styles.settingsAction} onPress={() => { setShowSettingsModal(false); clearAllHistory(); }}>
-                  <Ionicons name="trash-outline" size={21} color="#F4F7F6" />
+                  <Ionicons name="trash-outline" size={21} color="#050505" />
                   <Text style={styles.settingsActionText}>{isArabic ? 'حذف كل بيانات السجل' : 'Delete all history data'}</Text>
                 </TouchableOpacity>
               </ScrollView>
@@ -4498,7 +4378,7 @@ const getGroupedActivities = () => {
               <Ionicons
                 name={onboardingStep === 0 ? 'today-outline' : onboardingStep === 1 ? 'star-outline' : 'cloud-done-outline'}
                 size={44}
-                color="#F4F7F6"
+                color="#050505"
               />
               <Text style={styles.onboardingTitle}>
                 {onboardingStep === 0
@@ -4537,29 +4417,16 @@ const getGroupedActivities = () => {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#080F10',
-  },
-  cinematicBackdrop: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  cinematicBackdropImage: {
-    ...StyleSheet.absoluteFillObject,
-    width: '100%',
-    height: '100%',
-  },
-  cinematicBackdropScrim: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(3, 8, 9, 0.56)',
   },
   mainContainer: {
     flex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: '#F6F7F9',
   },
   container: {
     flex: 1,
     paddingHorizontal: 20,
     paddingTop: 18,
-    backgroundColor: 'transparent',
+    backgroundColor: '#F6F7F9',
   },
   backButton: {
     marginTop: 55,
@@ -4576,27 +4443,27 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#F4F7F6',
+    color: '#050505',
     marginTop: 60,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 18,
-    color: '#F4F7F6',
+    color: '#050505',
     marginBottom: 14,
   },
   homeTopbar: {
     marginTop: 42,
-    marginBottom: 28,
-    minHeight: 58,
+    marginBottom: 30,
+    minHeight: 98,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   homeHeading: {
-    color: '#F4F7F6',
-    fontSize: 24,
-    lineHeight: 30,
+    color: '#050505',
+    fontSize: 22,
+    lineHeight: 27,
     fontWeight: '800',
     marginBottom: 8,
   },
@@ -4617,8 +4484,8 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
   },
   brandLogo: {
-    width: 196,
-    height: 184,
+    width: 168,
+    height: 168,
   },
   languageButton: {
     width: 44,
@@ -4634,7 +4501,7 @@ const styles = StyleSheet.create({
     width: 44,
   },
   languageButtonText: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 18,
     fontWeight: '800',
   },
@@ -4643,16 +4510,15 @@ const styles = StyleSheet.create({
     writingDirection: 'rtl',
   },
   statsBox: {
-    display: 'none',
-    backgroundColor: 'rgba(12, 20, 21, 0.82)',
+    backgroundColor: 'rgba(255, 255, 255, 0.24)',
     borderWidth: 1,
-    borderColor: '#304243',
+    borderColor: '#E7E9EE',
     padding: 18,
     borderRadius: 16,
     marginBottom: 22,
   },
   statsTitle: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 14,
@@ -4661,17 +4527,17 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   statLabel: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 17,
     marginBottom: 3,
   },
   statValue: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 22,
     fontWeight: '700',
   },
   hintText: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 18,
     marginBottom: 12,
   },
@@ -4682,20 +4548,20 @@ const styles = StyleSheet.create({
   },
   addButton: {
     flex: 1,
-    backgroundColor: '#121C1D',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#304243',
+    borderColor: '#E7E9EE',
     padding: 14,
     borderRadius: 12,
   },
   resetButton: {
     flex: 1,
-    backgroundColor: '#304243',
+    backgroundColor: '#E7E9EE',
     padding: 14,
     borderRadius: 12,
   },
   smallActionText: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 17,
     fontWeight: '700',
     textAlign: 'center',
@@ -4705,13 +4571,12 @@ const styles = StyleSheet.create({
 },
 
 activityGroupTitle: {
-  color: '#F4F7F6',
+  color: '#050505',
   fontSize: 18,
   fontWeight: 'bold',
   marginBottom: 12,
 },
   activityList: {
-    display: 'none',
     gap: 12,
     paddingBottom: 30,
   },
@@ -4723,9 +4588,9 @@ activityGroupTitle: {
     paddingVertical: 16,
     paddingHorizontal: 18,
     borderRadius: 14,
-    backgroundColor: 'rgba(12, 20, 21, 0.82)',
+    backgroundColor: 'rgba(255, 255, 255, 0.24)',
     borderWidth: 1,
-    borderColor: '#304243',
+    borderColor: '#E7E9EE',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -4734,11 +4599,11 @@ activityGroupTitle: {
     flexDirection: 'row-reverse',
   },
   categoryButtonActive: {
-    borderColor: '#22A398',
-    backgroundColor: '#12302E',
+    borderColor: '#2563EB',
+    backgroundColor: '#EFF6FF',
   },
   categoryCount: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 16,
     marginTop: 5,
   },
@@ -4749,33 +4614,33 @@ activityGroupTitle: {
     minHeight: 54,
     paddingHorizontal: 16,
     borderWidth: 1,
-    borderColor: '#425655',
+    borderColor: '#D0D5DD',
     borderRadius: 10,
-    backgroundColor: '#121C1D',
+    backgroundColor: '#FFFFFF',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   activityDropdownTriggerText: {
     flex: 1,
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 18,
     fontWeight: '600',
   },
   activityDropdownChevron: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 14,
     marginLeft: 12,
   },
   activityDropdownMenu: {
     borderWidth: 1,
     borderTopWidth: 0,
-    borderColor: '#425655',
-    backgroundColor: '#121C1D',
+    borderColor: '#D0D5DD',
+    backgroundColor: '#FFFFFF',
   },
   activityDropdownGroupTitle: {
-    color: '#F4F7F6',
-    backgroundColor: '#10191A',
+    color: '#050505',
+    backgroundColor: '#F2F4F7',
     fontSize: 16,
     fontWeight: '800',
     paddingHorizontal: 16,
@@ -4787,14 +4652,14 @@ activityGroupTitle: {
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#304243',
+    borderBottomColor: '#E7E9EE',
   },
   activityDropdownOptionRow: {
     minHeight: 52,
     flexDirection: 'row',
     alignItems: 'stretch',
     borderBottomWidth: 1,
-    borderBottomColor: '#304243',
+    borderBottomColor: '#E7E9EE',
   },
   activityDropdownOption: {
     flex: 1,
@@ -4803,7 +4668,7 @@ activityGroupTitle: {
     paddingVertical: 12,
   },
   activityDropdownOptionText: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 18,
     fontWeight: '600',
   },
@@ -4813,25 +4678,25 @@ activityGroupTitle: {
     justifyContent: 'center',
   },
   activityDropdownDeleteText: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 26,
     fontWeight: '500',
   },
   activityButton: {
-    backgroundColor: 'rgba(12, 20, 21, 0.82)',
+    backgroundColor: 'rgba(255, 255, 255, 0.24)',
     borderWidth: 1,
-    borderColor: '#304243',
+    borderColor: '#E7E9EE',
     padding: 18,
     borderRadius: 14,
     marginBottom: 12,
   },
   activityText: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 18,
     fontWeight: '600',
   },
   swipeDeleteAction: {
-    backgroundColor: '#304243',
+    backgroundColor: '#E7E9EE',
     justifyContent: 'center',
     alignItems: 'center',
     width: 95,
@@ -4839,38 +4704,38 @@ activityGroupTitle: {
     marginBottom: 12,
   },
   swipeDeleteText: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 18,
     fontWeight: '700',
   },
   addExerciseButton: {
-    backgroundColor: '#22A398',
+    backgroundColor: '#2563EB',
     padding: 16,
     borderRadius: 12,
     marginBottom: 16,
     marginTop: 14,
   },
   deleteLastButton: {
-    backgroundColor: '#22A398',
+    backgroundColor: '#2563EB',
     padding: 16,
     borderRadius: 12,
     marginBottom: 12,
   },
   resetLapButton: {
-    backgroundColor: '#22A398',
+    backgroundColor: '#2563EB',
     padding: 16,
     borderRadius: 12,
     marginBottom: 4,
   },
   exerciseListBox: {
-    backgroundColor: '#080F10',
+    backgroundColor: '#F6F7F9',
     padding: 14,
     borderRadius: 12,
     marginTop: 4,
     marginBottom: 12,
   },
   exerciseListTitle: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 10,
@@ -4879,7 +4744,7 @@ activityGroupTitle: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderBottomColor: '#304243',
+    borderBottomColor: '#E7E9EE',
     borderBottomWidth: 1,
     paddingVertical: 10,
   },
@@ -4887,13 +4752,13 @@ activityGroupTitle: {
     flex: 1,
   },
   exerciseName: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 19,
     fontWeight: '700',
     marginBottom: 4,
   },
   exerciseDeleteButton: {
-    backgroundColor: '#304243',
+    backgroundColor: '#E7E9EE',
     width: 34,
     height: 34,
     borderRadius: 17,
@@ -4902,7 +4767,7 @@ activityGroupTitle: {
     marginLeft: 10,
   },
   exerciseDeleteText: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontWeight: 'bold',
     fontSize: 17,
   },
@@ -4914,104 +4779,104 @@ activityGroupTitle: {
   },
   balootTotalColumn: {
     flex: 1,
-    backgroundColor: '#080F10',
+    backgroundColor: '#F6F7F9',
     borderRadius: 14,
     padding: 18,
     alignItems: 'center',
   },
   balootSideTitle: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 20,
     marginBottom: 8,
   },
   balootTotalNumber: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 44,
     fontWeight: 'bold',
   },
   winnerBox: {
-    backgroundColor: '#080F10',
+    backgroundColor: '#F6F7F9',
     padding: 14,
     borderRadius: 12,
     marginBottom: 16,
   },
   winnerLabel: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 17,
     marginBottom: 4,
   },
   winnerText: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 22,
     fontWeight: 'bold',
   },
   dealerBox: {
-    backgroundColor: '#080F10',
+    backgroundColor: '#F6F7F9',
     padding: 18,
     borderRadius: 14,
     alignItems: 'center',
     marginBottom: 16,
   },
   dealerTitle: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 18,
     marginBottom: 8,
   },
   dealerArrow: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 66,
     fontWeight: 'bold',
     marginBottom: 4,
   },
   dealerHint: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 16,
   },
   startButton: {
-    backgroundColor: '#22A398',
+    backgroundColor: '#2563EB',
     padding: 18,
     borderRadius: 14,
     marginBottom: 14,
   },
   endButton: {
-    backgroundColor: '#22A398',
+    backgroundColor: '#2563EB',
     padding: 18,
     borderRadius: 14,
     marginBottom: 24,
   },
   saveButton: {
-    backgroundColor: '#22A398',
+    backgroundColor: '#2563EB',
     padding: 18,
     borderRadius: 14,
     marginTop: 24,
     marginBottom: 60,
   },
   timerActionButton: {
-    backgroundColor: '#304243',
+    backgroundColor: '#E7E9EE',
     borderWidth: 1,
-    borderColor: '#425655',
+    borderColor: '#D0D5DD',
   },
   timerActionText: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 20,
     fontWeight: '700',
     textAlign: 'center',
   },
   cancelButton: {
-    backgroundColor: '#22A398',
+    backgroundColor: '#2563EB',
     padding: 16,
     borderRadius: 12,
   },
   buttonText: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 22,
     fontWeight: '600',
     textAlign: 'center',
   },
   infoBox: {
-    backgroundColor: 'rgba(12, 20, 21, 0.82)',
+    backgroundColor: 'rgba(255, 255, 255, 0.24)',
     borderWidth: 1,
-    borderColor: '#304243',
+    borderColor: '#E7E9EE',
     padding: 18,
     borderRadius: 14,
     marginBottom: 18,
@@ -5027,12 +4892,12 @@ activityGroupTitle: {
     flex: 1,
   },
   infoText: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 19,
     marginBottom: 10,
   },
   durationText: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 22,
     fontWeight: 'bold',
     marginTop: 8,
@@ -5044,20 +4909,20 @@ activityGroupTitle: {
     padding: 24,
   },
   modalBox: {
-    backgroundColor: '#121C1D',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#304243',
+    borderColor: '#E7E9EE',
     borderRadius: 18,
     padding: 24,
   },
   modalTitle: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 26,
     fontWeight: 'bold',
     marginBottom: 8,
   },
   modalSubtitle: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 18,
     marginBottom: 18,
   },
@@ -5072,25 +4937,25 @@ activityGroupTitle: {
     minHeight: 44,
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#425655',
+    borderColor: '#D0D5DD',
     borderRadius: 10,
     padding: 10,
   },
   categoryChoiceText: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 15,
     fontWeight: '700',
     textAlign: 'center',
   },
   input: {
-    backgroundColor: '#121C1D',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#304243',
+    borderColor: '#E7E9EE',
     borderRadius: 12,
     padding: 16,
     fontSize: 20,
     marginBottom: 12,
-    color: '#F4F7F6',
+    color: '#050505',
   },
   passwordInputRow: {
     flexDirection: 'row',
@@ -5109,13 +4974,13 @@ activityGroupTitle: {
     paddingVertical: 10,
   },
   passwordVisibilityText: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 16,
     fontWeight: '700',
   },
   candleBox: {
     alignItems: 'center',
-    backgroundColor: '#080F10',
+    backgroundColor: '#F6F7F9',
     borderRadius: 14,
     padding: 18,
     marginBottom: 12,
@@ -5128,7 +4993,7 @@ activityGroupTitle: {
     flex: 1,
   },
   candleTimeSettingLabel: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 18,
     fontWeight: '700',
     marginBottom: 6,
@@ -5205,13 +5070,13 @@ activityGroupTitle: {
     backgroundColor: '#fffaf0',
   },
   candleTime: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 38,
     fontWeight: 'bold',
     marginBottom: 8,
   },
   candleHint: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 16,
     textAlign: 'center',
     lineHeight: 22,
@@ -5221,7 +5086,7 @@ activityGroupTitle: {
     height: 6,
     marginTop: 12,
     borderRadius: 3,
-    backgroundColor: '#304243',
+    backgroundColor: '#E7E9EE',
     overflow: 'hidden',
   },
   candleProgressFill: {
@@ -5235,7 +5100,7 @@ activityGroupTitle: {
   },
   candleButton: {
     flex: 1,
-    backgroundColor: '#22A398',
+    backgroundColor: '#2563EB',
     borderRadius: 12,
     padding: 14,
   },
@@ -5244,28 +5109,28 @@ activityGroupTitle: {
 },
 
 historyFilterButton: {
-  backgroundColor: '#121C1D',
+  backgroundColor: '#FFFFFF',
   paddingVertical: 10,
   paddingHorizontal: 14,
   borderRadius: 20,
   marginRight: 10,
   borderWidth: 1,
-  borderColor: '#304243',
+  borderColor: '#E7E9EE',
 },
 
 historyFilterButtonActive: {
-  backgroundColor: '#22A398',
-  borderColor: '#22A398',
+  backgroundColor: '#2563EB',
+  borderColor: '#2563EB',
 },
 
 historyFilterText: {
-  color: '#F4F7F6',
+  color: '#050505',
   fontSize: 16,
   fontWeight: '600',
 },
 
 historyFilterTextActive: {
-  color: '#F4F7F6',
+  color: '#050505',
 },
   historySection: {
     marginTop: 10,
@@ -5278,70 +5143,70 @@ historyFilterTextActive: {
     marginBottom: 12,
   },
   historyTitle: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 26,
     fontWeight: 'bold',
   },
   clearHistoryButton: {
-    backgroundColor: '#304243',
+    backgroundColor: '#E7E9EE',
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 10,
   },
   clearHistoryText: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 16,
     fontWeight: '600',
   },
   emptyHistory: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 18,
   },
   sessionCard: {
-    backgroundColor: 'rgba(12, 20, 21, 0.82)',
+    backgroundColor: 'rgba(255, 255, 255, 0.24)',
     borderWidth: 1,
-    borderColor: '#304243',
+    borderColor: '#E7E9EE',
     padding: 16,
     borderRadius: 14,
     marginBottom: 12,
   },
   sessionActivity: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 8,
   },
   sessionText: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 18,
     marginBottom: 4,
   },
   sessionDuration: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 19,
     fontWeight: 'bold',
     marginTop: 6,
   },
   savedDetailsBox: {
     marginTop: 10,
-    backgroundColor: '#080F10',
+    backgroundColor: '#F6F7F9',
     padding: 12,
     borderRadius: 10,
   },
   savedDetailsHeader: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 19,
     fontWeight: 'bold',
     marginTop: 8,
     marginBottom: 4,
   },
   savedDetailsText: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 18,
     marginBottom: 4,
   },
   savedSetText: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 17,
     marginLeft: 12,
     marginBottom: 3,
@@ -5351,20 +5216,20 @@ historyFilterTextActive: {
   },
   loginContainer: {
   flexGrow: 1,
-  backgroundColor: 'transparent',
+  backgroundColor: '#F6F7F9',
   padding: 24,
   justifyContent: 'center',
 },
 loginTitle: {
   fontSize: 24,
   fontWeight: 'bold',
-  color: '#F4F7F6',
+  color: '#050505',
   marginBottom: 8,
   textAlign: 'center',
 },
 loginTagline: {
   fontSize: 18,
-  color: '#F4F7F6',
+  color: '#050505',
   fontWeight: '800',
   lineHeight: 24,
   marginBottom: 12,
@@ -5372,12 +5237,12 @@ loginTagline: {
 },
 loginSubtitle: {
   fontSize: 20,
-  color: '#F4F7F6',
+  color: '#050505',
   marginBottom: 30,
   textAlign: 'center',
 },
 loginHint: {
-  color: '#F4F7F6',
+  color: '#050505',
   fontSize: 16,
   textAlign: 'center',
   marginTop: 12,
@@ -5390,17 +5255,17 @@ authModeRow: {
 },
 authModeButton: {
   flex: 1,
-  borderColor: '#304243',
+  borderColor: '#E7E9EE',
   borderWidth: 1,
   borderRadius: 12,
   padding: 12,
 },
 authModeButtonActive: {
-  backgroundColor: '#22A398',
-  borderColor: '#4CC8BC',
+  backgroundColor: '#E7E9EE',
+  borderColor: '#D0D5DD',
 },
 authModeText: {
-  color: '#F4F7F6',
+  color: '#050505',
   fontWeight: '800',
   textAlign: 'center',
 },
@@ -5410,35 +5275,35 @@ forgotPasswordButton: {
   paddingVertical: 10,
 },
 forgotPasswordText: {
-  color: '#F4F7F6',
+  color: '#050505',
   fontSize: 18,
   fontWeight: '700',
   textDecorationLine: 'underline',
 },
 authSubmitButton: {
-  backgroundColor: '#22A398',
+  backgroundColor: '#E7E9EE',
   borderWidth: 1,
-  borderColor: '#4CC8BC',
+  borderColor: '#D0D5DD',
 },
 authSubmitText: {
-  color: '#F4F7F6',
+  color: '#050505',
   fontSize: 20,
   fontWeight: '700',
   textAlign: 'center',
 },
 signupHelp: {
-  color: '#F4F7F6',
+  color: '#050505',
   fontSize: 16,
   marginBottom: 22,
 },
 signupDivider: {
-  color: '#F4F7F6',
+  color: '#050505',
   fontSize: 18,
   textAlign: 'center',
   marginBottom: 12,
 },
 secondaryAuthButton: {
-  borderColor: '#304243',
+  borderColor: '#E7E9EE',
   borderWidth: 1,
   borderRadius: 12,
   padding: 15,
@@ -5446,20 +5311,20 @@ secondaryAuthButton: {
   marginBottom: 12,
 },
 secondaryAuthButtonText: {
-  color: '#F4F7F6',
+  color: '#050505',
   fontSize: 18,
   fontWeight: '800',
   textAlign: 'center',
 },
 socialButton: {
-  borderColor: '#304243',
+  borderColor: '#E7E9EE',
   borderWidth: 1,
   borderRadius: 12,
   padding: 15,
   marginBottom: 12,
 },
 socialButtonText: {
-  color: '#F4F7F6',
+  color: '#050505',
   fontSize: 18,
   fontWeight: '800',
   textAlign: 'center',
@@ -5477,13 +5342,13 @@ logoutButton: {
   alignSelf: 'flex-start',
 },
 homeDescription: {
-  color: '#F4F7F6',
+  color: '#050505',
   fontSize: 16,
   lineHeight: 24,
   marginBottom: 20,
 },
 homeWelcome: {
-  color: '#F4F7F6',
+  color: '#050505',
   fontSize: 16,
 },
 sessionTopRow: {
@@ -5494,26 +5359,26 @@ sessionTopRow: {
 },
 
 activityBadge: {
-  backgroundColor: '#22A398',
+  backgroundColor: '#2563EB',
   paddingVertical: 6,
   paddingHorizontal: 12,
   borderRadius: 999,
 },
 
 activityBadgeText: {
-  color: '#F4F7F6',
+  color: '#050505',
   fontSize: 16,
   fontWeight: '700',
 },
 
 sessionDate: {
-  color: '#F4F7F6',
+  color: '#050505',
   fontSize: 16,
   fontWeight: '600',
 },
 
 sessionDurationLarge: {
-  color: '#F4F7F6',
+  color: '#050505',
   fontSize: 26,
   fontWeight: 'bold',
   marginBottom: 10,
@@ -5522,20 +5387,20 @@ sessionDurationLarge: {
 sessionTimeRow: {
   flexDirection: 'row',
   justifyContent: 'space-between',
-  backgroundColor: '#080F10',
+  backgroundColor: '#F6F7F9',
   padding: 12,
   borderRadius: 10,
   marginBottom: 8,
 },
 
 sessionTimeText: {
-  color: '#F4F7F6',
+  color: '#050505',
   fontSize: 16,
   fontWeight: '600',
 },
 selectedOptionButton: {
-  backgroundColor: '#153B38',
-  borderColor: '#22A398',
+  backgroundColor: '#DDE7FC',
+  borderColor: '#2563EB',
 },
 lockScreen: {
   flex: 1,
@@ -5543,10 +5408,10 @@ lockScreen: {
   justifyContent: 'center',
   gap: 18,
   padding: 28,
-  backgroundColor: 'transparent',
+  backgroundColor: '#F6F7F9',
 },
 lockTitle: {
-  color: '#F4F7F6',
+  color: '#050505',
   fontSize: 22,
   fontWeight: '900',
 },
@@ -5556,10 +5421,10 @@ lockButton: {
   justifyContent: 'center',
   paddingHorizontal: 18,
   borderRadius: 8,
-  backgroundColor: '#22A398',
+  backgroundColor: '#E7E9EE',
 },
 lockButtonText: {
-  color: '#F4F7F6',
+  color: '#050505',
   fontSize: 16,
   fontWeight: '900',
 },
@@ -5575,7 +5440,6 @@ logoutButtonTop: {
   justifyContent: 'center',
 },
 syncRow: {
-  display: 'none',
   flexDirection: 'row',
   alignItems: 'center',
   gap: 7,
@@ -5587,24 +5451,23 @@ syncDot: {
   borderRadius: 4,
 },
 syncSaved: {
-  backgroundColor: '#2BA89D',
+  backgroundColor: '#17805C',
 },
 syncOffline: {
-  backgroundColor: '#A9B8B5',
+  backgroundColor: '#667085',
 },
 syncText: {
-  color: '#F4F7F6',
+  color: '#050505',
   fontSize: 14,
   fontWeight: '700',
 },
 todaySection: {
-  display: 'none',
   marginBottom: 16,
   padding: 16,
   borderWidth: 1,
-  borderColor: '#304243',
+  borderColor: '#E7E9EE',
   borderRadius: 8,
-  backgroundColor: 'rgba(12,20,21,0.88)',
+  backgroundColor: 'rgba(255,255,255,0.34)',
 },
 sectionHeaderRow: {
   flexDirection: 'row',
@@ -5619,16 +5482,16 @@ compactAction: {
   gap: 6,
   paddingHorizontal: 10,
   borderRadius: 8,
-  backgroundColor: '#304243',
+  backgroundColor: '#E7E9EE',
 },
 compactActionText: {
-  color: '#F4F7F6',
+  color: '#050505',
   fontSize: 13,
   fontWeight: '800',
 },
 todayEmpty: {
   marginTop: 8,
-  color: '#F4F7F6',
+  color: '#050505',
   fontSize: 15,
 },
 todayReminderRow: {
@@ -5639,7 +5502,7 @@ todayReminderRow: {
 },
 todayReminderText: {
   flex: 1,
-  color: '#F4F7F6',
+  color: '#050505',
   fontSize: 15,
 },
 draftBanner: {
@@ -5648,7 +5511,7 @@ draftBanner: {
   marginTop: 14,
   paddingTop: 12,
   borderTopWidth: 1,
-  borderTopColor: '#304243',
+  borderTopColor: '#E7E9EE',
 },
 draftContinueButton: {
   flex: 1,
@@ -5664,7 +5527,7 @@ draftDeleteButton: {
   justifyContent: 'center',
 },
 draftDeleteText: {
-  color: '#F4F7F6',
+  color: '#050505',
   fontSize: 28,
   fontWeight: '700',
 },
@@ -5672,16 +5535,15 @@ draftTextBox: {
   flex: 1,
 },
 draftTitle: {
-  color: '#F4F7F6',
+  color: '#050505',
   fontSize: 15,
   fontWeight: '900',
 },
 draftMeta: {
-  color: '#F4F7F6',
+  color: '#050505',
   fontSize: 14,
 },
 quickSection: {
-  display: 'none',
   marginBottom: 16,
 },
 quickActivityRow: {
@@ -5697,12 +5559,12 @@ quickActivityButton: {
   gap: 6,
   paddingHorizontal: 12,
   borderWidth: 1,
-  borderColor: '#304243',
+  borderColor: '#E7E9EE',
   borderRadius: 8,
-  backgroundColor: 'rgba(12,20,21,0.86)',
+  backgroundColor: 'rgba(255,255,255,0.32)',
 },
 quickActivityText: {
-  color: '#F4F7F6',
+  color: '#050505',
   fontSize: 14,
   fontWeight: '800',
 },
@@ -5717,17 +5579,17 @@ settingsModal: {
   maxHeight: '88%',
   padding: 20,
   borderRadius: 8,
-  backgroundColor: '#080F10',
+  backgroundColor: '#F6F7F9',
 },
 settingsLabel: {
   marginTop: 16,
   marginBottom: 8,
-  color: '#F4F7F6',
+  color: '#050505',
   fontSize: 16,
   fontWeight: '900',
 },
 settingsHelp: {
-  color: '#F4F7F6',
+  color: '#050505',
   fontSize: 13,
 },
 settingChoiceRow: {
@@ -5741,15 +5603,15 @@ settingChoice: {
   justifyContent: 'center',
   paddingHorizontal: 12,
   borderWidth: 1,
-  borderColor: '#304243',
+  borderColor: '#E7E9EE',
   borderRadius: 8,
 },
 settingChoiceActive: {
-  backgroundColor: '#304243',
-  borderColor: '#A9B8B5',
+  backgroundColor: '#E7E9EE',
+  borderColor: '#667085',
 },
 settingChoiceText: {
-  color: '#F4F7F6',
+  color: '#050505',
   fontSize: 14,
   fontWeight: '800',
 },
@@ -5770,12 +5632,12 @@ settingsAction: {
   marginTop: 12,
   paddingHorizontal: 12,
   borderWidth: 1,
-  borderColor: '#304243',
+  borderColor: '#E7E9EE',
   borderRadius: 8,
 },
 settingsActionText: {
   flex: 1,
-  color: '#F4F7F6',
+  color: '#050505',
   fontSize: 15,
   fontWeight: '800',
 },
@@ -5786,7 +5648,7 @@ deviceRow: {
   minHeight: 48,
   paddingVertical: 8,
   borderBottomWidth: 1,
-  borderBottomColor: '#304243',
+  borderBottomColor: '#E7E9EE',
 },
 onboardingModal: {
   width: '88%',
@@ -5794,16 +5656,16 @@ onboardingModal: {
   gap: 16,
   padding: 24,
   borderRadius: 8,
-  backgroundColor: '#080F10',
+  backgroundColor: '#F6F7F9',
 },
 onboardingTitle: {
-  color: '#F4F7F6',
+  color: '#050505',
   fontSize: 22,
   fontWeight: '900',
   textAlign: 'center',
 },
 onboardingText: {
-  color: '#F4F7F6',
+  color: '#050505',
   fontSize: 16,
   lineHeight: 23,
   textAlign: 'center',
@@ -5816,203 +5678,14 @@ onboardingDot: {
   width: 8,
   height: 8,
   borderRadius: 4,
-  backgroundColor: '#526361',
+  backgroundColor: '#B8BEC8',
 },
 onboardingDotActive: {
-  backgroundColor: '#F4F7F6',
+  backgroundColor: '#050505',
 },
 skipText: {
-  color: '#F4F7F6',
+  color: '#050505',
   fontSize: 15,
   textDecorationLine: 'underline',
-},
-dashboardMobileBrand: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  gap: 9,
-},
-dashboardMobileLogo: {
-  width: 42,
-  height: 42,
-  borderRadius: 10,
-},
-dashboardMobileBrandText: {
-  color: '#F4F7F6',
-  fontSize: 20,
-  fontWeight: '800',
-},
-dashboardActivityPanel: {
-  padding: 14,
-  marginTop: 0,
-  marginBottom: 14,
-  borderWidth: 1,
-  borderColor: '#304243',
-  borderRadius: 8,
-  backgroundColor: 'rgba(8, 16, 17, 0.86)',
-},
-dashboardPanelTitle: {
-  color: '#F4F7F6',
-  fontSize: 17,
-  fontWeight: '800',
-},
-dashboardPanelLink: {
-  color: '#5ED3C7',
-  fontSize: 14,
-  fontWeight: '800',
-},
-dashboardCategoryGrid: {
-  flexDirection: 'row',
-  flexWrap: 'wrap',
-  gap: 8,
-  marginTop: 14,
-},
-dashboardCategoryWrap: {
-  width: '48%',
-},
-dashboardHorseCategoryWrap: {
-  width: '100%',
-},
-dashboardCategoryTile: {
-  minHeight: 82,
-  alignItems: 'center',
-  justifyContent: 'center',
-  gap: 8,
-  padding: 10,
-  borderWidth: 1,
-  borderColor: '#304243',
-  borderRadius: 7,
-  backgroundColor: 'rgba(9, 20, 21, 0.9)',
-},
-dashboardHorseCategoryTile: {
-  minHeight: 88,
-  flexDirection: 'row',
-  justifyContent: 'flex-start',
-  gap: 14,
-  paddingHorizontal: 18,
-  backgroundColor: '#268B83',
-},
-dashboardCategoryTileSelected: {
-  borderColor: '#5ED3C7',
-},
-dashboardCategoryText: {
-  flexShrink: 1,
-  color: '#F4F7F6',
-  fontSize: 14,
-  fontWeight: '800',
-  textAlign: 'center',
-},
-dashboardActivityDropdown: {
-  marginTop: 6,
-  padding: 6,
-  borderWidth: 1,
-  borderColor: '#304243',
-  borderRadius: 7,
-  backgroundColor: '#0A1415',
-},
-dashboardActivityOption: {
-  flex: 1,
-  minHeight: 42,
-  justifyContent: 'center',
-  paddingHorizontal: 10,
-  borderBottomWidth: 1,
-  borderBottomColor: '#304243',
-},
-dashboardActivityOptionRow: {
-  minHeight: 44,
-  flexDirection: 'row',
-  alignItems: 'center',
-  borderBottomWidth: 1,
-  borderBottomColor: '#304243',
-},
-dashboardActivityOptionText: {
-  color: '#F4F7F6',
-  fontSize: 14,
-  fontWeight: '700',
-},
-dashboardReminderPanel: {
-  padding: 16,
-  marginBottom: 14,
-  borderWidth: 1,
-  borderColor: '#304243',
-  borderRadius: 8,
-  backgroundColor: 'rgba(8, 16, 17, 0.86)',
-},
-dashboardReminderRow: {
-  minHeight: 54,
-  flexDirection: 'row',
-  alignItems: 'center',
-  gap: 10,
-  paddingVertical: 8,
-  borderBottomWidth: 1,
-  borderBottomColor: '#304243',
-},
-dashboardReminderCheck: {
-  width: 14,
-  height: 14,
-  borderWidth: 1,
-  borderColor: '#A9B8B5',
-  borderRadius: 2,
-},
-dashboardReminderDate: {
-  color: '#A9B8B5',
-  fontSize: 12,
-  marginTop: 3,
-},
-dashboardReminderFooter: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  marginTop: 12,
-},
-syncRowVisible: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  gap: 7,
-},
-dashboardWeeklyPanel: {
-  padding: 16,
-  marginBottom: 14,
-  borderWidth: 1,
-  borderColor: '#304243',
-  borderRadius: 8,
-  backgroundColor: 'rgba(8, 16, 17, 0.86)',
-},
-dashboardWeeklyStats: {
-  flexDirection: 'row',
-  gap: 10,
-  marginTop: 14,
-},
-dashboardStatLabel: {
-  color: '#A9B8B5',
-  fontSize: 12,
-  marginBottom: 5,
-},
-dashboardStatValue: {
-  color: '#F4F7F6',
-  fontSize: 20,
-  fontWeight: '900',
-},
-dashboardStatValueSmall: {
-  maxWidth: 120,
-  color: '#F4F7F6',
-  fontSize: 14,
-  fontWeight: '800',
-},
-dashboardRecentPanel: {
-  padding: 16,
-  marginBottom: 90,
-  borderWidth: 1,
-  borderColor: '#304243',
-  borderRadius: 8,
-  backgroundColor: 'rgba(8, 16, 17, 0.86)',
-},
-dashboardRecentRow: {
-  minHeight: 54,
-  flexDirection: 'row',
-  alignItems: 'center',
-  gap: 10,
-  paddingVertical: 8,
-  borderBottomWidth: 1,
-  borderBottomColor: '#304243',
 },
 });

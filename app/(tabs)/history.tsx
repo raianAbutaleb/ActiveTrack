@@ -5,7 +5,6 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   AppState,
-  ImageBackground,
   Modal,
   ScrollView,
   StyleSheet,
@@ -1054,21 +1053,14 @@ export default function HistoryScreen() {
   };
 
   return (
-    <ImageBackground
-      source={require('../../assets/images/friesian-horse-bg.png')}
-      style={styles.screenBackground}
-      imageStyle={styles.screenBackgroundImage}
-      resizeMode="cover"
-    >
-      <View pointerEvents="none" style={styles.screenBackgroundScrim} />
-      <ScrollView style={styles.container}>
+    <ScrollView style={styles.container}>
       <TouchableOpacity
         style={styles.backButton}
         onPress={() => router.replace('/')}
         accessibilityRole="button"
         accessibilityLabel="Back"
       >
-        <Ionicons name="arrow-back" size={27} color="#F4F7F6" />
+        <Ionicons name="arrow-back" size={27} color="#050505" />
       </TouchableOpacity>
 
       <View style={styles.headerRow}>
@@ -1080,7 +1072,7 @@ export default function HistoryScreen() {
               onPress={() => shareSessionsCsv(getFilteredSessions())}
               accessibilityLabel="Export CSV"
             >
-              <Ionicons name="share-outline" size={20} color="#F4F7F6" />
+              <Ionicons name="share-outline" size={20} color="#050505" />
             </TouchableOpacity>
           )}
           {sessions.length > 0 && (
@@ -1089,7 +1081,7 @@ export default function HistoryScreen() {
               onPress={() => shareSessionsPdf(getFilteredSessions())}
               accessibilityLabel="Export PDF"
             >
-              <Ionicons name="document-text-outline" size={20} color="#F4F7F6" />
+              <Ionicons name="document-text-outline" size={20} color="#050505" />
             </TouchableOpacity>
           )}
           {sessions.length > 0 && (
@@ -1111,7 +1103,7 @@ export default function HistoryScreen() {
             value={searchQuery}
             onChangeText={setSearchQuery}
             placeholder="Search activity, horse, project, vehicle or note"
-            placeholderTextColor="#A9B8B5"
+            placeholderTextColor="#667085"
           />
           <View style={styles.controlRow}>
             {(['all', 'week', 'month'] as const).map((range) => (
@@ -1338,7 +1330,7 @@ export default function HistoryScreen() {
                 value={editDate}
                 onChangeText={setEditDate}
                 placeholder="YYYY-MM-DD"
-                placeholderTextColor="#F4F7F6"
+                placeholderTextColor="#050505"
               />
               {editableFields.map((field) => (
                 <View key={field.path}>
@@ -1351,7 +1343,7 @@ export default function HistoryScreen() {
                       [field.path]: value,
                     }))}
                     keyboardType={field.type === 'number' ? 'numeric' : 'default'}
-                    placeholderTextColor="#F4F7F6"
+                    placeholderTextColor="#050505"
                   />
                 </View>
               ))}
@@ -1361,7 +1353,7 @@ export default function HistoryScreen() {
                 value={editNote}
                 onChangeText={setEditNote}
                 placeholder="Add a note"
-                placeholderTextColor="#F4F7F6"
+                placeholderTextColor="#050505"
                 multiline
               />
             </ScrollView>
@@ -1377,27 +1369,15 @@ export default function HistoryScreen() {
         </View>
       </Modal>
 
-        <View style={styles.bottomSpace} />
-      </ScrollView>
-    </ImageBackground>
+      <View style={styles.bottomSpace} />
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  screenBackground: {
-    flex: 1,
-    backgroundColor: '#080F10',
-  },
-  screenBackgroundImage: {
-    opacity: 0.72,
-  },
-  screenBackgroundScrim: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(3, 8, 9, 0.6)',
-  },
   container: {
     flex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: '#F6F7F9',
     padding: 24,
   },
 
@@ -1427,10 +1407,10 @@ const styles = StyleSheet.create({
     minHeight: 48,
     paddingHorizontal: 14,
     borderWidth: 1,
-    borderColor: '#304243',
+    borderColor: '#E7E9EE',
     borderRadius: 8,
-    backgroundColor: '#121C1D',
-    color: '#F4F7F6',
+    backgroundColor: '#FFFFFF',
+    color: '#050505',
     fontSize: 16,
   },
   controlRow: {
@@ -1444,16 +1424,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#304243',
+    borderColor: '#E7E9EE',
     borderRadius: 8,
-    backgroundColor: 'rgba(12,20,21,0.9)',
+    backgroundColor: 'rgba(255,255,255,0.35)',
   },
   controlButtonActive: {
-    backgroundColor: '#304243',
-    borderColor: '#A9B8B5',
+    backgroundColor: '#E7E9EE',
+    borderColor: '#667085',
   },
   controlButtonText: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 14,
     fontWeight: '700',
   },
@@ -1461,9 +1441,9 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#304243',
+    borderColor: '#E7E9EE',
     borderRadius: 8,
-    backgroundColor: 'rgba(12,20,21,0.88)',
+    backgroundColor: 'rgba(255,255,255,0.34)',
   },
   calendarDateBox: {
     flexDirection: 'row',
@@ -1471,18 +1451,18 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   calendarDate: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 17,
     fontWeight: '900',
   },
   calendarCount: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 14,
     fontWeight: '700',
   },
   calendarActivities: {
     marginTop: 8,
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 15,
   },
 
@@ -1504,24 +1484,24 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#F4F7F6',
+    color: '#050505',
   },
 
   subtitle: {
     fontSize: 17,
-    color: '#F4F7F6',
+    color: '#050505',
     marginBottom: 24,
   },
 
   clearButton: {
-    backgroundColor: '#304243',
+    backgroundColor: '#E7E9EE',
     paddingVertical: 9,
     paddingHorizontal: 13,
     borderRadius: 10,
   },
 
   clearButtonText: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 16,
     fontWeight: '700',
   },
@@ -1531,16 +1511,16 @@ const styles = StyleSheet.create({
   },
 
   progressBox: {
-    backgroundColor: 'rgba(12, 20, 21, 0.82)',
+    backgroundColor: 'rgba(255, 255, 255, 0.24)',
     borderWidth: 1,
-    borderColor: '#304243',
+    borderColor: '#E7E9EE',
     borderRadius: 14,
     padding: 16,
     marginBottom: 18,
   },
 
   progressTitle: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 12,
@@ -1554,30 +1534,30 @@ const styles = StyleSheet.create({
 
   progressSummaryCard: {
     flex: 1,
-    backgroundColor: '#080F10',
+    backgroundColor: '#F6F7F9',
     borderRadius: 10,
     padding: 12,
   },
 
   progressLabel: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 15,
     marginBottom: 5,
   },
 
   progressValue: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 19,
     fontWeight: 'bold',
   },
 
   progressMeta: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 15,
   },
 
   progressSectionTitle: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 17,
     fontWeight: 'bold',
     marginBottom: 10,
@@ -1594,58 +1574,58 @@ const styles = StyleSheet.create({
   },
 
   progressActivityName: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 16,
     fontWeight: '600',
   },
 
   progressTrack: {
     height: 8,
-    backgroundColor: '#304243',
+    backgroundColor: '#E7E9EE',
     borderRadius: 4,
     overflow: 'hidden',
   },
 
   progressBar: {
     height: 8,
-    backgroundColor: '#22A398',
+    backgroundColor: '#2563EB',
     borderRadius: 4,
   },
 
   filterButton: {
-    backgroundColor: '#121C1D',
+    backgroundColor: '#FFFFFF',
     paddingVertical: 10,
     paddingHorizontal: 14,
     borderRadius: 20,
     marginRight: 10,
     borderWidth: 1,
-    borderColor: '#304243',
+    borderColor: '#E7E9EE',
   },
 
   filterButtonActive: {
-    backgroundColor: '#22A398',
-    borderColor: '#22A398',
+    backgroundColor: '#2563EB',
+    borderColor: '#2563EB',
   },
 
   filterText: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 16,
     fontWeight: '600',
   },
 
   filterTextActive: {
-    color: '#F4F7F6',
+    color: '#050505',
   },
 
   emptyText: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 18,
   },
 
   card: {
-    backgroundColor: 'rgba(12, 20, 21, 0.82)',
+    backgroundColor: 'rgba(255, 255, 255, 0.24)',
     borderWidth: 1,
-    borderColor: '#304243',
+    borderColor: '#E7E9EE',
     padding: 16,
     borderRadius: 14,
     marginBottom: 14,
@@ -1659,26 +1639,26 @@ const styles = StyleSheet.create({
   },
 
   badge: {
-    backgroundColor: '#22A398',
+    backgroundColor: '#2563EB',
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 999,
   },
 
   badgeText: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 16,
     fontWeight: '700',
   },
 
   dateText: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 16,
     fontWeight: '600',
   },
 
   durationText: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 26,
     fontWeight: 'bold',
     marginBottom: 10,
@@ -1687,33 +1667,33 @@ const styles = StyleSheet.create({
   timeBox: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    backgroundColor: '#080F10',
+    backgroundColor: '#F6F7F9',
     padding: 12,
     borderRadius: 10,
   },
 
   timeText: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 16,
     fontWeight: '600',
   },
 
   detailsBox: {
     marginTop: 10,
-    backgroundColor: '#080F10',
+    backgroundColor: '#F6F7F9',
     padding: 12,
     borderRadius: 10,
   },
 
   detailsTitle: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 8,
   },
 
   detailsSectionTitle: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 18,
     fontWeight: 'bold',
     marginTop: 10,
@@ -1721,7 +1701,7 @@ const styles = StyleSheet.create({
   },
 
   detailsText: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 18,
     fontWeight: '700',
     marginBottom: 4,
@@ -1732,7 +1712,7 @@ const styles = StyleSheet.create({
   },
 
   setText: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 17,
     marginLeft: 12,
     marginBottom: 3,
@@ -1746,13 +1726,13 @@ const styles = StyleSheet.create({
 
   editButton: {
     flex: 1,
-    backgroundColor: '#304243',
+    backgroundColor: '#E7E9EE',
     padding: 12,
     borderRadius: 10,
   },
 
   editButtonText: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 17,
     fontWeight: '700',
     textAlign: 'center',
@@ -1760,13 +1740,13 @@ const styles = StyleSheet.create({
 
   deleteButton: {
     flex: 1,
-    backgroundColor: '#304243',
+    backgroundColor: '#E7E9EE',
     padding: 12,
     borderRadius: 10,
   },
 
   deleteButtonText: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 17,
     fontWeight: '700',
     textAlign: 'center',
@@ -1784,12 +1764,12 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#425655',
-    backgroundColor: '#080F10',
+    borderColor: '#D0D5DD',
+    backgroundColor: '#F6F7F9',
   },
 
   editModalTitle: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 18,
@@ -1800,7 +1780,7 @@ const styles = StyleSheet.create({
   },
 
   editLabel: {
-    color: '#F4F7F6',
+    color: '#050505',
     fontSize: 17,
     fontWeight: '700',
     marginBottom: 7,
@@ -1810,10 +1790,10 @@ const styles = StyleSheet.create({
     minHeight: 48,
     paddingHorizontal: 12,
     borderWidth: 1,
-    borderColor: '#425655',
+    borderColor: '#D0D5DD',
     borderRadius: 8,
-    backgroundColor: '#121C1D',
-    color: '#F4F7F6',
+    backgroundColor: '#FFFFFF',
+    color: '#050505',
     fontSize: 18,
     marginBottom: 16,
   },
@@ -1833,18 +1813,18 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#425655',
+    borderColor: '#D0D5DD',
     borderRadius: 8,
-    backgroundColor: '#121C1D',
+    backgroundColor: '#FFFFFF',
   },
 
   modalSaveButton: {
     flex: 1,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#425655',
+    borderColor: '#D0D5DD',
     borderRadius: 8,
-    backgroundColor: '#304243',
+    backgroundColor: '#E7E9EE',
   },
 
   bottomSpace: {
